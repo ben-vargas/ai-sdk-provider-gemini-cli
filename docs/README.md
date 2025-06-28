@@ -4,27 +4,30 @@ This directory contains technical documentation for the AI SDK Provider for Gemi
 
 ## Documentation Overview
 
-### 1. [Authentication Options](./gemini-cli-auth-options.md)
+### 1. [Project Structure](./project-structure.md)
+Complete codebase map showing the organization of source files, examples, and documentation.
+
+### 2. [Authentication Options](./gemini-cli-auth-options.md)
 Comprehensive guide to the three authentication methods supported by `@google/gemini-cli-core`:
 - OAuth with Google Personal Account (`oauth-personal`)
 - Gemini API Key (`gemini-api-key`)
 - Vertex AI (`vertex-ai`)
 
-### 2. [Language Model V1 Implementation](./language-model-v1-doGenerate-summary.md)
+### 3. [Language Model V1 Implementation](./language-model-v1-doGenerate-summary.md)
 Detailed specification of the Vercel AI SDK Language Model V1 interface implementation:
 - Core interfaces and types
 - Message format specifications
 - Tool calling interfaces
 - Implementation patterns
 
-### 3. [Tool Schema Mapping](./tool-schema-mapping.md)
+### 4. [Tool Schema Mapping](./tool-schema-mapping.md)
 Guide for mapping between Vercel AI SDK's tool schemas and Gemini's FunctionDeclaration format:
 - Type mapping tables
 - Implementation approach
 - Unsupported features
 - Testing considerations
 
-### 4. [Zod to Gemini Mapping](./zod-to-gemini-mapping.md)
+### 5. [Zod to Gemini Mapping](./zod-to-gemini-mapping.md)
 Comprehensive mapping between Zod schemas and Gemini's Schema format:
 - Type conversions
 - Constraint mappings
