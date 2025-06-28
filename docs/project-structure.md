@@ -6,8 +6,7 @@ This document provides an overview of the ai-sdk-provider-gemini-cli codebase or
 ai-sdk-provider-gemini-cli/
 ├── src/                          # Source code
 │   ├── index.ts                  # Main exports
-│   ├── create-gemini-provider.ts # Provider factory function
-│   ├── gemini-provider.ts        # Provider class implementation
+│   ├── gemini-provider.ts        # Provider factory function
 │   ├── gemini-language-model.ts  # Core LanguageModelV1 implementation
 │   ├── client.ts                 # Gemini CLI Core client initialization
 │   ├── message-mapper.ts         # Maps AI SDK messages to Gemini format
@@ -15,7 +14,11 @@ ai-sdk-provider-gemini-cli/
 │   ├── extract-json.ts           # JSON extraction from markdown
 │   ├── error.ts                  # Error handling and mapping
 │   ├── validation.ts             # Input validation utilities
-│   └── types.ts                  # TypeScript type definitions
+│   ├── types.ts                  # TypeScript type definitions
+│   └── __tests__/                # Unit tests
+│       ├── extract-json.test.ts  # JSON extraction tests
+│       ├── gemini-provider.test.ts # Provider creation tests
+│       └── validation.test.ts    # Validation logic tests
 │
 ├── examples/                     # Usage examples
 │   ├── README.md                 # Examples documentation
@@ -54,12 +57,14 @@ ai-sdk-provider-gemini-cli/
 │   ├── tsconfig.build.json       # Build-specific TS config
 │   ├── tsup.config.ts            # Build tool configuration
 │   ├── vitest.config.ts          # Test runner configuration
+│   ├── eslint.config.js          # ESLint configuration (flat config)
 │   ├── .gitignore                # Git ignore patterns
 │   ├── .npmignore                # NPM publish ignore patterns
 │   └── .prettierrc               # Code formatter configuration
 │
 └── Root Files
     ├── README.md                 # Main project documentation
+    ├── CONTRIBUTING.md           # Contributing guidelines
     └── LICENSE                   # MIT license
 
 ```
@@ -70,8 +75,7 @@ ai-sdk-provider-gemini-cli/
 
 - **Provider Entry Points**
   - `index.ts` - Exports all public APIs
-  - `create-gemini-provider.ts` - Factory function for creating providers
-  - `gemini-provider.ts` - Main provider class
+  - `gemini-provider.ts` - Factory function for creating providers
 
 - **Language Model**
   - `gemini-language-model.ts` - Implements Vercel AI SDK's LanguageModelV1 interface

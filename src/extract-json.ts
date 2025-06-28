@@ -27,13 +27,18 @@ export function extractJson(text: string): string {
   if (firstObj === -1 && firstArr === -1) {
     return text;
   }
-  const start = firstArr === -1 ? firstObj : firstObj === -1 ? firstArr : Math.min(firstObj, firstArr);
+  const start =
+    firstArr === -1
+      ? firstObj
+      : firstObj === -1
+        ? firstArr
+        : Math.min(firstObj, firstArr);
   content = content.slice(start);
 
   // Try to parse the entire string
   try {
-    const parsed = JSON.parse(content);
-    return JSON.stringify(parsed, null, 2);
+    const parsed = JSON.parse(content) as unknown;
+    return JSON.stringify(parsed);
   } catch {
     // Continue with more lenient parsing
   }
@@ -41,38 +46,38 @@ export function extractJson(text: string): string {
   // Find valid JSON boundaries by tracking nesting depth
   const openChar = content[0];
   const closeChar = openChar === '{' ? '}' : ']';
-  
+
   const closingPositions: number[] = [];
   let depth = 0;
   let inString = false;
   let escapeNext = false;
-  
+
   for (let i = 0; i < content.length; i++) {
     const char = content[i];
-    
+
     if (escapeNext) {
       escapeNext = false;
       continue;
     }
-    
+
     if (char === '\\') {
       escapeNext = true;
       continue;
     }
-    
+
     if (char === '"' && !inString) {
       inString = true;
       continue;
     }
-    
+
     if (char === '"' && inString) {
       inString = false;
       continue;
     }
-    
+
     // Skip content inside strings
     if (inString) continue;
-    
+
     if (char === openChar) {
       depth++;
     } else if (char === closeChar) {
@@ -82,13 +87,13 @@ export function extractJson(text: string): string {
       }
     }
   }
-  
+
   // Try parsing at each valid closing position, starting from the end
   for (let i = closingPositions.length - 1; i >= 0; i--) {
     try {
       const attempt = content.slice(0, closingPositions[i]);
-      const parsed = JSON.parse(attempt);
-      return JSON.stringify(parsed, null, 2);
+      const parsed = JSON.parse(attempt) as unknown;
+      return JSON.stringify(parsed);
     } catch {
       // Continue trying
     }

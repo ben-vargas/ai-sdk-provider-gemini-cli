@@ -37,6 +37,7 @@ Thank you for your interest in contributing! We welcome contributions from the c
 ## Testing
 
 While we don't have unit tests yet, please:
+
 - Test your changes using the examples
 - Add new examples for new features
 - Run `npm run example:test` to verify integration

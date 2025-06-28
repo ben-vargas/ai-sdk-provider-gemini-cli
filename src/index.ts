@@ -1,14 +1,13 @@
 // Main exports
-export { createGeminiProvider } from './create-gemini-provider';
-export { geminiProvider } from './gemini-provider';
+export { createGeminiProvider } from './gemini-provider';
 
 // Type exports
-export type { GeminiProvider } from './create-gemini-provider';
+export type { GeminiProvider } from './gemini-provider';
 export type { GeminiProviderOptions } from './types';
 
 // Legacy compatibility exports (for backward compatibility)
-export { createGeminiProvider as createGeminiCliCoreProvider } from './create-gemini-provider';
-export type { GeminiProvider as GeminiCliCoreProvider } from './create-gemini-provider';
+export { createGeminiProvider as createGeminiCliCoreProvider } from './gemini-provider';
+export type { GeminiProvider as GeminiCliCoreProvider } from './gemini-provider';
 export type { GeminiProviderOptions as GeminiCliCoreProviderOptions } from './types';
 
 // Re-export types from AI SDK for convenience

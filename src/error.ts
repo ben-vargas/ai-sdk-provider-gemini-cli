@@ -6,7 +6,7 @@ import { APICallError } from '@ai-sdk/provider';
 export function mapGeminiError(error: unknown): APICallError {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
-    
+
     // Check for rate limit errors
     if (message.includes('rate limit') || message.includes('quota')) {
       return new APICallError({
@@ -22,7 +22,11 @@ export function mapGeminiError(error: unknown): APICallError {
     }
 
     // Check for authentication errors
-    if (message.includes('unauthorized') || message.includes('authentication') || message.includes('api key')) {
+    if (
+      message.includes('unauthorized') ||
+      message.includes('authentication') ||
+      message.includes('api key')
+    ) {
       return new APICallError({
         url: 'gemini-cli-core',
         requestBodyValues: {},

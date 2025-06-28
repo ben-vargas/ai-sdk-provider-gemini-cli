@@ -3,7 +3,7 @@ import type { GoogleAuth } from 'google-auth-library';
 /**
  * Provider options for configuring Gemini authentication and behavior
  */
-export type GeminiProviderOptions = 
+export type GeminiProviderOptions =
   | GeminiApiKeyAuth
   | VertexAIAuth
   | OAuthAuth

@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="https://img.shields.io/badge/warning-alpha-FF6700" alt="alpha warning">
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/v/ai-sdk-provider-gemini-cli?color=00A79E" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/unpacked-size/ai-sdk-provider-gemini-cli?color=00A79E" alt="install size" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/dy/ai-sdk-provider-gemini-cli.svg?color=00A79E" alt="npm downloads" /></a>
@@ -34,12 +35,14 @@ Please ensure you have appropriate permissions and comply with all applicable te
 ## Installation
 
 ### 1. Install and authenticate the Gemini CLI
+
 ```bash
 npm install -g @google/gemini-cli
 gemini auth login
 ```
 
 ### 2. Add the provider
+
 ```bash
 npm install ai-sdk-provider-gemini-cli ai
 ```
@@ -52,12 +55,12 @@ import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
 
 // Create provider with OAuth authentication
 const gemini = createGeminiProvider({
-  authType: 'oauth-personal'
+  authType: 'oauth-personal',
 });
 
 const result = await generateText({
   model: gemini('gemini-2.5-pro'),
-  prompt: 'Write a haiku about coding'
+  prompt: 'Write a haiku about coding',
 });
 
 console.log(result.text);
@@ -74,12 +77,14 @@ console.log(result.text);
 The `examples/` directory contains comprehensive examples demonstrating all features:
 
 ### Getting Started
+
 - `check-auth.mjs` - Verify your authentication setup
 - `basic-usage.mjs` - Simple text generation examples
 - `streaming.mjs` - Real-time streaming responses
 - `conversation-history.mjs` - Multi-turn conversations
 
 ### Advanced Features
+
 - `generate-object-basic.mjs` - Structured output with Zod schemas
 - `generate-object-nested.mjs` - Complex nested data structures
 - `generate-object-constraints.mjs` - Data validation and constraints
@@ -87,6 +92,7 @@ The `examples/` directory contains comprehensive examples demonstrating all feat
 - `error-handling.mjs` - Robust error handling patterns
 
 ### Run Examples
+
 ```bash
 # First build the project
 npm run build
@@ -111,7 +117,7 @@ The provider uses OAuth authentication with Google Cloud Code endpoints:
 
 ```typescript
 const gemini = createGeminiProvider({
-  authType: 'oauth-personal'
+  authType: 'oauth-personal',
 });
 ```
 
@@ -126,7 +132,7 @@ gemini auth login
 ```typescript
 const gemini = createGeminiProvider({
   authType: 'api-key',
-  apiKey: process.env.GOOGLE_API_KEY
+  apiKey: process.env.GOOGLE_API_KEY,
 });
 ```
 
@@ -139,13 +145,13 @@ import { generateText } from 'ai';
 import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
 
 const gemini = createGeminiProvider({
-  authType: 'oauth-personal'
+  authType: 'oauth-personal',
 });
 
 const result = await generateText({
   model: gemini('gemini-2.5-pro'),
   prompt: 'Explain quantum computing in simple terms',
-  maxTokens: 500
+  maxTokens: 500,
 });
 
 console.log(result.text);
@@ -159,12 +165,12 @@ import { streamText } from 'ai';
 import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
 
 const gemini = createGeminiProvider({
-  authType: 'oauth-personal'
+  authType: 'oauth-personal',
 });
 
 const result = await streamText({
   model: gemini('gemini-2.5-pro'),
-  prompt: 'Write a story about a robot learning to paint'
+  prompt: 'Write a story about a robot learning to paint',
 });
 
 for await (const chunk of result.textStream) {
@@ -180,7 +186,7 @@ import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
 import { z } from 'zod';
 
 const gemini = createGeminiProvider({
-  authType: 'oauth-personal'
+  authType: 'oauth-personal',
 });
 
 const result = await generateObject({
@@ -188,9 +194,9 @@ const result = await generateObject({
   schema: z.object({
     name: z.string().describe('Product name'),
     price: z.number().describe('Price in USD'),
-    features: z.array(z.string()).describe('Key features')
+    features: z.array(z.string()).describe('Key features'),
   }),
-  prompt: 'Generate a laptop product listing'
+  prompt: 'Generate a laptop product listing',
 });
 
 console.log(result.object);
@@ -203,13 +209,13 @@ import { generateText } from 'ai';
 import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
 
 const gemini = createGeminiProvider({
-  authType: 'oauth-personal'
+  authType: 'oauth-personal',
 });
 
 const result = await generateText({
   model: gemini('gemini-2.5-pro'),
   system: 'You are a helpful coding assistant. Always include code examples.',
-  prompt: 'How do I read a file in Node.js?'
+  prompt: 'How do I read a file in Node.js?',
 });
 
 console.log(result.text);
@@ -223,8 +229,8 @@ const result = await generateText({
   messages: [
     { role: 'user', content: 'My name is Alice' },
     { role: 'assistant', content: 'Nice to meet you, Alice!' },
-    { role: 'user', content: 'What is my name?' }
-  ]
+    { role: 'user', content: 'What is my name?' },
+  ],
 });
 
 console.log(result.text); // Should mention "Alice"
@@ -246,7 +252,7 @@ const model = gemini('gemini-2.5-pro', {
   // Standard AI SDK parameters:
   temperature: 0.7,
   maxTokens: 1000,
-  topP: 0.95
+  topP: 0.95,
 });
 ```
 
@@ -262,6 +268,7 @@ const gemini = createGeminiProvider({
 ## Key Features
 
 This provider uses Google's Cloud Code endpoints through the Gemini CLI Core library:
+
 - 🔐 Secure OAuth authentication
 - ☁️ Access to Google Cloud Code models
 - 🚀 Core Vercel AI SDK features

@@ -3,6 +3,21 @@ import type { Tool, FunctionDeclaration } from '@google/genai';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { z } from 'zod';
 
+// Type for JSON Schema objects with common properties
+interface JsonSchemaObject {
+  $schema?: string;
+  $ref?: string;
+  $defs?: unknown;
+  definitions?: unknown;
+  properties?: Record<string, unknown>;
+  items?: unknown;
+  additionalProperties?: unknown;
+  allOf?: unknown[];
+  anyOf?: unknown[];
+  oneOf?: unknown[];
+  [key: string]: unknown;
+}
+
 /**
  * Maps Vercel AI SDK tools to Gemini format
  */
@@ -25,10 +40,10 @@ export function mapToolsToGeminiFormat(
 /**
  * Converts tool parameters from Zod schema or JSON schema to Gemini format
  */
-function convertToolParameters(parameters: unknown): any {
+function convertToolParameters(parameters: unknown): JsonSchemaObject {
   // If it's already a plain object (JSON schema), clean it
   if (isJsonSchema(parameters)) {
-    return cleanJsonSchema(parameters as any);
+    return cleanJsonSchema(parameters as JsonSchemaObject);
   }
 
   // If it's a Zod schema, convert to JSON schema first
@@ -55,12 +70,12 @@ function isJsonSchema(obj: unknown): boolean {
 /**
  * Checks if an object is a Zod schema
  */
-function isZodSchema(obj: unknown): boolean {
+function isZodSchema(obj: unknown): obj is z.ZodTypeAny {
   return (
     typeof obj === 'object' &&
     obj !== null &&
     '_def' in obj &&
-    typeof (obj as any)._def === 'object'
+    typeof (obj as z.ZodTypeAny)._def === 'object'
   );
 }
 
@@ -68,7 +83,7 @@ function isZodSchema(obj: unknown): boolean {
  * Cleans JSON schema for Gemini compatibility
  * Removes $schema and other metadata that Gemini doesn't support
  */
-function cleanJsonSchema(schema: any): any {
+function cleanJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
   if (typeof schema !== 'object' || schema === null) {
     return schema;
   }
@@ -82,27 +97,32 @@ function cleanJsonSchema(schema: any): any {
   delete cleaned.definitions;
 
   // Recursively clean nested schemas
-  if (cleaned.properties) {
-    cleaned.properties = Object.fromEntries(
-      Object.entries(cleaned.properties).map(([key, value]) => [
-        key,
-        cleanJsonSchema(value),
-      ])
-    );
+  if (cleaned.properties && typeof cleaned.properties === 'object') {
+    const cleanedProps: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(cleaned.properties)) {
+      cleanedProps[key] = cleanJsonSchema(value as JsonSchemaObject);
+    }
+    cleaned.properties = cleanedProps;
   }
 
   if (cleaned.items) {
-    cleaned.items = cleanJsonSchema(cleaned.items);
+    cleaned.items = cleanJsonSchema(cleaned.items as JsonSchemaObject);
   }
 
-  if (cleaned.additionalProperties && typeof cleaned.additionalProperties === 'object') {
-    cleaned.additionalProperties = cleanJsonSchema(cleaned.additionalProperties);
+  if (
+    cleaned.additionalProperties &&
+    typeof cleaned.additionalProperties === 'object'
+  ) {
+    cleaned.additionalProperties = cleanJsonSchema(
+      cleaned.additionalProperties as JsonSchemaObject
+    );
   }
 
   // Clean arrays
-  for (const key of ['allOf', 'anyOf', 'oneOf']) {
-    if (Array.isArray(cleaned[key])) {
-      cleaned[key] = cleaned[key].map(cleanJsonSchema);
+  for (const key of ['allOf', 'anyOf', 'oneOf'] as const) {
+    const arrayProp = cleaned[key];
+    if (Array.isArray(arrayProp)) {
+      cleaned[key] = arrayProp.map(item => cleanJsonSchema(item as JsonSchemaObject));
     }
   }
 

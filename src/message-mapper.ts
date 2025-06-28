@@ -20,32 +20,36 @@ export function mapPromptToGeminiFormat(
   let messages = options.prompt;
   const contents: Content[] = [];
   let systemInstruction: Content | undefined;
-  
+
   // If in object-json mode, enhance the last user message with schema information
-  if (options.mode?.type === 'object-json' && options.mode.schema && messages.length > 0) {
+  if (
+    options.mode?.type === 'object-json' &&
+    options.mode.schema &&
+    messages.length > 0
+  ) {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage.role === 'user' && Array.isArray(lastMessage.content)) {
       const schemaPrompt = `\n\nYou must respond with a JSON object that exactly matches this schema:\n${JSON.stringify(options.mode.schema, null, 2)}\n\nIMPORTANT: Use the exact field names from the schema. Do not add extra fields.`;
-      
+
       // Clone the messages array and modify the last message
       messages = [...messages];
       const lastContent = [...lastMessage.content];
-      
+
       // Find the last text content and append to it
       for (let i = lastContent.length - 1; i >= 0; i--) {
         const content = lastContent[i];
         if (content.type === 'text') {
           lastContent[i] = {
             ...content,
-            text: content.text + schemaPrompt
+            text: content.text + schemaPrompt,
           };
           break;
         }
       }
-      
+
       messages[messages.length - 1] = {
         ...lastMessage,
-        content: lastContent
+        content: lastContent,
       };
     }
   }
@@ -73,7 +77,9 @@ export function mapPromptToGeminiFormat(
         // For now, we'll add them as a user message
         contents.push({
           role: 'user',
-          parts: message.content.map((part: LanguageModelV1ToolResultPart) => mapToolResultPart(part)),
+          parts: message.content.map((part: LanguageModelV1ToolResultPart) =>
+            mapToolResultPart(part)
+          ),
         });
         break;
     }
@@ -85,7 +91,9 @@ export function mapPromptToGeminiFormat(
 /**
  * Maps a user message to Gemini format
  */
-function mapUserMessage(message: LanguageModelV1Message & { role: 'user' }): Content {
+function mapUserMessage(
+  message: LanguageModelV1Message & { role: 'user' }
+): Content {
   const parts: Part[] = [];
 
   for (const part of message.content) {
@@ -106,7 +114,9 @@ function mapUserMessage(message: LanguageModelV1Message & { role: 'user' }): Con
 /**
  * Maps an assistant message to Gemini format
  */
-function mapAssistantMessage(message: LanguageModelV1Message & { role: 'assistant' }): Content {
+function mapAssistantMessage(
+  message: LanguageModelV1Message & { role: 'assistant' }
+): Content {
   const parts: Part[] = [];
 
   for (const part of message.content) {
@@ -134,7 +144,9 @@ function mapAssistantMessage(message: LanguageModelV1Message & { role: 'assistan
  */
 function mapImagePart(part: LanguageModelV1ImagePart): Part {
   if (part.image instanceof URL) {
-    throw new Error('URL images are not supported by Gemini CLI Core. Please provide base64-encoded image data.');
+    throw new Error(
+      'URL images are not supported by Gemini CLI Core. Please provide base64-encoded image data.'
+    );
   }
 
   // Extract mime type and base64 data

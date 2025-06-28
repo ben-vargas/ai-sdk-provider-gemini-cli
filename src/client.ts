@@ -1,5 +1,12 @@
-import type { ContentGenerator, ContentGeneratorConfig } from '@google/gemini-cli-core';
-import { createContentGenerator, createContentGeneratorConfig, AuthType } from '@google/gemini-cli-core';
+import type {
+  ContentGenerator,
+  ContentGeneratorConfig,
+} from '@google/gemini-cli-core';
+import {
+  createContentGenerator,
+  createContentGeneratorConfig,
+  AuthType,
+} from '@google/gemini-cli-core';
 import type { GeminiProviderOptions } from './types';
 
 export interface GeminiClient {
@@ -16,12 +23,15 @@ export async function initializeGeminiClient(
 ): Promise<GeminiClient> {
   // Map our auth types to Gemini CLI Core auth types
   let authType: AuthType | undefined;
-  
+
   if (options.authType === 'gemini-api-key') {
     authType = AuthType.USE_GEMINI;
   } else if (options.authType === 'vertex-ai') {
     authType = AuthType.USE_VERTEX_AI;
-  } else if (options.authType === 'oauth' || options.authType === 'oauth-personal') {
+  } else if (
+    options.authType === 'oauth' ||
+    options.authType === 'oauth-personal'
+  ) {
     authType = AuthType.LOGIN_WITH_GOOGLE_PERSONAL;
   } else if (options.authType === 'google-auth-library') {
     // Google Auth Library is not directly supported by AuthType enum
