@@ -1,0 +1,43 @@
+# Source files (use compiled output)
+src/
+
+# Test files
+tests/
+**/*.test.ts
+**/*.spec.ts
+**/*.test.js
+**/*.spec.js
+
+# Configuration files
+*.config.*
+tsconfig.json
+tsconfig.*.json
+.prettierrc
+.eslintrc*
+.editorconfig
+
+# Development files
+.github/
+docs/
+coverage/
+.nyc_output/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+
+# Resources
+resources/
+
+# Examples
+examples/
+
+# Other files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
