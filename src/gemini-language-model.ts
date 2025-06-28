@@ -7,10 +7,12 @@ import type {
   LanguageModelV1FunctionToolCall,
   LanguageModelV1StreamPart,
 } from '@ai-sdk/provider';
-import type { ContentGenerator, Config } from '@google/gemini-cli-core';
+import type { ContentGenerator, ContentGeneratorConfig } from '@google/gemini-cli-core';
 import type {
   GenerateContentParameters,
   GenerateContentConfig,
+  Part,
+  Content,
 } from '@google/genai';
 import { initializeGeminiClient } from './client';
 import { mapPromptToGeminiFormat } from './message-mapper';
@@ -18,15 +20,6 @@ import { mapToolsToGeminiFormat } from './tool-mapper';
 import { mapGeminiError } from './error';
 import { extractJson } from './extract-json';
 import type { GeminiProviderOptions } from './types';
-
-// Type for Gemini response parts
-interface GeminiPart {
-  text?: string;
-  functionCall?: {
-    name: string;
-    args: unknown;
-  };
-}
 
 export interface GeminiLanguageModelOptions {
   modelId: string;
@@ -63,7 +56,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
   readonly supportsStructuredOutputs = true;
 
   private contentGenerator?: ContentGenerator;
-  private config?: Config;
+  private config?: ContentGeneratorConfig;
   private initPromise?: Promise<void>;
 
   readonly modelId: string;
@@ -78,7 +71,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
 
   private async ensureInitialized(): Promise<{
     contentGenerator: ContentGenerator;
-    config: Config;
+    config: ContentGeneratorConfig;
   }> {
     if (this.contentGenerator && this.config) {
       return { contentGenerator: this.contentGenerator, config: this.config };
@@ -167,7 +160,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       }
 
       // Create the request parameters
-      const request: GenerateContentParameters & { systemInstruction?: string; tools?: unknown } = {
+      const request: GenerateContentParameters & { systemInstruction?: Content; tools?: unknown } = {
         model: this.modelId,
         contents,
         config: generationConfig,
@@ -188,8 +181,8 @@ export class GeminiLanguageModel implements LanguageModelV1 {
 
       // Extract the result
       const candidate = response.candidates?.[0];
-      const content = candidate?.content;
-      let text = content?.parts?.[0]?.text || '';
+      const responseContent = candidate?.content;
+      let text = responseContent?.parts?.[0]?.text || '';
 
       // Extract JSON if in object-json mode
       if (options.mode.type === 'object-json' && text) {
@@ -198,13 +191,13 @@ export class GeminiLanguageModel implements LanguageModelV1 {
 
       // Parse tool calls if present
       let toolCalls: LanguageModelV1FunctionToolCall[] | undefined;
-      if (content?.parts) {
-        toolCalls = content.parts
-          .filter((part): part is GeminiPart => !!(part as GeminiPart).functionCall)
+      if (responseContent?.parts) {
+        toolCalls = responseContent.parts
+          .filter((part): part is Part => !!(part as Part).functionCall)
           .map((part) => ({
             toolCallType: 'function' as const,
             toolCallId: crypto.randomUUID(),
-            toolName: part.functionCall!.name,
+            toolName: part.functionCall!.name || '',
             args: JSON.stringify(part.functionCall!.args || {}),
           }));
       }
@@ -282,7 +275,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       }
 
       // Create the request parameters
-      const request: GenerateContentParameters & { systemInstruction?: string; tools?: unknown } = {
+      const request: GenerateContentParameters & { systemInstruction?: Content; tools?: unknown } = {
         model: this.modelId,
         contents,
         config: generationConfig,
