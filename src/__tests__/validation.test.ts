@@ -18,7 +18,9 @@ describe('validateAuthOptions', () => {
       apiKey: 'test-api-key',
     });
     expect(result.authType).toBe('api-key');
-    expect(result.apiKey).toBe('test-api-key');
+    if ('apiKey' in result) {
+      expect(result.apiKey).toBe('test-api-key');
+    }
   });
 
   it('should accept gemini-api-key auth type with API key', () => {
@@ -27,22 +29,28 @@ describe('validateAuthOptions', () => {
       apiKey: 'test-api-key',
     });
     expect(result.authType).toBe('gemini-api-key');
-    expect(result.apiKey).toBe('test-api-key');
+    if ('apiKey' in result) {
+      expect(result.apiKey).toBe('test-api-key');
+    }
   });
 
   it('should accept vertex-ai auth type with required fields', () => {
     const result = validateAuthOptions({
       authType: 'vertex-ai',
-      projectId: 'test-project',
-      location: 'us-central1',
+      vertexAI: {
+        projectId: 'test-project',
+        location: 'us-central1',
+      },
     });
     expect(result.authType).toBe('vertex-ai');
-    expect(result.projectId).toBe('test-project');
-    expect(result.location).toBe('us-central1');
+    if ('vertexAI' in result && result.vertexAI) {
+      expect(result.vertexAI.projectId).toBe('test-project');
+      expect(result.vertexAI.location).toBe('us-central1');
+    }
   });
 
   it('should throw error for api-key auth without API key', () => {
-    expect(() => 
+    expect(() =>
       validateAuthOptions({
         authType: 'api-key',
       })
@@ -50,7 +58,7 @@ describe('validateAuthOptions', () => {
   });
 
   it('should throw error for gemini-api-key auth without API key', () => {
-    expect(() => 
+    expect(() =>
       validateAuthOptions({
         authType: 'gemini-api-key',
       })
@@ -58,25 +66,31 @@ describe('validateAuthOptions', () => {
   });
 
   it('should throw error for vertex-ai auth without projectId', () => {
-    expect(() => 
+    expect(() =>
       validateAuthOptions({
         authType: 'vertex-ai',
-        location: 'us-central1',
+        vertexAI: {
+          projectId: '',
+          location: 'us-central1',
+        },
       })
     ).toThrow('Project ID is required for vertex-ai auth type');
   });
 
   it('should throw error for vertex-ai auth without location', () => {
-    expect(() => 
+    expect(() =>
       validateAuthOptions({
         authType: 'vertex-ai',
-        projectId: 'test-project',
+        vertexAI: {
+          projectId: 'test-project',
+          location: '',
+        },
       })
     ).toThrow('Location is required for vertex-ai auth type');
   });
 
   it('should throw error for invalid auth type', () => {
-    expect(() => 
+    expect(() =>
       validateAuthOptions({
         // @ts-expect-error Testing invalid auth type
         authType: 'invalid-auth',

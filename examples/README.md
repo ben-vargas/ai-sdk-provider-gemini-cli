@@ -6,8 +6,8 @@ This directory contains curated examples demonstrating the key features of the G
 
 1. Authenticate with Google Cloud Code:
 ```bash
-# Run the gemini CLI to authenticate
-gemini auth login
+# Run the gemini CLI and follow interactive setup
+gemini
 ```
 
 2. Build the provider:
@@ -135,7 +135,7 @@ const gemini = createGeminiProvider({
 ```javascript
 const gemini = createGeminiProvider({
   authType: 'api-key',
-  apiKey: process.env.GOOGLE_API_KEY
+  apiKey: process.env.GEMINI_API_KEY
 });
 ```
 
@@ -201,7 +201,7 @@ This provider uses Google Cloud Code endpoints (https://cloudcode-pa.googleapis.
 ## Troubleshooting
 
 If you encounter authentication issues:
-1. Run `gemini auth login` to authenticate
+1. Run `gemini` and follow setup prompts to authenticate
 2. Check `~/.gemini/oauth_creds.json` exists
 3. Run `node examples/check-auth.mjs` to verify
 

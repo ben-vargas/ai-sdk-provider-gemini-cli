@@ -278,7 +278,7 @@ async function main() {
   } else {
     console.log('⚠️  Some tests failed. Please check the errors above.');
     console.log('\n💡 Troubleshooting tips:');
-    console.log('- Ensure you are authenticated: gemini auth login');
+    console.log('- Ensure you are authenticated: gemini (follow setup prompts)');
     console.log('- Check ~/.gemini/oauth_creds.json exists');
     console.log('- Verify your internet connection');
     console.log('- Try running individual examples to isolate issues');

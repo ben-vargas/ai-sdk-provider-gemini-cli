@@ -8,7 +8,7 @@ The core package supports three authentication methods, defined in the `AuthType
 
 ```typescript
 export enum AuthType {
-  LOGIN_WITH_GOOGLE_PERSONAL = 'oauth-personal',
+  LOGIN_WITH_GOOGLE = 'oauth-personal',
   USE_GEMINI = 'gemini-api-key',
   USE_VERTEX_AI = 'vertex-ai'
 }
@@ -16,7 +16,7 @@ export enum AuthType {
 
 ## 1. OAuth with Google Personal Account (`oauth-personal`)
 
-- **Auth Type**: `AuthType.LOGIN_WITH_GOOGLE_PERSONAL`
+- **Auth Type**: `AuthType.LOGIN_WITH_GOOGLE`
 - **How it works**: Uses OAuth2 flow with Google authentication
 - **Client ID**: `681255809395-oo8ft2oprdrnp9e3aqf6av3hmdib135j.apps.googleusercontent.com`
 - **Scopes**: 
@@ -26,12 +26,22 @@ export enum AuthType {
 - **Credentials cached at**: `~/.gemini/oauth_creds.json`
 - **No API key required** - uses OAuth tokens instead
 
-## 2. Gemini API Key (`gemini-api-key`)
+## 2. API Key Authentication
 
-- **Auth Type**: `AuthType.USE_GEMINI`
+This provider supports both AI SDK standard and Gemini-specific auth types:
+
+### AI SDK Standard (`api-key`) - Recommended
+- **Auth Type**: `'api-key'` (AI SDK compliant)
 - **Environment Variable**: `GEMINI_API_KEY`
 - **How it works**: Direct API key authentication with Gemini service
 - **Used with**: `GoogleGenAI` client from `@google/genai` package
+- **Maps to**: `AuthType.USE_GEMINI`
+
+### Gemini-Specific (`gemini-api-key`) - Alternative
+- **Auth Type**: `'gemini-api-key'` (Gemini-specific)
+- **Environment Variable**: `GEMINI_API_KEY`
+- **How it works**: Same as above, alternative naming
+- **Maps to**: `AuthType.USE_GEMINI`
 
 ## 3. Vertex AI (`vertex-ai`)
 
@@ -100,11 +110,41 @@ await config.refreshAuth(AuthType.USE_GEMINI);
 const client = config.getGeminiClient();
 ```
 
+## Authentication Setup
+
+### For OAuth Authentication
+```bash
+# Initial setup - run and follow interactive prompts
+gemini
+
+# Or change auth method inside CLI
+/auth
+```
+
+### For API Key Authentication
+```bash
+# Get your API key from Google AI Studio
+export GEMINI_API_KEY="your-api-key-here"
+
+# Or set in .gemini/.env file
+mkdir -p .gemini
+echo 'GEMINI_API_KEY="your-api-key"' >> .gemini/.env
+```
+
+### For Vertex AI Authentication
+```bash
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+export GOOGLE_CLOUD_LOCATION="us-central1"
+export GOOGLE_GENAI_USE_VERTEXAI=true
+export GEMINI_API_KEY="your-api-key"
+```
+
 ## Key Points
 
 1. **OAuth authentication** provides a seamless experience without requiring API keys
-2. **API key authentication** supports both Gemini and Vertex AI endpoints
+2. **API key authentication** supports both AI SDK standard (`'api-key'`) and Gemini-specific (`'gemini-api-key'`) auth types
 3. **Credentials are cached** for OAuth to avoid repeated authentication
 4. **The authentication type must be specified** when initializing the client
 5. **Environment variables are checked** automatically based on the auth type
 6. **Model selection is handled** differently for different auth types (with fallback logic for API keys)
+7. **No "gemini auth login" command exists** - use `gemini` for interactive setup or `/auth` inside CLI

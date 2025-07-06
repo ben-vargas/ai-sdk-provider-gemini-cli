@@ -13,42 +13,45 @@ export function validateAuthOptions(
 ): GeminiProviderOptions {
   // Default to oauth-personal if no authType specified
   const authType = options.authType || 'oauth-personal';
-  
-  // Create validated options with explicit authType
-  const validatedOptions: GeminiProviderOptions = {
-    ...options,
-    authType
-  };
 
   // Validate based on auth type
   switch (authType) {
     case 'api-key':
     case 'gemini-api-key':
-      if (!options.apiKey) {
+      if (!('apiKey' in options) || !options.apiKey) {
         throw new Error(`API key is required for ${authType} auth type`);
       }
-      break;
+      return { ...options, authType };
 
     case 'vertex-ai':
-      if (!options.projectId) {
+      if ('vertexAI' in options && options.vertexAI) {
+        if (!options.vertexAI.projectId || options.vertexAI.projectId.trim() === '') {
+          throw new Error('Project ID is required for vertex-ai auth type');
+        }
+        if (!options.vertexAI.location || options.vertexAI.location.trim() === '') {
+          throw new Error('Location is required for vertex-ai auth type');
+        }
+      } else {
         throw new Error(
-          'Project ID is required for vertex-ai auth type'
+          'Vertex AI configuration is required for vertex-ai auth type'
         );
       }
-      if (!options.location) {
-        throw new Error(
-          'Location is required for vertex-ai auth type'
-        );
-      }
-      break;
+      return { ...options, authType };
 
+    case 'oauth':
     case 'oauth-personal':
       // No additional validation needed for oauth
-      break;
+      return { ...options, authType };
+
+    case 'google-auth-library':
+      if (!('googleAuth' in options) || !options.googleAuth) {
+        throw new Error(
+          'Google Auth Library instance is required for google-auth-library auth type'
+        );
+      }
+      return { ...options, authType };
 
     default:
-      throw new Error(`Invalid auth type: ${authType}`);
+      throw new Error(`Invalid auth type: ${String(authType)}`);
   }
-
-  return validatedOptions;
 }
