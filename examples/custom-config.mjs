@@ -36,10 +36,10 @@ async function main() {
     console.log('Example 2: API Key Authentication');
     console.log('─'.repeat(50));
     
-    if (process.env.GOOGLE_API_KEY) {
+    if (process.env.GEMINI_API_KEY) {
       const apiKeyProvider = createGeminiProvider({
         authType: 'api-key',
-        apiKey: process.env.GOOGLE_API_KEY
+        apiKey: process.env.GEMINI_API_KEY
       });
       
       const result2 = await generateText({
@@ -51,7 +51,7 @@ async function main() {
       console.log('Response:', result2.text);
       console.log('Auth method: API Key');
     } else {
-      console.log('Skipping: GOOGLE_API_KEY not set in environment');
+      console.log('Skipping: GEMINI_API_KEY not set in environment');
     }
     console.log();
 
@@ -189,8 +189,8 @@ async function main() {
   } catch (error) {
     console.error('❌ Error:', error.message);
     console.log('\n💡 Troubleshooting:');
-    console.log('- For OAuth: run "gemini auth login"');
-    console.log('- For API key: set GOOGLE_API_KEY environment variable');
+    console.log('- For OAuth: run "gemini (follow setup prompts)"');
+    console.log('- For API key: set GEMINI_API_KEY environment variable');
   }
 }
 

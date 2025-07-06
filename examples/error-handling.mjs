@@ -54,7 +54,7 @@ async function main() {
   const credsPath = path.join(os.homedir(), '.gemini', 'oauth_creds.json');
   if (!fs.existsSync(credsPath)) {
     console.log('❌ OAuth credentials not found');
-    console.log('💡 Solution: Run "gemini auth login" to authenticate');
+    console.log('💡 Solution: Run "gemini (follow setup prompts)" to authenticate');
     console.log();
   } else {
     console.log('✅ OAuth credentials found');
@@ -74,7 +74,7 @@ async function main() {
     } catch (error) {
       if (isAuthError(error)) {
         console.log('❌ Authentication failed:', error.message);
-        console.log('💡 Try refreshing credentials: gemini auth login');
+        console.log('💡 Try refreshing credentials: gemini (follow setup prompts)');
       } else {
         console.log('❌ Unexpected error:', error.message);
       }

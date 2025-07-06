@@ -34,11 +34,11 @@ Please ensure you have appropriate permissions and comply with all applicable te
 
 ## Installation
 
-### 1. Install and authenticate the Gemini CLI
+### 1. Install and set up the Gemini CLI
 
 ```bash
 npm install -g @google/gemini-cli
-gemini auth login
+gemini  # Follow the interactive authentication setup
 ```
 
 ### 2. Add the provider
@@ -121,19 +121,36 @@ const gemini = createGeminiProvider({
 });
 ```
 
-This uses your existing Gemini CLI credentials from `~/.gemini/oauth_creds.json`. To authenticate:
+This uses your existing Gemini CLI credentials from `~/.gemini/oauth_creds.json`. To set up authentication:
 
 ```bash
-gemini auth login
+# Initial setup - follow interactive prompts
+gemini
+
+# Or change auth method inside CLI with slash command
+/auth
 ```
 
 ### API Key Authentication
 
 ```typescript
+// Using AI SDK standard auth type (recommended)
 const gemini = createGeminiProvider({
   authType: 'api-key',
-  apiKey: process.env.GOOGLE_API_KEY,
+  apiKey: process.env.GEMINI_API_KEY,
 });
+
+// Alternative: Gemini-specific auth type
+const gemini = createGeminiProvider({
+  authType: 'gemini-api-key',
+  apiKey: process.env.GEMINI_API_KEY,
+});
+```
+
+Get your API key from [Google AI Studio](https://aistudio.google.com/apikey) and set it as an environment variable:
+
+```bash
+export GEMINI_API_KEY="your-api-key-here"
 ```
 
 ## Usage Examples

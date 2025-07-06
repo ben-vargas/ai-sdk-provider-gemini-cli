@@ -212,7 +212,7 @@ async function main() {
     console.log('- Check generate-object-advanced.mjs for real-world patterns');
   } catch (error) {
     console.error('❌ Error:', error.message);
-    console.log('\n💡 Tip: Make sure you\'re authenticated with: gemini auth login');
+    console.log('\n💡 Tip: Make sure you\'re authenticated with: gemini (follow setup prompts)');
   }
 }
 

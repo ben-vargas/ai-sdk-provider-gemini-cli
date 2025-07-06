@@ -11,10 +11,10 @@ export type GeminiProviderOptions =
   | { authType?: undefined };
 
 /**
- * Gemini API key authentication
+ * Gemini API key authentication (supports both AI SDK standard and Gemini-specific auth types)
  */
 export interface GeminiApiKeyAuth {
-  authType: 'gemini-api-key';
+  authType: 'api-key' | 'gemini-api-key';
   apiKey?: string;
 }
 

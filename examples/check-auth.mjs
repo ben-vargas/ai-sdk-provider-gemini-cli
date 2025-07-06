@@ -42,7 +42,7 @@ if (hasOAuthCreds) {
     console.log('⚠️  Could not parse credentials file:', e.message);
   }
 } else {
-  console.log('\n💡 To authenticate, run: gemini auth login');
+  console.log('\n💡 To authenticate, run: gemini (then follow setup prompts)');
 }
 
 console.log();
@@ -52,7 +52,7 @@ console.log('2. Gemini CLI Core Connection Test');
 console.log('─'.repeat(50));
 
 try {
-  const config = await createContentGeneratorConfig('gemini-2.5-pro', AuthType.LOGIN_WITH_GOOGLE_PERSONAL);
+  const config = await createContentGeneratorConfig('gemini-2.5-pro', AuthType.LOGIN_WITH_GOOGLE);
   console.log('✅ Successfully created config');
   console.log(`Model: ${config.model}`);
   console.log(`Auth Type: ${config.authType}`);
@@ -62,7 +62,7 @@ try {
   console.log('✅ Content generator initialized');
 } catch (error) {
   console.error('❌ Failed to initialize:', error.message);
-  console.log('\n💡 Try running: gemini auth login');
+  console.log('\n💡 Try running: gemini (then follow setup prompts)');
 }
 
 console.log();
@@ -106,9 +106,8 @@ console.log(`Home directory: ${os.homedir()}`);
 
 // Check for environment variables
 const envVars = [
-  'GOOGLE_API_KEY',
-  'CODE_ASSIST_ENDPOINT',
-  'GEMINI_API_KEY'
+  'GEMINI_API_KEY',
+  'CODE_ASSIST_ENDPOINT'
 ];
 
 console.log('\nEnvironment variables:');
@@ -121,7 +120,7 @@ console.log('\n' + '─'.repeat(50));
 console.log('Authentication check complete!');
 
 if (!hasOAuthCreds) {
-  console.log('\n⚠️  Action required: Run "gemini auth login" to authenticate');
+  console.log('\n⚠️  Action required: Run "gemini" and follow setup prompts to authenticate');
 } else {
   console.log('\n✅ You are ready to use the Gemini CLI AI SDK Provider!');
 }

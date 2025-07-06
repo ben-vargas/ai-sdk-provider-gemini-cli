@@ -7,7 +7,10 @@ import type {
   LanguageModelV1FunctionToolCall,
   LanguageModelV1StreamPart,
 } from '@ai-sdk/provider';
-import type { ContentGenerator, ContentGeneratorConfig } from '@google/gemini-cli-core';
+import type {
+  ContentGenerator,
+  ContentGeneratorConfig,
+} from '@google/gemini-cli-core';
 import type {
   GenerateContentParameters,
   GenerateContentConfig,
@@ -160,7 +163,10 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       }
 
       // Create the request parameters
-      const request: GenerateContentParameters & { systemInstruction?: Content; tools?: unknown } = {
+      const request: GenerateContentParameters & {
+        systemInstruction?: Content;
+        tools?: unknown;
+      } = {
         model: this.modelId,
         contents,
         config: generationConfig,
@@ -193,7 +199,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       let toolCalls: LanguageModelV1FunctionToolCall[] | undefined;
       if (responseContent?.parts) {
         toolCalls = responseContent.parts
-          .filter((part): part is Part => !!(part as Part).functionCall)
+          .filter((part): part is Part => !!part.functionCall)
           .map((part) => ({
             toolCallType: 'function' as const,
             toolCallId: crypto.randomUUID(),
@@ -275,7 +281,10 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       }
 
       // Create the request parameters
-      const request: GenerateContentParameters & { systemInstruction?: Content; tools?: unknown } = {
+      const request: GenerateContentParameters & {
+        systemInstruction?: Content;
+        tools?: unknown;
+      } = {
         model: this.modelId,
         contents,
         config: generationConfig,

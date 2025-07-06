@@ -1,5 +1,5 @@
 import type { LanguageModelV1FunctionTool } from '@ai-sdk/provider';
-import type { Tool, FunctionDeclaration } from '@google/genai';
+import type { Tool, FunctionDeclaration, Schema } from '@google/genai';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { z } from 'zod';
 
@@ -40,20 +40,20 @@ export function mapToolsToGeminiFormat(
 /**
  * Converts tool parameters from Zod schema or JSON schema to Gemini format
  */
-function convertToolParameters(parameters: unknown): JsonSchemaObject {
+function convertToolParameters(parameters: unknown): Schema {
   // If it's already a plain object (JSON schema), clean it
   if (isJsonSchema(parameters)) {
-    return cleanJsonSchema(parameters as JsonSchemaObject);
+    return cleanJsonSchema(parameters as JsonSchemaObject) as Schema;
   }
 
   // If it's a Zod schema, convert to JSON schema first
   if (isZodSchema(parameters)) {
     const jsonSchema = zodToJsonSchema(parameters as z.ZodSchema);
-    return cleanJsonSchema(jsonSchema);
+    return cleanJsonSchema(jsonSchema) as Schema;
   }
 
-  // Return as-is if we can't identify the format
-  return parameters;
+  // Return a basic schema if we can't identify the format
+  return parameters as Schema;
 }
 
 /**
@@ -122,7 +122,9 @@ function cleanJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
   for (const key of ['allOf', 'anyOf', 'oneOf'] as const) {
     const arrayProp = cleaned[key];
     if (Array.isArray(arrayProp)) {
-      cleaned[key] = arrayProp.map(item => cleanJsonSchema(item as JsonSchemaObject));
+      cleaned[key] = arrayProp.map((item) =>
+        cleanJsonSchema(item as JsonSchemaObject)
+      );
     }
   }
 

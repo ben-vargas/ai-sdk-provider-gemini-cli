@@ -127,7 +127,7 @@ async function main() {
     console.error('❌ Error:', error.message);
     
     if (error.message.includes('authentication')) {
-      console.log('\n💡 Authentication tip: Run "gemini auth login"');
+      console.log('\n💡 Authentication tip: Run "gemini (follow setup prompts)"');
     }
   }
 }

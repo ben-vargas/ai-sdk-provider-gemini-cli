@@ -28,19 +28,23 @@ describe('extractJson', () => {
   });
 
   it('should extract only the first code block', () => {
-    const input = '```json\n{"first": true}\n```\n\n```json\n{"second": true}\n```';
+    const input =
+      '```json\n{"first": true}\n```\n\n```json\n{"second": true}\n```';
     expect(extractJson(input)).toBe('{"first":true}');
   });
 
   it('should handle text before and after fence', () => {
-    const input = 'Here is the JSON:\n```json\n{"name": "test"}\n```\nEnd of response';
+    const input =
+      'Here is the JSON:\n```json\n{"name": "test"}\n```\nEnd of response';
     expect(extractJson(input)).toBe('{"name":"test"}');
   });
 
   it('should handle nested objects', () => {
     const json = '{"user": {"name": "test", "age": 30}, "items": [1, 2, 3]}';
     const input = `\`\`\`json\n${json}\n\`\`\``;
-    expect(extractJson(input)).toBe('{"user":{"name":"test","age":30},"items":[1,2,3]}');
+    expect(extractJson(input)).toBe(
+      '{"user":{"name":"test","age":30},"items":[1,2,3]}'
+    );
   });
 
   it('should handle arrays', () => {

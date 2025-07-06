@@ -66,7 +66,7 @@ export function createGeminiProvider(
         'The provider function cannot be called with the new keyword.'
       );
     }
-    
+
     return createLanguageModel(modelId, settings);
   } as GeminiProvider;
 

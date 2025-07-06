@@ -78,7 +78,7 @@ async function main() {
   } catch (error) {
     console.error('❌ Error:', error.message);
     console.log('\n💡 Tips:');
-    console.log('- Make sure you have authenticated: gemini auth login');
+    console.log('- Make sure you have authenticated: gemini (follow setup prompts)');
     console.log('- Check your OAuth credentials: ~/.gemini/oauth_creds.json');
     console.log('- Run "node examples/check-auth.mjs" to verify setup');
   }

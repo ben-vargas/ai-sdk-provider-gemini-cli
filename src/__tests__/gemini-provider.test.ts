@@ -65,7 +65,7 @@ describe('createGeminiProvider', () => {
       const provider = createGeminiProvider();
       const model1 = provider('gemini-2.5-pro');
       const model2 = provider.languageModel('gemini-2.5-pro');
-      
+
       expect(model1.constructor).toBe(model2.constructor);
       expect(model1.modelId).toBe(model2.modelId);
     });
@@ -76,7 +76,7 @@ describe('createGeminiProvider', () => {
       const provider = createGeminiProvider();
       const model1 = provider('gemini-2.5-pro');
       const model2 = provider.chat('gemini-2.5-pro');
-      
+
       expect(model1.constructor).toBe(model2.constructor);
       expect(model1.modelId).toBe(model2.modelId);
     });
