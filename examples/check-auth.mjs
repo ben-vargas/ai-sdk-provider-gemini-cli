@@ -52,7 +52,7 @@ console.log('2. Gemini CLI Core Connection Test');
 console.log('─'.repeat(50));
 
 try {
-  const config = await createContentGeneratorConfig('gemini-2.5-pro', AuthType.LOGIN_WITH_GOOGLE_PERSONAL);
+  const config = await createContentGeneratorConfig('gemini-2.5-pro', AuthType.LOGIN_WITH_GOOGLE);
   console.log('✅ Successfully created config');
   console.log(`Model: ${config.model}`);
   console.log(`Auth Type: ${config.authType}`);

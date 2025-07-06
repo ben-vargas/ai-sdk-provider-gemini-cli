@@ -32,7 +32,7 @@ export async function initializeGeminiClient(
     options.authType === 'oauth' ||
     options.authType === 'oauth-personal'
   ) {
-    authType = AuthType.LOGIN_WITH_GOOGLE_PERSONAL;
+    authType = AuthType.LOGIN_WITH_GOOGLE;
   } else if (options.authType === 'google-auth-library') {
     // Google Auth Library is not directly supported by AuthType enum
     // We'll need to handle this differently or use a default
