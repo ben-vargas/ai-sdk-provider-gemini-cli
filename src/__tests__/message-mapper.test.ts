@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mapPromptToGeminiFormat } from '../message-mapper';
-import type {
-  LanguageModelV1CallOptions,
-} from '@ai-sdk/provider';
+import type { LanguageModelV1CallOptions } from '@ai-sdk/provider';
 import { z } from 'zod';
 
 describe('mapPromptToGeminiFormat', () => {

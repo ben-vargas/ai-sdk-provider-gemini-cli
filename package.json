@@ -48,6 +48,7 @@
     "dev": "tsup --watch",
     "lint": "eslint src --max-warnings 0",
     "format": "prettier --write \"src/**/*.ts\" \"*.md\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"*.md\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
