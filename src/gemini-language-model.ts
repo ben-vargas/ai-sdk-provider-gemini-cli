@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type {
   LanguageModelV1,
   LanguageModelV1CallOptions,
@@ -202,7 +203,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
           .filter((part): part is Part => !!part.functionCall)
           .map((part) => ({
             toolCallType: 'function' as const,
-            toolCallId: crypto.randomUUID(),
+            toolCallId: randomUUID(),
             toolName: part.functionCall!.name || '',
             args: JSON.stringify(part.functionCall!.args || {}),
           }));
@@ -224,7 +225,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
           body: response,
         },
         response: {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           timestamp: new Date(),
           modelId: this.modelId,
         },
@@ -332,7 +333,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
                     controller.enqueue({
                       type: 'tool-call',
                       toolCallType: 'function',
-                      toolCallId: crypto.randomUUID(),
+                      toolCallId: randomUUID(),
                       toolName: part.functionCall.name || '',
                       args: JSON.stringify(part.functionCall.args || {}),
                     });
