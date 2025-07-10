@@ -25,10 +25,16 @@ export function validateAuthOptions(
 
     case 'vertex-ai':
       if ('vertexAI' in options && options.vertexAI) {
-        if (!options.vertexAI.projectId || options.vertexAI.projectId.trim() === '') {
+        if (
+          !options.vertexAI.projectId ||
+          options.vertexAI.projectId.trim() === ''
+        ) {
           throw new Error('Project ID is required for vertex-ai auth type');
         }
-        if (!options.vertexAI.location || options.vertexAI.location.trim() === '') {
+        if (
+          !options.vertexAI.location ||
+          options.vertexAI.location.trim() === ''
+        ) {
           throw new Error('Location is required for vertex-ai auth type');
         }
       } else {
