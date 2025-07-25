@@ -23,7 +23,7 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result1 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       system: 'You are a helpful assistant who always responds in haiku format.',
       prompt: 'Explain what JavaScript is',
     });
@@ -31,7 +31,7 @@ async function main() {
     console.log('System: Respond in haiku format');
     console.log('Prompt: Explain what JavaScript is');
     console.log('Response:');
-    console.log(result1.text);
+    console.log(result1.content[0].text);
     console.log();
 
     // Example 2: Professional tone
@@ -39,13 +39,13 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result2 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       system: 'You are a professional technical writer. Be concise, accurate, and use bullet points when appropriate. Avoid casual language.',
       prompt: 'What are the benefits of using TypeScript?',
     });
     
     console.log('Response:');
-    console.log(result2.text);
+    console.log(result2.content[0].text);
     console.log();
 
     // Example 3: Code assistant
@@ -53,13 +53,13 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result3 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       system: 'You are a senior software engineer. Provide code examples when relevant, explain your reasoning, and mention best practices. Use markdown for code blocks.',
       prompt: 'How do I handle errors in async/await?',
     });
     
     console.log('Response:');
-    console.log(result3.text);
+    console.log(result3.content[0].text);
     console.log();
 
     // Example 4: Language teacher
@@ -67,13 +67,13 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result4 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       system: 'You are a friendly language teacher. Explain concepts simply, provide examples, and encourage learning. Use emojis to make responses engaging.',
       prompt: 'Teach me how to say common greetings in Spanish',
     });
     
     console.log('Response:');
-    console.log(result4.text);
+    console.log(result4.content[0].text);
     console.log();
 
     // Example 5: System message with conversation
@@ -81,7 +81,7 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result5 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       system: 'You are a pirate captain. Speak in pirate dialect, use nautical terms, and be adventurous in your responses.',
       messages: [
         { role: 'user', content: 'Who are you?' },
@@ -93,7 +93,7 @@ async function main() {
     console.log('System: Pirate captain persona');
     console.log('Conversation with pirate captain...');
     console.log('Response:');
-    console.log(result5.text);
+    console.log(result5.content[0].text);
     console.log();
 
     // Example 6: Streaming with system message
@@ -104,7 +104,7 @@ async function main() {
     console.log('Streaming response...\n');
     
     const stream = await streamText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       system: 'You are a professional chef. Format recipes with: 1) Brief introduction 2) Ingredients list with measurements 3) Step-by-step instructions 4) Chef tips. Use clear formatting.',
       prompt: 'Create a recipe for chocolate chip cookies',
     });
@@ -138,12 +138,12 @@ async function main() {
     for (const system of systems) {
       console.log(`\n${system.name}:`);
       const result = await generateText({
-        model: gemini('gemini-2.5-flash'), // Using flash for faster comparison
+        model: gemini('gemini-2.5-pro'), // Using flash for faster comparison
         system: system.instruction,
         prompt,
-        maxTokens: 150,
+        maxOutputTokens: 150,
       });
-      console.log(result.text);
+      console.log(result.content[0]?.text || 'No response generated');
     }
     
     console.log('\n✅ All system message examples completed!');
@@ -152,7 +152,7 @@ async function main() {
     console.log('- They persist throughout the conversation');
     console.log('- Be specific about format, style, and constraints');
     console.log('- Can define personas, expertise levels, or output formats');
-    console.log('- Combine with conversation history for consistent behavior');
+    console.log('- For strict formatting (like JSON), may need to handle wrapper text');
 
   } catch (error) {
     console.error('❌ Error:', error.message);

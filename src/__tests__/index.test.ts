@@ -51,53 +51,53 @@ describe('index exports', () => {
   });
 
   describe('AI SDK type re-exports', () => {
-    it('should re-export LanguageModelV1 type', () => {
-      type _TestType = index.LanguageModelV1;
+    it('should re-export LanguageModelV2 type', () => {
+      type _TestType = index.LanguageModelV2;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1FunctionTool type', () => {
-      type _TestType = index.LanguageModelV1FunctionTool;
+    it('should re-export LanguageModelV2FunctionTool type', () => {
+      type _TestType = index.LanguageModelV2FunctionTool;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1FunctionToolCall type', () => {
-      type _TestType = index.LanguageModelV1FunctionToolCall;
+    it('should re-export LanguageModelV2ToolCall type', () => {
+      type _TestType = index.LanguageModelV2ToolCall;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1FinishReason type', () => {
-      type _TestType = index.LanguageModelV1FinishReason;
+    it('should re-export LanguageModelV2FinishReason type', () => {
+      type _TestType = index.LanguageModelV2FinishReason;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1CallOptions type', () => {
-      type _TestType = index.LanguageModelV1CallOptions;
+    it('should re-export LanguageModelV2CallOptions type', () => {
+      type _TestType = index.LanguageModelV2CallOptions;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1CallWarning type', () => {
-      type _TestType = index.LanguageModelV1CallWarning;
+    it('should re-export LanguageModelV2CallWarning type', () => {
+      type _TestType = index.LanguageModelV2CallWarning;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1StreamPart type', () => {
-      type _TestType = index.LanguageModelV1StreamPart;
+    it('should re-export LanguageModelV2StreamPart type', () => {
+      type _TestType = index.LanguageModelV2StreamPart;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1Message type', () => {
-      type _TestType = index.LanguageModelV1Message;
+    it('should re-export LanguageModelV2Content type', () => {
+      type _TestType = index.LanguageModelV2Content;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1Prompt type', () => {
-      type _TestType = index.LanguageModelV1Prompt;
+    it('should re-export LanguageModelV2Usage type', () => {
+      type _TestType = index.LanguageModelV2Usage;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV1ProviderMetadata type', () => {
-      type _TestType = index.LanguageModelV1ProviderMetadata;
+    it('should re-export ProviderV2 type', () => {
+      type _TestType = index.ProviderV2;
       expect(true).toBe(true);
     });
   });

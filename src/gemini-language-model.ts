@@ -1,12 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import type {
-  LanguageModelV1,
-  LanguageModelV1CallOptions,
-  LanguageModelV1CallWarning,
-  LanguageModelV1FinishReason,
-  LanguageModelV1FunctionTool,
-  LanguageModelV1FunctionToolCall,
-  LanguageModelV1StreamPart,
+  LanguageModelV2,
+  LanguageModelV2CallOptions,
+  LanguageModelV2CallWarning,
+  LanguageModelV2FinishReason,
+  LanguageModelV2FunctionTool,
+  LanguageModelV2StreamPart,
+  LanguageModelV2Content,
+  LanguageModelV2Usage,
 } from '@ai-sdk/provider';
 import type {
   ContentGenerator,
@@ -15,8 +16,6 @@ import type {
 import type {
   GenerateContentParameters,
   GenerateContentConfig,
-  Part,
-  Content,
 } from '@google/genai';
 import { initializeGeminiClient } from './client';
 import { mapPromptToGeminiFormat } from './message-mapper';
@@ -36,7 +35,7 @@ export interface GeminiLanguageModelOptions {
  */
 function mapGeminiFinishReason(
   geminiReason?: string
-): LanguageModelV1FinishReason {
+): LanguageModelV2FinishReason {
   switch (geminiReason) {
     case 'STOP':
       return 'stop';
@@ -52,12 +51,13 @@ function mapGeminiFinishReason(
   }
 }
 
-export class GeminiLanguageModel implements LanguageModelV1 {
-  readonly specificationVersion = 'v1' as const;
+export class GeminiLanguageModel implements LanguageModelV2 {
+  readonly specificationVersion = 'v2' as const;
   readonly provider = 'gemini-cli-core';
   readonly defaultObjectGenerationMode = 'json' as const;
   readonly supportsImageUrls = false; // CLI Core uses base64 data, not URLs
-  readonly supportsStructuredOutputs = true;
+  readonly supportedUrls = {}; // No native URL support
+  readonly supportsStructuredOutputs = false; // V2 structured outputs not supported yet
 
   private contentGenerator?: ContentGenerator;
   private config?: ContentGeneratorConfig;
@@ -105,31 +105,23 @@ export class GeminiLanguageModel implements LanguageModelV1 {
   /**
    * Non-streaming generation method
    */
-  async doGenerate(options: LanguageModelV1CallOptions): Promise<{
-    text?: string;
-    toolCalls?: LanguageModelV1FunctionToolCall[];
-    finishReason: LanguageModelV1FinishReason;
-    usage: {
-      promptTokens: number;
-      completionTokens: number;
-    };
+  async doGenerate(options: LanguageModelV2CallOptions): Promise<{
+    content: LanguageModelV2Content[];
+    finishReason: LanguageModelV2FinishReason;
+    usage: LanguageModelV2Usage;
     rawCall: {
       rawPrompt: unknown;
       rawSettings: Record<string, unknown>;
     };
     rawResponse?: {
-      headers?: Record<string, string>;
       body?: unknown;
-    };
-    request?: {
-      body?: string;
     };
     response?: {
       id?: string;
       timestamp?: Date;
       modelId?: string;
     };
-    warnings?: LanguageModelV1CallWarning[];
+    warnings: LanguageModelV2CallWarning[];
   }> {
     try {
       const { contentGenerator } = await this.ensureInitialized();
@@ -139,23 +131,27 @@ export class GeminiLanguageModel implements LanguageModelV1 {
 
       // Prepare generation config
       const generationConfig: GenerateContentConfig = {
-        temperature: options.temperature,
-        topP: options.topP,
-        topK: options.topK,
-        maxOutputTokens: options.maxTokens || 65536, // Default to 65536 (64K) - max supported by Gemini 2.5 models
+        temperature:
+          options.temperature ??
+          (this.settings?.temperature as number | undefined),
+        topP: options.topP ?? (this.settings?.topP as number | undefined),
+        topK: options.topK ?? (this.settings?.topK as number | undefined),
+        maxOutputTokens:
+          options.maxOutputTokens ??
+          (this.settings?.maxOutputTokens as number | undefined),
         stopSequences: options.stopSequences,
         responseMimeType:
-          options.mode.type === 'object-json'
+          options.responseFormat?.type === 'json'
             ? 'application/json'
             : 'text/plain',
       };
 
       // Map tools if provided in regular mode
       let tools;
-      if (options.mode.type === 'regular' && options.mode.tools) {
+      if (options.tools) {
         // Filter to only function tools (not provider-defined tools)
-        const functionTools = options.mode.tools.filter(
-          (tool): tool is LanguageModelV1FunctionTool =>
+        const functionTools = options.tools.filter(
+          (tool): tool is LanguageModelV2FunctionTool =>
             tool.type === 'function'
         );
         if (functionTools.length > 0) {
@@ -164,59 +160,99 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       }
 
       // Create the request parameters
-      const request: GenerateContentParameters & {
-        systemInstruction?: Content;
-        tools?: unknown;
-      } = {
+      const request: GenerateContentParameters = {
         model: this.modelId,
         contents,
-        config: generationConfig,
+        config: {
+          ...generationConfig,
+          systemInstruction: systemInstruction,
+          tools: tools,
+        },
       };
 
-      // Add system instruction if present - Gemini supports this as a separate field
-      if (systemInstruction) {
-        request.systemInstruction = systemInstruction;
-      }
+      // Set up abort handling
+      let abortListener: (() => void) | undefined;
+      if (options.abortSignal) {
+        // Check if already aborted
+        if (options.abortSignal.aborted) {
+          const abortError = new Error('Request aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        }
 
-      // Add tools if present
-      if (tools) {
-        request.tools = tools;
+        // Set up listener for abort signal
+        abortListener = () => {
+          // In a real implementation, we would cancel the ongoing request
+          // For now, we'll just track the abort state
+        };
+        options.abortSignal.addEventListener('abort', abortListener, {
+          once: true,
+        });
       }
 
       // Generate content
-      const response = await contentGenerator.generateContent(request);
+      let response;
+      try {
+        response = await contentGenerator.generateContent(request);
+
+        // Check if aborted during generation
+        if (options.abortSignal?.aborted) {
+          const abortError = new Error('Request aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        }
+      } finally {
+        // Clean up abort listener
+        if (options.abortSignal && abortListener) {
+          options.abortSignal.removeEventListener('abort', abortListener);
+        }
+      }
 
       // Extract the result
       const candidate = response.candidates?.[0];
       const responseContent = candidate?.content;
-      let text = responseContent?.parts?.[0]?.text || '';
 
-      // Extract JSON if in object-json mode
-      if (options.mode.type === 'object-json' && text) {
-        text = extractJson(text);
-      }
+      // Build content array for v2 format
+      const content: LanguageModelV2Content[] = [];
 
-      // Parse tool calls if present
-      let toolCalls: LanguageModelV1FunctionToolCall[] | undefined;
       if (responseContent?.parts) {
-        toolCalls = responseContent.parts
-          .filter((part): part is Part => !!part.functionCall)
-          .map((part) => ({
-            toolCallType: 'function' as const,
-            toolCallId: randomUUID(),
-            toolName: part.functionCall!.name || '',
-            args: JSON.stringify(part.functionCall!.args || {}),
-          }));
+        for (const part of responseContent.parts) {
+          if (part.text) {
+            let text = part.text;
+            // Extract JSON if in object-json mode
+            if (options.responseFormat?.type === 'json') {
+              text = extractJson(text);
+            }
+            content.push({
+              type: 'text',
+              text: text,
+            });
+          } else if (part.functionCall) {
+            content.push({
+              type: 'tool-call',
+              toolCallId: randomUUID(),
+              toolName: part.functionCall.name || '',
+              input: JSON.stringify(part.functionCall.args || {}),
+            } as LanguageModelV2Content);
+          }
+        }
       }
+
+      // Calculate token usage
+      const inputTokens = response.usageMetadata?.promptTokenCount || 0;
+      const outputTokens = response.usageMetadata?.candidatesTokenCount || 0;
+      const totalTokens = inputTokens + outputTokens;
+
+      const usage: LanguageModelV2Usage = {
+        inputTokens,
+        outputTokens,
+        totalTokens,
+      };
 
       return {
-        text,
-        toolCalls: toolCalls?.length ? toolCalls : undefined,
+        content,
         finishReason: mapGeminiFinishReason(candidate?.finishReason),
-        usage: {
-          promptTokens: response.usageMetadata?.promptTokenCount || 0,
-          completionTokens: response.usageMetadata?.candidatesTokenCount || 0,
-        },
+        usage,
         rawCall: {
           rawPrompt: { contents, systemInstruction, generationConfig, tools },
           rawSettings: generationConfig as Record<string, unknown>,
@@ -229,6 +265,7 @@ export class GeminiLanguageModel implements LanguageModelV1 {
           timestamp: new Date(),
           modelId: this.modelId,
         },
+        warnings: [],
       };
     } catch (error) {
       throw mapGeminiError(error);
@@ -238,16 +275,12 @@ export class GeminiLanguageModel implements LanguageModelV1 {
   /**
    * Streaming generation method
    */
-  async doStream(options: LanguageModelV1CallOptions): Promise<{
-    stream: ReadableStream<LanguageModelV1StreamPart>;
+  async doStream(options: LanguageModelV2CallOptions): Promise<{
+    stream: ReadableStream<LanguageModelV2StreamPart>;
     rawCall: {
       rawPrompt: unknown;
       rawSettings: Record<string, unknown>;
     };
-    rawResponse?: {
-      headers?: Record<string, string>;
-    };
-    warnings?: LanguageModelV1CallWarning[];
   }> {
     try {
       const { contentGenerator } = await this.ensureInitialized();
@@ -257,23 +290,27 @@ export class GeminiLanguageModel implements LanguageModelV1 {
 
       // Prepare generation config
       const generationConfig: GenerateContentConfig = {
-        temperature: options.temperature,
-        topP: options.topP,
-        topK: options.topK,
-        maxOutputTokens: options.maxTokens || 65536, // Default to 65536 (64K) - max supported by Gemini 2.5 models
+        temperature:
+          options.temperature ??
+          (this.settings?.temperature as number | undefined),
+        topP: options.topP ?? (this.settings?.topP as number | undefined),
+        topK: options.topK ?? (this.settings?.topK as number | undefined),
+        maxOutputTokens:
+          options.maxOutputTokens ??
+          (this.settings?.maxOutputTokens as number | undefined),
         stopSequences: options.stopSequences,
         responseMimeType:
-          options.mode.type === 'object-json'
+          options.responseFormat?.type === 'json'
             ? 'application/json'
             : 'text/plain',
       };
 
       // Map tools if provided in regular mode
       let tools;
-      if (options.mode.type === 'regular' && options.mode.tools) {
+      if (options.tools) {
         // Filter to only function tools (not provider-defined tools)
-        const functionTools = options.mode.tools.filter(
-          (tool): tool is LanguageModelV1FunctionTool =>
+        const functionTools = options.tools.filter(
+          (tool): tool is LanguageModelV2FunctionTool =>
             tool.type === 'function'
         );
         if (functionTools.length > 0) {
@@ -282,39 +319,99 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       }
 
       // Create the request parameters
-      const request: GenerateContentParameters & {
-        systemInstruction?: Content;
-        tools?: unknown;
-      } = {
+      const request: GenerateContentParameters = {
         model: this.modelId,
         contents,
-        config: generationConfig,
+        config: {
+          ...generationConfig,
+          systemInstruction: systemInstruction,
+          tools: tools,
+        },
       };
 
-      // Add system instruction if present - Gemini supports this as a separate field
-      if (systemInstruction) {
-        request.systemInstruction = systemInstruction;
-      }
+      // Set up abort handling
+      let abortListener: (() => void) | undefined;
+      if (options.abortSignal) {
+        // Check if already aborted
+        if (options.abortSignal.aborted) {
+          const abortError = new Error('Request aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        }
 
-      // Add tools if present
-      if (tools) {
-        request.tools = tools;
+        // Set up listener for abort signal
+        abortListener = () => {
+          // In a real implementation, we would cancel the ongoing stream
+          // For now, we'll just track the abort state
+        };
+        options.abortSignal.addEventListener('abort', abortListener, {
+          once: true,
+        });
       }
 
       // Create streaming response
-      const streamResponse =
-        await contentGenerator.generateContentStream(request);
+      let streamResponse;
+      try {
+        streamResponse = await contentGenerator.generateContentStream(request);
 
-      // Transform the stream to AI SDK format
-      const stream = new ReadableStream<LanguageModelV1StreamPart>({
+        // Check if aborted during stream creation
+        if (options.abortSignal?.aborted) {
+          const abortError = new Error('Request aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        }
+      } catch (error) {
+        // Clean up abort listener on error
+        if (options.abortSignal && abortListener) {
+          options.abortSignal.removeEventListener('abort', abortListener);
+        }
+        throw error;
+      }
+
+      // Capture modelId for use in stream
+      const modelId = this.modelId;
+
+      // Transform the stream to AI SDK v5 format
+      const stream = new ReadableStream<LanguageModelV2StreamPart>({
         async start(controller) {
           try {
+            // Check for abort signal in stream
+            if (options.abortSignal?.aborted) {
+              const abortError = new Error('Request aborted');
+              abortError.name = 'AbortError';
+              controller.error(abortError);
+              return;
+            }
             let accumulatedText = '';
-            const isObjectJsonMode = options.mode.type === 'object-json';
+            const isObjectJsonMode = options.responseFormat?.type === 'json';
+            let currentToolCallId: string | undefined;
+            let totalInputTokens = 0;
+            let totalOutputTokens = 0;
+
+            // Emit stream-start event
+            controller.enqueue({
+              type: 'stream-start',
+              warnings: [],
+            });
 
             for await (const chunk of streamResponse) {
+              // Check if aborted during streaming
+              if (options.abortSignal?.aborted) {
+                const abortError = new Error('Request aborted');
+                abortError.name = 'AbortError';
+                controller.error(abortError);
+                break;
+              }
+
               const candidate = chunk.candidates?.[0];
               const content = candidate?.content;
+
+              // Update token counts if available
+              if (chunk.usageMetadata) {
+                totalInputTokens = chunk.usageMetadata.promptTokenCount || 0;
+                totalOutputTokens =
+                  chunk.usageMetadata.candidatesTokenCount || 0;
+              }
 
               if (content?.parts) {
                 for (const part of content.parts) {
@@ -323,20 +420,23 @@ export class GeminiLanguageModel implements LanguageModelV1 {
                       // In object-json mode, accumulate text
                       accumulatedText += part.text;
                     } else {
-                      // In regular mode, stream immediately
+                      // In regular mode, stream text directly
                       controller.enqueue({
                         type: 'text-delta',
-                        textDelta: part.text,
+                        id: randomUUID(),
+                        delta: part.text,
                       });
                     }
                   } else if (part.functionCall) {
+                    // Emit tool call as a single event
+                    currentToolCallId = randomUUID();
                     controller.enqueue({
                       type: 'tool-call',
-                      toolCallType: 'function',
-                      toolCallId: randomUUID(),
+                      toolCallId: currentToolCallId,
                       toolName: part.functionCall.name || '',
-                      args: JSON.stringify(part.functionCall.args || {}),
+                      input: JSON.stringify(part.functionCall.args || {}),
                     });
+                    currentToolCallId = undefined;
                   }
                 }
               }
@@ -347,17 +447,27 @@ export class GeminiLanguageModel implements LanguageModelV1 {
                   const extractedJson = extractJson(accumulatedText);
                   controller.enqueue({
                     type: 'text-delta',
-                    textDelta: extractedJson,
+                    id: randomUUID(),
+                    delta: extractedJson,
                   });
                 }
 
+                // Emit response metadata
+                controller.enqueue({
+                  type: 'response-metadata',
+                  id: randomUUID(),
+                  timestamp: new Date(),
+                  modelId: modelId,
+                });
+
+                // Emit finish event
                 controller.enqueue({
                   type: 'finish',
                   finishReason: mapGeminiFinishReason(candidate.finishReason),
                   usage: {
-                    promptTokens: chunk.usageMetadata?.promptTokenCount || 0,
-                    completionTokens:
-                      chunk.usageMetadata?.candidatesTokenCount || 0,
+                    inputTokens: totalInputTokens,
+                    outputTokens: totalOutputTokens,
+                    totalTokens: totalInputTokens + totalOutputTokens,
                   },
                 });
               }
@@ -372,13 +482,42 @@ export class GeminiLanguageModel implements LanguageModelV1 {
               const extractedJson = extractJson(accumulatedText);
               controller.enqueue({
                 type: 'text-delta',
-                textDelta: extractedJson,
+                id: randomUUID(),
+                delta: extractedJson,
+              });
+
+              // Emit response metadata and finish
+              controller.enqueue({
+                type: 'response-metadata',
+                id: randomUUID(),
+                timestamp: new Date(),
+                modelId: modelId,
+              });
+              controller.enqueue({
+                type: 'finish',
+                finishReason: 'stop',
+                usage: {
+                  inputTokens: totalInputTokens,
+                  outputTokens: totalOutputTokens,
+                  totalTokens: totalInputTokens + totalOutputTokens,
+                },
               });
             }
 
             controller.close();
           } catch (error) {
             controller.error(mapGeminiError(error));
+          } finally {
+            // Clean up abort listener
+            if (options.abortSignal && abortListener) {
+              options.abortSignal.removeEventListener('abort', abortListener);
+            }
+          }
+        },
+        cancel: () => {
+          // Clean up abort listener on cancel
+          if (options.abortSignal && abortListener) {
+            options.abortSignal.removeEventListener('abort', abortListener);
           }
         },
       });

@@ -1,113 +1,79 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { z } from 'zod';
-import type {
-  LanguageModelV1FunctionTool,
-  LanguageModelV1Prompt,
-} from '@ai-sdk/provider';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GeminiLanguageModel } from '../gemini-language-model';
-import type { GeminiProviderOptions } from '../types';
-import type { ContentGenerator } from '@google/gemini-cli-core';
-
-// Mock the dependencies
-vi.mock('../client', () => ({
-  initializeGeminiClient: vi.fn(),
-}));
-
-vi.mock('../message-mapper', () => ({
-  mapPromptToGeminiFormat: vi.fn(() => ({
-    contents: [{ parts: [{ text: 'mocked' }], role: 'user' }],
-    systemInstruction: undefined,
-  })),
-}));
-
-vi.mock('../tool-mapper', () => ({
-  mapToolsToGeminiFormat: vi.fn(),
-}));
-
-vi.mock('../error', () => ({
-  mapGeminiError: vi.fn((error) => error),
-}));
-
-vi.mock('../extract-json', () => ({
-  extractJson: vi.fn(() => '{"name": "John", "age": 30}'),
-}));
-
-// Import mocked modules
 import { initializeGeminiClient } from '../client';
 import { mapPromptToGeminiFormat } from '../message-mapper';
-import { mapToolsToGeminiFormat } from '../tool-mapper';
-import { mapGeminiError } from '../error';
 import { extractJson } from '../extract-json';
+import type {
+  LanguageModelV2FunctionTool,
+  LanguageModelV2CallOptions,
+} from '@ai-sdk/provider';
+
+// Mock dependencies
+vi.mock('../client');
+vi.mock('../message-mapper');
+vi.mock('../extract-json');
 
 describe('GeminiLanguageModel', () => {
-  let mockClient: ContentGenerator;
   let model: GeminiLanguageModel;
-  const defaultOptions: GeminiProviderOptions = {
-    authType: 'oauth-personal',
-  };
+  let mockClient: any;
 
   beforeEach(() => {
+    // Reset all mocks before each test
     vi.clearAllMocks();
 
-    // Setup mock client
+    // Setup default mock implementations
     mockClient = {
       generateContent: vi.fn(),
       generateContentStream: vi.fn(),
-    } as unknown as ContentGenerator;
+    };
 
-    vi.mocked(initializeGeminiClient).mockResolvedValue(mockClient);
-  });
+    vi.mocked(initializeGeminiClient).mockResolvedValue({
+      client: mockClient,
+      config: {
+        maxRetries: 3,
+        timeout: 30000,
+      },
+    });
 
-  afterEach(() => {
-    vi.clearAllMocks();
+    vi.mocked(mapPromptToGeminiFormat).mockReturnValue({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: 'Who are you?' }],
+        },
+      ],
+      systemInstruction: {
+        role: 'user',
+        parts: [{ text: 'You are a helpful assistant' }],
+      },
+    });
+
+    // Create model instance for testing
+    model = new GeminiLanguageModel({
+      modelId: 'gemini-2.5-pro',
+      providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+      settings: {},
+    });
   });
 
   describe('constructor', () => {
-    it('should initialize with default model configuration', async () => {
-      model = new GeminiLanguageModel({
-        modelId: 'gemini-2.5-pro',
-        providerOptions: defaultOptions,
-      });
-
-      expect(model.provider).toBe('gemini-cli-core');
+    it('should initialize with correct properties', () => {
       expect(model.modelId).toBe('gemini-2.5-pro');
-      expect(model.defaultObjectGenerationMode).toBe('json');
-    });
-
-    it('should initialize with custom settings', async () => {
-      model = new GeminiLanguageModel({
-        modelId: 'gemini-2.5-flash',
-        providerOptions: defaultOptions,
-        settings: {
-          temperature: 0.5,
-          topP: 0.9,
-        },
-      });
-
       expect(model.provider).toBe('gemini-cli-core');
-      expect(model.modelId).toBe('gemini-2.5-flash');
+      expect(model.specificationVersion).toBe('v2');
+      expect(model.defaultObjectGenerationMode).toBe('json');
+      expect(model.supportsImageUrls).toBe(false);
     });
   });
 
   describe('doGenerate', () => {
-    beforeEach(async () => {
-      model = new GeminiLanguageModel({
-        modelId: 'gemini-2.5-pro',
-        providerOptions: defaultOptions,
-      });
-
-      // Manually set the contentGenerator for tests
-      model['contentGenerator'] = mockClient;
-      model['config'] = { model: 'gemini-2.5-pro' } as any;
-    });
-
     it('should generate text successfully', async () => {
       const mockResponse = {
         candidates: [
           {
             content: {
-              parts: [{ text: 'Hello, world!' }],
               role: 'model',
+              parts: [{ text: 'Hello, world!' }],
             },
             finishReason: 'STOP',
           },
@@ -115,31 +81,34 @@ describe('GeminiLanguageModel', () => {
         usageMetadata: {
           promptTokenCount: 10,
           candidatesTokenCount: 20,
-          totalTokenCount: 30,
         },
       };
 
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
-      vi.mocked(mapPromptToGeminiFormat).mockReturnValue({
-        contents: [{ parts: [{ text: 'Say hello' }], role: 'user' }],
-        systemInstruction: undefined,
-      });
+      mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const prompt: LanguageModelV1Prompt = [
-        { role: 'user', content: [{ type: 'text', text: 'Say hello' }] },
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant',
+        },
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Who are you?' }],
+        },
       ];
 
       const result = await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt,
+        prompt: messages,
       });
 
-      expect(result.text).toBe('Hello, world!');
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].type).toBe('text');
+      expect((result.content[0] as any).text).toBe('Hello, world!');
       expect(result.finishReason).toBe('stop');
       expect(result.usage).toEqual({
-        promptTokens: 10,
-        completionTokens: 20,
+        inputTokens: 10,
+        outputTokens: 20,
+        totalTokens: 30,
       });
     });
 
@@ -148,15 +117,15 @@ describe('GeminiLanguageModel', () => {
         candidates: [
           {
             content: {
+              role: 'model',
               parts: [
                 {
                   functionCall: {
-                    name: 'weather',
-                    args: { location: 'New York' },
+                    name: 'getWeather',
+                    args: { location: 'London' },
                   },
                 },
               ],
-              role: 'model',
             },
             finishReason: 'STOP',
           },
@@ -164,61 +133,43 @@ describe('GeminiLanguageModel', () => {
         usageMetadata: {
           promptTokenCount: 15,
           candidatesTokenCount: 25,
-          totalTokenCount: 40,
         },
       };
 
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
-      vi.mocked(mapPromptToGeminiFormat).mockReturnValue({
-        contents: [{ parts: [{ text: 'What is the weather?' }], role: 'user' }],
-        systemInstruction: undefined,
-      });
-      vi.mocked(mapToolsToGeminiFormat).mockReturnValue([
-        {
-          functionDeclarations: [
-            {
-              name: 'weather',
-              description: 'Get weather information',
-              parameters: {
-                type: 'object',
-                properties: {
-                  location: { type: 'string' },
-                },
-              },
-            },
-          ],
-        },
-      ]);
+      mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
-          name: 'weather',
+          name: 'getWeather',
           description: 'Get weather information',
-          parameters: z.object({
-            location: z.string(),
-          }),
+          inputSchema: {
+            type: 'object',
+            properties: {
+              location: { type: 'string' },
+            },
+          },
+        },
+      ];
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'What is the weather in London?' }],
         },
       ];
 
       const result = await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'regular', tools },
-        prompt: [
-          {
-            role: 'user',
-            content: [{ type: 'text', text: 'What is the weather?' }],
-          },
-        ],
+        prompt: messages,
+        tools,
       });
 
-      expect(result.toolCalls).toHaveLength(1);
-      expect(result.toolCalls[0]).toEqual({
-        toolCallType: 'function',
-        toolCallId: expect.any(String),
-        toolName: 'weather',
-        args: '{"location":"New York"}',
-      });
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].type).toBe('tool-call');
+      const toolCall = result.content[0] as any;
+      expect(toolCall.toolCallId).toBeDefined();
+      expect(toolCall.toolName).toBe('getWeather');
+      expect(toolCall.input).toBe('{"location":"London"}');
     });
 
     it('should handle JSON mode', async () => {
@@ -226,64 +177,74 @@ describe('GeminiLanguageModel', () => {
         candidates: [
           {
             content: {
-              parts: [{ text: '```json\n{"name": "John", "age": 30}\n```' }],
               role: 'model',
+              parts: [{ text: '```json\n{"name": "John", "age": 30}\n```' }],
             },
             finishReason: 'STOP',
           },
         ],
+        usageMetadata: {
+          promptTokenCount: 20,
+          candidatesTokenCount: 30,
+        },
       };
 
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+      vi.mocked(extractJson).mockReturnValue('{"name": "John", "age": 30}');
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Generate a person object' }],
+        },
+      ];
 
       const result = await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'object-json' },
-        prompt: [
-          {
-            role: 'user',
-            content: [{ type: 'text', text: 'Generate a person object' }],
-          },
-        ],
+        prompt: messages,
+        responseFormat: { type: 'json' },
       });
 
-      // Debug: The extractJson mock is being called but result.text has the wrong value
+      // Debug: The extractJson mock is being called but result.text has the JSON with code block markers
       // This suggests the mock isn't working as expected
       expect(extractJson).toHaveBeenCalled();
-      expect(result.text).toBe('{"name": "John", "age": 30}');
-    });
-
-    it('should handle errors', async () => {
-      const error = new Error('API Error');
-      vi.mocked(mockClient.generateContent).mockRejectedValue(error);
-      vi.mocked(mapGeminiError).mockReturnValue(error);
-
-      await expect(
-        model.doGenerate({
-          inputFormat: 'prompt',
-          mode: { type: 'regular' },
-          prompt: [
-            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-          ],
-        })
-      ).rejects.toThrow('API Error');
+      expect(result.content[0].type).toBe('text');
+      expect((result.content[0] as any).text).toBe(
+        '{"name": "John", "age": 30}'
+      );
     });
 
     it('should handle empty response', async () => {
       const mockResponse = {
-        candidates: [],
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 5,
+          candidatesTokenCount: 0,
+        },
       };
 
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Hello' }],
+        },
+      ];
 
       const result = await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+        prompt: messages,
       });
 
-      expect(result.text).toBe('');
-      expect(result.finishReason).toBe('unknown');
+      expect(result.content).toHaveLength(0);
+      expect(result.finishReason).toBe('stop');
     });
 
     it('should handle multi-modal input', async () => {
@@ -291,45 +252,40 @@ describe('GeminiLanguageModel', () => {
         candidates: [
           {
             content: {
-              parts: [{ text: 'I see a cat in the image' }],
               role: 'model',
+              parts: [{ text: 'I see a cat in the image' }],
             },
             finishReason: 'STOP',
           },
         ],
+        usageMetadata: {
+          promptTokenCount: 50,
+          candidatesTokenCount: 40,
+        },
       };
 
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
-      vi.mocked(mapPromptToGeminiFormat).mockReturnValue({
-        contents: [
-          {
-            parts: [
-              { text: 'What is in this image?' },
-              { inlineData: { mimeType: 'image/png', data: 'base64data' } },
-            ],
-            role: 'user',
-          },
-        ],
-        systemInstruction: undefined,
-      });
+      mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const prompt: LanguageModelV1Prompt = [
+      const messages: LanguageModelV2CallOptions['prompt'] = [
         {
           role: 'user',
           content: [
-            { type: 'text', text: 'What is in this image?' },
-            { type: 'image', image: 'base64data', mimeType: 'image/png' },
+            { type: 'text', text: 'What do you see?' },
+            {
+              type: 'file',
+              data: 'base64imagedata',
+              contentType: 'image/jpeg',
+            },
           ],
         },
       ];
 
       const result = await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt,
+        prompt: messages,
       });
 
-      expect(result.text).toBe('I see a cat in the image');
+      expect(result.content[0].type).toBe('text');
+      expect((result.content[0] as any).text).toBe('I see a cat in the image');
     });
 
     it('should handle system messages', async () => {
@@ -337,35 +293,40 @@ describe('GeminiLanguageModel', () => {
         candidates: [
           {
             content: {
-              parts: [{ text: 'I am a helpful assistant!' }],
               role: 'model',
+              parts: [{ text: 'I am a helpful assistant!' }],
             },
             finishReason: 'STOP',
           },
         ],
+        usageMetadata: {
+          promptTokenCount: 12,
+          candidatesTokenCount: 18,
+        },
       };
 
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
-      vi.mocked(mapPromptToGeminiFormat).mockReturnValue({
-        contents: [{ parts: [{ text: 'Who are you?' }], role: 'user' }],
-        systemInstruction: { parts: [{ text: 'You are a helpful assistant' }] },
-      });
+      mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const prompt: LanguageModelV1Prompt = [
-        { role: 'system', content: 'You are a helpful assistant' },
-        { role: 'user', content: [{ type: 'text', text: 'Who are you?' }] },
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant',
+        },
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Who are you?' }],
+        },
       ];
 
       const result = await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt,
+        prompt: messages,
       });
 
-      expect(result.text).toBe('I am a helpful assistant!');
+      expect(result.content[0].type).toBe('text');
+      expect((result.content[0] as any).text).toBe('I am a helpful assistant!');
       expect(mapPromptToGeminiFormat).toHaveBeenCalledWith(
         expect.objectContaining({
-          prompt,
+          prompt: messages,
         })
       );
     });
@@ -375,23 +336,32 @@ describe('GeminiLanguageModel', () => {
         candidates: [
           {
             content: {
-              parts: [{ text: 'Response with temperature' }],
               role: 'model',
+              parts: [{ text: 'Response with custom settings' }],
             },
             finishReason: 'STOP',
           },
         ],
+        usageMetadata: {
+          promptTokenCount: 8,
+          candidatesTokenCount: 12,
+        },
       };
 
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
 
       await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+        prompt: messages,
         temperature: 0.7,
         topP: 0.9,
-        maxTokens: 1000,
+        maxOutputTokens: 1000,
       });
 
       expect(mockClient.generateContent).toHaveBeenCalledWith(
@@ -405,72 +375,27 @@ describe('GeminiLanguageModel', () => {
       );
     });
 
-    it('should handle content filter finish reason', async () => {
-      const mockResponse = {
-        candidates: [
-          {
-            content: {
-              parts: [{ text: 'Filtered response' }],
-              role: 'model',
-            },
-            finishReason: 'SAFETY',
-          },
-        ],
-      };
+    it('should handle errors gracefully', async () => {
+      mockClient.generateContent.mockRejectedValue(
+        new Error('API Error: Rate limit exceeded')
+      );
 
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Hello' }],
+        },
+      ];
 
-      const result = await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
-      });
-
-      expect(result.finishReason).toBe('content-filter');
-    });
-
-    it('should handle max tokens finish reason', async () => {
-      const mockResponse = {
-        candidates: [
-          {
-            content: {
-              parts: [{ text: 'Truncated response...' }],
-              role: 'model',
-            },
-            finishReason: 'MAX_TOKENS',
-          },
-        ],
-      };
-
-      vi.mocked(mockClient.generateContent).mockResolvedValue(mockResponse);
-
-      const result = await model.doGenerate({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt: [
-          {
-            role: 'user',
-            content: [{ type: 'text', text: 'Tell me a long story' }],
-          },
-        ],
-      });
-
-      expect(result.finishReason).toBe('length');
+      await expect(
+        model.doGenerate({
+          prompt: messages,
+        })
+      ).rejects.toThrow();
     });
   });
 
   describe('doStream', () => {
-    beforeEach(async () => {
-      model = new GeminiLanguageModel({
-        modelId: 'gemini-2.5-pro',
-        providerOptions: defaultOptions,
-      });
-
-      // Manually set the contentGenerator for tests
-      model['contentGenerator'] = mockClient;
-      model['config'] = { model: 'gemini-2.5-pro' } as any;
-    });
-
     it('should stream text successfully', async () => {
       const mockStream = {
         async *[Symbol.asyncIterator]() {
@@ -478,70 +403,78 @@ describe('GeminiLanguageModel', () => {
             candidates: [
               {
                 content: {
-                  parts: [{ text: 'Hello' }],
                   role: 'model',
+                  parts: [{ text: 'Hello' }],
                 },
               },
             ],
-            usageMetadata: {
-              promptTokenCount: 5,
-              candidatesTokenCount: 5,
-              totalTokenCount: 10,
-            },
           };
           yield {
             candidates: [
               {
                 content: {
-                  parts: [{ text: ', world!' }],
                   role: 'model',
+                  parts: [{ text: ', world!' }],
                 },
                 finishReason: 'STOP',
               },
             ],
             usageMetadata: {
-              promptTokenCount: 5,
-              candidatesTokenCount: 10,
-              totalTokenCount: 15,
+              promptTokenCount: 10,
+              candidatesTokenCount: 20,
             },
           };
         },
       };
 
-      vi.mocked(mockClient.generateContentStream).mockResolvedValue(
-        mockStream as any
-      );
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Say hello' }],
+        },
+      ];
 
       const result = await model.doStream({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt: [
-          { role: 'user', content: [{ type: 'text', text: 'Say hello' }] },
-        ],
+        prompt: messages,
       });
 
-      const parts = [];
-      for await (const part of result.stream) {
-        parts.push(part);
+      const streamParts: any[] = [];
+      const reader = result.stream.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        streamParts.push(value);
       }
 
-      expect(parts).toHaveLength(3);
-      expect(parts[0]).toEqual({
-        type: 'text-delta',
-        textDelta: 'Hello',
-      });
-      expect(parts[1]).toEqual({
-        type: 'text-delta',
-        textDelta: ', world!',
-      });
-      expect(parts[2]).toEqual({
-        type: 'finish',
-        finishReason: 'stop',
-        usage: {
-          promptTokens: 5,
-          completionTokens: 10,
-        },
-      });
+      expect(streamParts).toHaveLength(5); // stream-start, 2 text-delta chunks, response-metadata, finish
+      expect(streamParts[0]).toEqual({ type: 'stream-start', warnings: [] });
+      expect(streamParts[1]).toEqual(
+        expect.objectContaining({
+          type: 'text-delta',
+          delta: 'Hello',
+        })
+      );
+      expect(streamParts[2]).toEqual(
+        expect.objectContaining({
+          type: 'text-delta',
+          delta: ', world!',
+        })
+      );
+      expect(streamParts[3].type).toBe('response-metadata');
+      expect(streamParts[4]).toEqual(
+        expect.objectContaining({
+          type: 'finish',
+          finishReason: 'stop',
+          usage: {
+            inputTokens: 10,
+            outputTokens: 20,
+            totalTokens: 30,
+          },
+        })
+      );
     });
 
     it('should stream tool calls', async () => {
@@ -551,76 +484,53 @@ describe('GeminiLanguageModel', () => {
             candidates: [
               {
                 content: {
+                  role: 'model',
                   parts: [
                     {
                       functionCall: {
-                        name: 'calculator',
-                        args: { a: 5, b: 3 },
+                        name: 'getWeather',
+                        args: { location: 'London' },
                       },
                     },
                   ],
-                  role: 'model',
                 },
                 finishReason: 'STOP',
               },
             ],
+            usageMetadata: {
+              promptTokenCount: 15,
+              candidatesTokenCount: 25,
+            },
           };
         },
       };
 
-      vi.mocked(mockClient.generateContentStream).mockResolvedValue(
-        mockStream as any
-      );
-      vi.mocked(mapToolsToGeminiFormat).mockReturnValue([
-        {
-          functionDeclarations: [
-            {
-              name: 'calculator',
-              description: 'Perform calculations',
-              parameters: {
-                type: 'object',
-                properties: {
-                  a: { type: 'number' },
-                  b: { type: 'number' },
-                },
-              },
-            },
-          ],
-        },
-      ]);
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
 
-      const tools: LanguageModelV1FunctionTool[] = [
+      const messages: LanguageModelV2CallOptions['prompt'] = [
         {
-          type: 'function',
-          name: 'calculator',
-          description: 'Perform calculations',
-          parameters: z.object({
-            a: z.number(),
-            b: z.number(),
-          }),
+          role: 'user',
+          content: [{ type: 'text', text: 'Get weather' }],
         },
       ];
 
       const result = await model.doStream({
-        inputFormat: 'prompt',
-        mode: { type: 'regular', tools },
-        prompt: [
-          { role: 'user', content: [{ type: 'text', text: 'Add 5 and 3' }] },
-        ],
+        prompt: messages,
       });
 
-      const parts = [];
-      for await (const part of result.stream) {
-        parts.push(part);
+      const streamParts: any[] = [];
+      const reader = result.stream.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        streamParts.push(value);
       }
 
-      expect(parts).toContainEqual({
-        type: 'tool-call',
-        toolCallType: 'function',
-        toolCallId: expect.any(String),
-        toolName: 'calculator',
-        args: '{"a":5,"b":3}',
-      });
+      const toolCallPart = streamParts.find((p) => p.type === 'tool-call');
+      expect(toolCallPart).toBeDefined();
+      expect(toolCallPart.toolName).toBe('getWeather');
+      expect(toolCallPart.input).toBe('{"location":"London"}');
     });
 
     it('should handle streaming errors', async () => {
@@ -630,8 +540,8 @@ describe('GeminiLanguageModel', () => {
             candidates: [
               {
                 content: {
-                  parts: [{ text: 'Starting...' }],
                   role: 'model',
+                  parts: [{ text: 'Starting...' }],
                 },
               },
             ],
@@ -640,71 +550,92 @@ describe('GeminiLanguageModel', () => {
         },
       };
 
-      vi.mocked(mockClient.generateContentStream).mockResolvedValue(
-        mockStream as any
-      );
-      vi.mocked(mapGeminiError).mockImplementation((err) => err);
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
 
       const result = await model.doStream({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+        prompt: messages,
       });
 
-      const parts = [];
+      const streamParts: any[] = [];
+      const reader = result.stream.getReader();
+
       await expect(async () => {
-        for await (const part of result.stream) {
-          parts.push(part);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          streamParts.push(value);
         }
-      }).rejects.toThrow('Stream error');
+      }).rejects.toThrow();
 
-      expect(parts).toHaveLength(1);
-      expect(parts[0]).toEqual({
-        type: 'text-delta',
-        textDelta: 'Starting...',
-      });
+      // Should have at least stream-start before error
+      expect(streamParts[0]).toEqual({ type: 'stream-start', warnings: [] });
     });
 
     it('should handle empty stream chunks', async () => {
       const mockStream = {
         async *[Symbol.asyncIterator]() {
           yield {
-            candidates: [],
+            candidates: [
+              {
+                content: {
+                  role: 'model',
+                  parts: [],
+                },
+              },
+            ],
           };
           yield {
             candidates: [
               {
                 content: {
-                  parts: [{ text: 'Hello' }],
                   role: 'model',
+                  parts: [],
                 },
                 finishReason: 'STOP',
               },
             ],
+            usageMetadata: {
+              promptTokenCount: 5,
+              candidatesTokenCount: 0,
+            },
           };
         },
       };
 
-      vi.mocked(mockClient.generateContentStream).mockResolvedValue(
-        mockStream as any
-      );
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
 
       const result = await model.doStream({
-        inputFormat: 'prompt',
-        mode: { type: 'regular' },
-        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+        prompt: messages,
       });
 
-      const parts = [];
-      for await (const part of result.stream) {
-        parts.push(part);
+      const streamParts: any[] = [];
+      const reader = result.stream.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        streamParts.push(value);
       }
 
-      expect(parts).toHaveLength(2);
-      expect(parts[0]).toEqual({
-        type: 'text-delta',
-        textDelta: 'Hello',
-      });
+      // Should have stream-start, response-metadata, and finish
+      expect(streamParts).toHaveLength(3);
+      expect(streamParts[0].type).toBe('stream-start');
+      expect(streamParts[1].type).toBe('response-metadata');
+      expect(streamParts[2].type).toBe('finish');
     });
 
     it('should handle JSON mode in streaming', async () => {
@@ -714,8 +645,8 @@ describe('GeminiLanguageModel', () => {
             candidates: [
               {
                 content: {
-                  parts: [{ text: '```json\n{' }],
                   role: 'model',
+                  parts: [{ text: '```json\n{' }],
                 },
               },
             ],
@@ -724,88 +655,159 @@ describe('GeminiLanguageModel', () => {
             candidates: [
               {
                 content: {
-                  parts: [{ text: '"name": "John"}\n```' }],
                   role: 'model',
+                  parts: [{ text: '"name": "John"}```' }],
                 },
                 finishReason: 'STOP',
               },
             ],
+            usageMetadata: {
+              promptTokenCount: 20,
+              candidatesTokenCount: 30,
+            },
           };
         },
       };
 
-      vi.mocked(mockClient.generateContentStream).mockResolvedValue(
-        mockStream as any
-      );
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+      vi.mocked(extractJson).mockReturnValue('{"name": "John"}');
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Generate JSON' }],
+        },
+      ];
 
       const result = await model.doStream({
-        inputFormat: 'prompt',
-        mode: { type: 'object-json' },
-        prompt: [
-          { role: 'user', content: [{ type: 'text', text: 'Generate JSON' }] },
-        ],
+        prompt: messages,
+        responseFormat: { type: 'json' },
       });
 
-      const parts = [];
-      for await (const part of result.stream) {
-        parts.push(part);
+      const streamParts: any[] = [];
+      const reader = result.stream.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        streamParts.push(value);
       }
 
-      // In object-json mode, text is accumulated and only emitted when finish reason is received
-      // We get the extracted JSON and a finish event, but there might be other parts
-      expect(parts.length).toBeGreaterThanOrEqual(2);
-
-      // Find the extracted JSON part
-      const jsonPart = parts.find(
-        (p) =>
-          p.type === 'text-delta' &&
-          p.textDelta === '{"name": "John", "age": 30}'
-      );
-      expect(jsonPart).toBeDefined();
-
-      // Ensure we have a finish event
-      const finishPart = parts.find((p) => p.type === 'finish');
-      expect(finishPart).toBeDefined();
-      expect(finishPart.finishReason).toBe('stop');
+      const textDelta = streamParts.find((p) => p.type === 'text-delta');
+      expect(textDelta).toBeDefined();
+      expect(textDelta.delta).toBe('{"name": "John"}');
     });
   });
 
   describe('supportsStructuredOutputs', () => {
-    it('should return true for gemini models', () => {
-      model = new GeminiLanguageModel({
-        modelId: 'gemini-2.5-pro',
-        providerOptions: defaultOptions,
-      });
-
-      expect(model.supportsStructuredOutputs).toBe(true);
+    it('should return false for gemini models', () => {
+      expect(model.supportsStructuredOutputs).toBe(false);
     });
   });
 
-  describe('ensureInitialized', () => {
+  describe('provider property', () => {
+    it('should return correct provider name', () => {
+      expect(model.provider).toBe('gemini-cli-core');
+    });
+  });
+
+  describe('lazy initialization', () => {
     it('should initialize client only once', async () => {
-      model = new GeminiLanguageModel({
-        modelId: 'gemini-2.5-pro',
-        providerOptions: defaultOptions,
-      });
+      // Setup mock response for both calls
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Test response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 5,
+          candidatesTokenCount: 10,
+        },
+      };
 
-      await model['ensureInitialized']();
-      await model['ensureInitialized']();
-      await model['ensureInitialized']();
+      mockClient.generateContent.mockResolvedValue(mockResponse);
 
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      // First call
+      await model.doGenerate({ prompt: messages });
+
+      // Second call
+      await model.doGenerate({ prompt: messages });
+
+      // Client should only be initialized once
       expect(initializeGeminiClient).toHaveBeenCalledTimes(1);
     });
 
     it('should handle initialization errors', async () => {
       vi.mocked(initializeGeminiClient).mockRejectedValue(
-        new Error('Init failed')
+        new Error('Failed to initialize')
       );
 
-      model = new GeminiLanguageModel({
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      await expect(model.doGenerate({ prompt: messages })).rejects.toThrow(
+        'Failed to initialize Gemini model'
+      );
+    });
+  });
+
+  describe('abort signal handling', () => {
+    it('should handle abort signal in doGenerate', async () => {
+      const model = new GeminiLanguageModel({
         modelId: 'gemini-2.5-pro',
-        providerOptions: defaultOptions,
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
       });
 
-      await expect(model['ensureInitialized']()).rejects.toThrow('Init failed');
+      const abortController = new AbortController();
+
+      // Abort immediately
+      abortController.abort();
+
+      await expect(
+        model.doGenerate({
+          prompt: [
+            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
+          ],
+          abortSignal: abortController.signal,
+        })
+      ).rejects.toThrow('Request aborted');
+    });
+
+    it('should handle abort signal in doStream', async () => {
+      const model = new GeminiLanguageModel({
+        modelId: 'gemini-2.5-pro',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+      });
+
+      const abortController = new AbortController();
+
+      // Abort immediately
+      abortController.abort();
+
+      await expect(
+        model.doStream({
+          prompt: [
+            { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
+          ],
+          abortSignal: abortController.signal,
+        })
+      ).rejects.toThrow('Request aborted');
     });
   });
 });

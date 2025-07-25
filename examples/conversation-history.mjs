@@ -29,7 +29,7 @@ async function main() {
     ];
 
     const result1 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       messages: messages1,
     });
 
@@ -37,7 +37,7 @@ async function main() {
     messages1.forEach(msg => {
       console.log(`${msg.role === 'user' ? '👤 User' : '🤖 Assistant'}: ${msg.content}`);
     });
-    console.log(`🤖 Assistant: ${result1.text}`);
+    console.log(`🤖 Assistant: ${result1.content[0].text}`);
     console.log();
 
     // Example 2: Building context incrementally
@@ -49,33 +49,33 @@ async function main() {
     // First message
     conversation.push({ role: 'user', content: 'I need help planning a trip to Japan.' });
     let response = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       messages: conversation,
     });
-    conversation.push({ role: 'assistant', content: response.text });
+    conversation.push({ role: 'assistant', content: response.content[0].text });
     console.log('👤 User:', conversation[0].content);
-    console.log('🤖 Assistant:', response.text);
+    console.log('🤖 Assistant:', response.content[0].text);
     console.log();
 
     // Second message
     conversation.push({ role: 'user', content: 'I have 10 days and I love nature and technology.' });
     response = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       messages: conversation,
     });
-    conversation.push({ role: 'assistant', content: response.text });
+    conversation.push({ role: 'assistant', content: response.content[0].text });
     console.log('👤 User:', conversation[2].content);
-    console.log('🤖 Assistant:', response.text);
+    console.log('🤖 Assistant:', response.content[0].text);
     console.log();
 
     // Third message - referencing earlier context
     conversation.push({ role: 'user', content: 'What was the first thing you suggested?' });
     response = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       messages: conversation,
     });
     console.log('👤 User:', conversation[4].content);
-    console.log('🤖 Assistant:', response.text);
+    console.log('🤖 Assistant:', response.content[0].text);
     console.log();
 
     // Example 3: Conversation with system message
@@ -83,7 +83,7 @@ async function main() {
     console.log('─'.repeat(50));
 
     const result3 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       system: 'You are a helpful coding tutor. Keep explanations concise and include code examples.',
       messages: [
         { role: 'user', content: 'What is a closure in JavaScript?' },
@@ -96,7 +96,7 @@ async function main() {
     console.log('👤 User: What is a closure in JavaScript?');
     console.log('🤖 Assistant: [Previous explanation with code]');
     console.log('👤 User: Can you show me a practical use case?');
-    console.log(`🤖 Assistant: ${result3.text}`);
+    console.log(`🤖 Assistant: ${result3.content[0].text}`);
     console.log();
 
     // Example 4: Streaming with conversation history
@@ -117,7 +117,7 @@ async function main() {
     console.log('🤖: ');
 
     const stream = await streamText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       messages: streamMessages,
     });
 
@@ -137,12 +137,12 @@ async function main() {
     ];
 
     const tokenResult = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       messages: tokenTestMessages,
     });
 
     console.log('Conversation length:', tokenTestMessages.length, 'messages');
-    console.log('Response:', tokenResult.text);
+    console.log('Response:', tokenResult.content[0].text);
     console.log('\nToken usage:');
     console.log('- Prompt tokens:', tokenResult.usage?.promptTokens || 'N/A');
     console.log('- Completion tokens:', tokenResult.usage?.completionTokens || 'N/A');

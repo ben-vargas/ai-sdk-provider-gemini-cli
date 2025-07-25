@@ -12,14 +12,14 @@ export type { GeminiProviderOptions as GeminiCliCoreProviderOptions } from './ty
 
 // Re-export types from AI SDK for convenience
 export type {
-  LanguageModelV1,
-  LanguageModelV1FunctionTool,
-  LanguageModelV1FunctionToolCall,
-  LanguageModelV1FinishReason,
-  LanguageModelV1CallOptions,
-  LanguageModelV1CallWarning,
-  LanguageModelV1StreamPart,
-  LanguageModelV1Message,
-  LanguageModelV1Prompt,
-  LanguageModelV1ProviderMetadata,
+  LanguageModelV2,
+  LanguageModelV2FunctionTool,
+  LanguageModelV2ToolCall,
+  LanguageModelV2FinishReason,
+  LanguageModelV2CallOptions,
+  LanguageModelV2CallWarning,
+  LanguageModelV2StreamPart,
+  LanguageModelV2Content,
+  LanguageModelV2Usage,
+  ProviderV2,
 } from '@ai-sdk/provider';

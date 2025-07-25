@@ -1,4 +1,4 @@
-import type { LanguageModelV1FunctionTool } from '@ai-sdk/provider';
+import type { LanguageModelV2FunctionTool } from '@ai-sdk/provider';
 import type { Tool, FunctionDeclaration, Schema } from '@google/genai';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { z } from 'zod';
@@ -22,7 +22,7 @@ interface JsonSchemaObject {
  * Maps Vercel AI SDK tools to Gemini format
  */
 export function mapToolsToGeminiFormat(
-  tools: LanguageModelV1FunctionTool[]
+  tools: LanguageModelV2FunctionTool[]
 ): Tool[] {
   const functionDeclarations: FunctionDeclaration[] = [];
 
@@ -30,7 +30,7 @@ export function mapToolsToGeminiFormat(
     functionDeclarations.push({
       name: tool.name,
       description: tool.description,
-      parameters: convertToolParameters(tool.parameters),
+      parameters: convertToolParameters(tool.inputSchema),
     });
   }
 
