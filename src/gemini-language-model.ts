@@ -181,9 +181,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         }
 
         // Set up listener for abort signal
+        // LIMITATION: The gemini-cli-core library doesn't expose request cancellation
+        // We can only check abort status before/after the request, not cancel in-flight
         abortListener = () => {
-          // In a real implementation, we would cancel the ongoing request
-          // For now, we'll just track the abort state
+          // Track abort state - actual cancellation happens via status checks
         };
         options.abortSignal.addEventListener('abort', abortListener, {
           once: true,
@@ -340,9 +341,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         }
 
         // Set up listener for abort signal
+        // LIMITATION: The gemini-cli-core library doesn't expose stream cancellation
+        // We can only check abort status during iteration, not cancel the underlying stream
         abortListener = () => {
-          // In a real implementation, we would cancel the ongoing stream
-          // For now, we'll just track the abort state
+          // Track abort state - actual cancellation happens via status checks
         };
         options.abortSignal.addEventListener('abort', abortListener, {
           once: true,
