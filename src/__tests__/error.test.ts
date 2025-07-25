@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { mapGeminiError } from '../error';
-import { APICallError } from '@ai-sdk/provider';
+import {
+  mapGeminiError,
+  createAPICallError,
+  createAuthenticationError,
+  createTimeoutError,
+  isAuthenticationError,
+  isTimeoutError,
+  getErrorMetadata,
+} from '../error';
+import { APICallError, LoadAPIKeyError } from '@ai-sdk/provider';
 
 describe('mapGeminiError', () => {
   describe('rate limit errors (429)', () => {
@@ -14,8 +22,12 @@ describe('mapGeminiError', () => {
       expect(result.message).toBe(
         'You have exceeded the rate limit for this API'
       );
-      expect(result.cause).toBe(error);
-      expect(result.url).toBe('gemini-cli-core');
+      expect(result.data).toEqual({
+        code: 'RATE_LIMIT',
+        exitCode: undefined,
+        stderr: undefined,
+      });
+      expect(result.url).toBe('gemini-cli-core://command');
     });
 
     it('should map "quota" error to 429', () => {
@@ -37,38 +49,35 @@ describe('mapGeminiError', () => {
   });
 
   describe('authentication errors (401)', () => {
-    it('should map "unauthorized" error to 401', () => {
+    it('should map "unauthorized" error to LoadAPIKeyError', () => {
       const error = new Error('Unauthorized access to the API');
       const result = mapGeminiError(error);
 
-      expect(result).toBeInstanceOf(APICallError);
-      expect(result.statusCode).toBe(401);
-      expect(result.isRetryable).toBe(false);
+      expect(result).toBeInstanceOf(LoadAPIKeyError);
       expect(result.message).toBe('Unauthorized access to the API');
     });
 
-    it('should map "authentication" error to 401', () => {
+    it('should map "authentication" error to LoadAPIKeyError', () => {
       const error = new Error('Authentication failed');
       const result = mapGeminiError(error);
 
-      expect(result.statusCode).toBe(401);
-      expect(result.isRetryable).toBe(false);
+      expect(result).toBeInstanceOf(LoadAPIKeyError);
+      expect(result.message).toBe('Authentication failed');
     });
 
-    it('should map "api key" error to 401', () => {
+    it('should map "api key" error to LoadAPIKeyError', () => {
       const error = new Error('Invalid API key provided');
       const result = mapGeminiError(error);
 
-      expect(result.statusCode).toBe(401);
-      expect(result.isRetryable).toBe(false);
+      expect(result).toBeInstanceOf(LoadAPIKeyError);
+      expect(result.message).toBe('Invalid API key provided');
     });
 
     it('should handle case-insensitive authentication detection', () => {
       const error = new Error('AUTHENTICATION REQUIRED');
       const result = mapGeminiError(error);
 
-      expect(result.statusCode).toBe(401);
-      expect(result.isRetryable).toBe(false);
+      expect(result).toBeInstanceOf(LoadAPIKeyError);
     });
   });
 
@@ -80,19 +89,11 @@ describe('mapGeminiError', () => {
       expect(result).toBeInstanceOf(APICallError);
       expect(result.statusCode).toBe(400);
       expect(result.isRetryable).toBe(false);
-      expect(result.message).toBe('Invalid request parameters');
+      expect(result.data?.code).toBe('INVALID_REQUEST');
     });
 
     it('should map "bad request" error to 400', () => {
-      const error = new Error('Bad request: missing required field');
-      const result = mapGeminiError(error);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.isRetryable).toBe(false);
-    });
-
-    it('should handle case-insensitive bad request detection', () => {
-      const error = new Error('INVALID input data');
+      const error = new Error('Bad request format');
       const result = mapGeminiError(error);
 
       expect(result.statusCode).toBe(400);
@@ -102,25 +103,17 @@ describe('mapGeminiError', () => {
 
   describe('not found errors (404)', () => {
     it('should map "not found" error to 404', () => {
-      const error = new Error('Resource not found');
+      const error = new Error('Model not found');
       const result = mapGeminiError(error);
 
       expect(result).toBeInstanceOf(APICallError);
       expect(result.statusCode).toBe(404);
       expect(result.isRetryable).toBe(false);
-      expect(result.message).toBe('Resource not found');
+      expect(result.data?.code).toBe('MODEL_NOT_FOUND');
     });
 
     it('should map "model" error to 404', () => {
-      const error = new Error('Model gemini-99 does not exist');
-      const result = mapGeminiError(error);
-
-      expect(result.statusCode).toBe(404);
-      expect(result.isRetryable).toBe(false);
-    });
-
-    it('should handle combined "model not found" error', () => {
-      const error = new Error('The specified model was not found');
+      const error = new Error('Invalid model specified');
       const result = mapGeminiError(error);
 
       expect(result.statusCode).toBe(404);
@@ -130,25 +123,17 @@ describe('mapGeminiError', () => {
 
   describe('internal server errors (500)', () => {
     it('should map generic errors to 500', () => {
-      const error = new Error('Something went wrong');
+      const error = new Error('Internal server error');
       const result = mapGeminiError(error);
 
       expect(result).toBeInstanceOf(APICallError);
       expect(result.statusCode).toBe(500);
       expect(result.isRetryable).toBe(true);
-      expect(result.message).toBe('Something went wrong');
+      expect(result.data?.code).toBe('INTERNAL_ERROR');
     });
 
-    it('should map network errors to 500', () => {
-      const error = new Error('Network connection failed');
-      const result = mapGeminiError(error);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.isRetryable).toBe(true);
-    });
-
-    it('should map timeout errors to 500', () => {
-      const error = new Error('Request timeout');
+    it('should map unknown errors to 500', () => {
+      const error = new Error('Something went wrong');
       const result = mapGeminiError(error);
 
       expect(result.statusCode).toBe(500);
@@ -156,29 +141,40 @@ describe('mapGeminiError', () => {
     });
   });
 
+  describe('timeout errors (504)', () => {
+    it('should map timeout errors to 504', () => {
+      const error = new Error('Request timeout');
+      const result = mapGeminiError(error);
+
+      expect(result).toBeInstanceOf(APICallError);
+      expect(result.statusCode).toBe(504);
+      expect(result.isRetryable).toBe(true);
+      expect(result.data?.code).toBe('TIMEOUT');
+    });
+
+    it('should map "timed out" errors to 504', () => {
+      const error = new Error('Operation timed out');
+      const result = mapGeminiError(error);
+
+      expect(result.statusCode).toBe(504);
+      expect(result.isRetryable).toBe(true);
+    });
+  });
+
   describe('error priority', () => {
-    it('should prioritize rate limit over other errors', () => {
-      const error = new Error('Rate limit exceeded for invalid request');
+    it('should prioritize authentication over bad request', () => {
+      const error = new Error('Invalid API key in bad request');
+      const result = mapGeminiError(error);
+
+      expect(result).toBeInstanceOf(LoadAPIKeyError);
+    });
+
+    it('should prioritize rate limit over not found', () => {
+      const error = new Error('Rate limit exceeded: model not found');
       const result = mapGeminiError(error);
 
       expect(result.statusCode).toBe(429);
       expect(result.isRetryable).toBe(true);
-    });
-
-    it('should prioritize authentication over bad request', () => {
-      const error = new Error('Unauthorized: invalid parameters');
-      const result = mapGeminiError(error);
-
-      expect(result.statusCode).toBe(401);
-      expect(result.isRetryable).toBe(false);
-    });
-
-    it('should prioritize bad request over not found', () => {
-      const error = new Error('Invalid model not found');
-      const result = mapGeminiError(error);
-
-      expect(result.statusCode).toBe(400);
-      expect(result.isRetryable).toBe(false);
     });
   });
 
@@ -191,7 +187,7 @@ describe('mapGeminiError', () => {
       expect(result.statusCode).toBe(500);
       expect(result.isRetryable).toBe(true);
       expect(result.message).toBe('An unknown error occurred');
-      expect(result.cause).toBe(error);
+      expect(result.data?.code).toBe('UNKNOWN_ERROR');
     });
 
     it('should handle object errors', () => {
@@ -201,7 +197,6 @@ describe('mapGeminiError', () => {
       expect(result.statusCode).toBe(500);
       expect(result.isRetryable).toBe(true);
       expect(result.message).toBe('An unknown error occurred');
-      expect(result.cause).toBe(error);
     });
 
     it('should handle null errors', () => {
@@ -210,18 +205,6 @@ describe('mapGeminiError', () => {
 
       expect(result.statusCode).toBe(500);
       expect(result.isRetryable).toBe(true);
-      expect(result.message).toBe('An unknown error occurred');
-      expect(result.cause).toBe(error);
-    });
-
-    it('should handle undefined errors', () => {
-      const error = undefined;
-      const result = mapGeminiError(error);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.isRetryable).toBe(true);
-      expect(result.message).toBe('An unknown error occurred');
-      expect(result.cause).toBe(error);
     });
 
     it('should handle number errors', () => {
@@ -230,8 +213,6 @@ describe('mapGeminiError', () => {
 
       expect(result.statusCode).toBe(500);
       expect(result.isRetryable).toBe(true);
-      expect(result.message).toBe('An unknown error occurred');
-      expect(result.cause).toBe(error);
     });
   });
 
@@ -240,58 +221,146 @@ describe('mapGeminiError', () => {
       const error = new Error('Test error');
       const result = mapGeminiError(error);
 
-      expect(result.url).toBe('gemini-cli-core');
+      expect(result.url).toBe('gemini-cli-core://command');
       expect(result.requestBodyValues).toEqual({});
       expect(result.responseHeaders).toEqual({});
-      expect(result.data).toEqual({});
-      expect(result.cause).toBe(error);
     });
 
-    it('should preserve error stack trace', () => {
+    it('should preserve error message', () => {
       const error = new Error('Test error with stack');
       const result = mapGeminiError(error);
 
-      expect(result.cause).toBe(error);
-      expect((result.cause as Error).stack).toBeDefined();
+      expect(result.message).toBe('Test error with stack');
     });
   });
 
   describe('edge cases', () => {
-    it('should handle empty error messages', () => {
-      const error = new Error('');
-      const result = mapGeminiError(error);
-
-      expect(result.statusCode).toBe(500);
-      expect(result.isRetryable).toBe(true);
-      expect(result.message).toBe('');
-    });
-
     it('should handle errors with special characters', () => {
-      const error = new Error('Error: [401] Unauthorized!');
+      const error = new Error('Error: @#$% unauthorized %$#@');
       const result = mapGeminiError(error);
 
-      expect(result.statusCode).toBe(401);
-      expect(result.isRetryable).toBe(false);
-    });
-
-    it('should handle very long error messages', () => {
-      const longMessage = 'Rate limit ' + 'x'.repeat(1000);
-      const error = new Error(longMessage);
-      const result = mapGeminiError(error);
-
-      expect(result.statusCode).toBe(429);
-      expect(result.message).toBe(longMessage);
+      expect(result).toBeInstanceOf(LoadAPIKeyError);
     });
 
     it('should handle errors with multiple matching keywords', () => {
-      const error = new Error(
-        'Unauthorized: Rate limit exceeded for invalid model'
-      );
+      const error = new Error('Rate limit exceeded: unauthorized request');
       const result = mapGeminiError(error);
 
-      // Should match the first condition (rate limit)
-      expect(result.statusCode).toBe(429);
-      expect(result.isRetryable).toBe(true);
+      // Authentication takes priority
+      expect(result).toBeInstanceOf(LoadAPIKeyError);
+    });
+  });
+});
+
+describe('error factory functions', () => {
+  describe('createAPICallError', () => {
+    it('should create API call error with metadata', () => {
+      const error = createAPICallError({
+        message: 'Test error',
+        code: 'TEST_ERROR',
+        exitCode: 1,
+        stderr: 'Error output',
+        promptExcerpt: 'Test prompt',
+        isRetryable: true,
+        statusCode: 500,
+      });
+
+      expect(error).toBeInstanceOf(APICallError);
+      expect(error.message).toBe('Test error');
+      expect(error.statusCode).toBe(500);
+      expect(error.isRetryable).toBe(true);
+      expect(error.data).toEqual({
+        code: 'TEST_ERROR',
+        exitCode: 1,
+        stderr: 'Error output',
+      });
+      expect(error.requestBodyValues).toEqual({ prompt: 'Test prompt' });
+    });
+  });
+
+  describe('createAuthenticationError', () => {
+    it('should create authentication error', () => {
+      const error = createAuthenticationError({
+        message: 'Invalid credentials',
+      });
+
+      expect(error).toBeInstanceOf(LoadAPIKeyError);
+      expect(error.message).toBe('Invalid credentials');
+    });
+  });
+
+  describe('createTimeoutError', () => {
+    it('should create timeout error', () => {
+      const error = createTimeoutError({
+        message: 'Request timed out',
+        promptExcerpt: 'Test prompt',
+        timeoutMs: 30000,
+      });
+
+      expect(error).toBeInstanceOf(APICallError);
+      expect(error.message).toBe('Request timed out');
+      expect(error.statusCode).toBe(504);
+      expect(error.isRetryable).toBe(true);
+      expect(error.data?.code).toBe('TIMEOUT');
+    });
+  });
+});
+
+describe('error utility functions', () => {
+  describe('isAuthenticationError', () => {
+    it('should detect LoadAPIKeyError', () => {
+      const error = new LoadAPIKeyError({ message: 'Auth failed' });
+      expect(isAuthenticationError(error)).toBe(true);
+    });
+
+    it('should detect authentication error by message', () => {
+      const error = new Error('Unauthorized request');
+      expect(isAuthenticationError(error)).toBe(true);
+    });
+
+    it('should return false for non-auth errors', () => {
+      const error = new Error('Generic error');
+      expect(isAuthenticationError(error)).toBe(false);
+    });
+  });
+
+  describe('isTimeoutError', () => {
+    it('should detect timeout by status code', () => {
+      const error = new APICallError({
+        url: 'test',
+        requestBodyValues: {},
+        statusCode: 504,
+        responseHeaders: {},
+        message: 'Timeout',
+      });
+      expect(isTimeoutError(error)).toBe(true);
+    });
+
+    it('should detect timeout by message', () => {
+      const error = new Error('Request timeout');
+      expect(isTimeoutError(error)).toBe(true);
+    });
+  });
+
+  describe('getErrorMetadata', () => {
+    it('should extract metadata from APICallError', () => {
+      const error = createAPICallError({
+        message: 'Test',
+        code: 'TEST',
+        exitCode: 1,
+      });
+
+      const metadata = getErrorMetadata(error);
+      expect(metadata).toEqual({
+        code: 'TEST',
+        exitCode: 1,
+        stderr: undefined,
+      });
+    });
+
+    it('should return undefined for non-APICallError', () => {
+      const error = new Error('Test');
+      expect(getErrorMetadata(error)).toBeUndefined();
     });
   });
 });

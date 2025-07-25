@@ -65,9 +65,9 @@ async function main() {
       });
       
       await generateText({
-        model: gemini('gemini-2.5-flash'),
+        model: gemini('gemini-2.5-pro'),
         prompt: 'Test auth',
-        maxTokens: 10,
+        maxOutputTokens: 10,
       });
       
       console.log('✅ Authentication successful');
@@ -94,11 +94,11 @@ async function main() {
     await generateText({
       model: gemini('gemini-99-ultra'), // Invalid model
       prompt: 'Test',
-      maxTokens: 10,
+      maxOutputTokens: 10,
     });
   } catch (error) {
     console.log('✅ Expected error caught:', error.message);
-    console.log('💡 Available models: gemini-2.5-pro, gemini-2.5-flash');
+    console.log('💡 Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-2.0-pro-exp, and more');
   }
   console.log();
 
@@ -119,9 +119,9 @@ async function main() {
     console.log('Making request with 3-second timeout...');
     
     const result = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       prompt: 'Write a detailed essay about quantum computing',
-      maxTokens: 1000,
+      maxOutputTokens: 1000,
       abortSignal: controller.signal,
     });
     
@@ -150,13 +150,13 @@ async function main() {
     
     const result = await retryWithBackoff(async () => {
       return await generateText({
-        model: gemini('gemini-2.5-flash'),
+        model: gemini('gemini-2.5-pro'),
         prompt: 'Say hello',
-        maxTokens: 20,
+        maxOutputTokens: 20,
       });
     }, 3, 1000);
     
-    console.log('✅ Request successful:', result.text);
+    console.log('✅ Request successful:', result.content[0]?.text || 'Generated successfully');
   } catch (error) {
     console.log('❌ All retries failed:', error.message);
     
@@ -178,22 +178,25 @@ async function main() {
     console.log('Starting stream...');
     
     const stream = await streamText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       prompt: 'Count to 10',
-      maxTokens: 100,
+      maxOutputTokens: 100,
     });
     
     let chunkCount = 0;
+    let processedText = '';
     try {
       for await (const chunk of stream.textStream) {
         chunkCount++;
+        processedText += chunk;
         process.stdout.write(chunk);
         
-        // Simulate an error condition
-        if (chunkCount === 5) {
+        // Simulate an error condition after receiving some text
+        if (processedText.length > 10) {
           throw new Error('Simulated stream processing error');
         }
       }
+      console.log('\n✅ Stream completed successfully');
     } catch (streamError) {
       console.log(`\n⚠️  Stream error after ${chunkCount} chunks:`, streamError.message);
       console.log('💡 Partial content was received before the error');
@@ -215,28 +218,38 @@ async function main() {
   const invalidInputs = [
     {
       name: 'Empty prompt',
-      config: { prompt: '', maxTokens: 10 },
+      config: { prompt: '', maxOutputTokens: 10 },
     },
     {
       name: 'Negative max tokens',
-      config: { prompt: 'Test', maxTokens: -10 },
+      config: { prompt: 'Test', maxOutputTokens: -10 },
     },
     {
       name: 'Invalid temperature',
       config: { 
         prompt: 'Test', 
-        maxTokens: 10,
-        // Note: temperature validation happens at provider level
+        maxOutputTokens: 10,
+        temperature: 2.5, // Out of valid range (0-2)
       },
     },
   ];
   
   for (const test of invalidInputs) {
     try {
-      await generateText({
-        model: gemini('gemini-2.5-flash'),
-        ...test.config,
-      });
+      if (test.name === 'Empty prompt') {
+        // Empty prompt may need retries due to API behavior
+        await retryWithBackoff(async () => {
+          return await generateText({
+            model: gemini('gemini-2.5-pro'),
+            ...test.config,
+          });
+        }, 3, 500);
+      } else {
+        await generateText({
+          model: gemini('gemini-2.5-pro'),
+          ...test.config,
+        });
+      }
       console.log(`${test.name}: ⚠️  No validation error (may be valid)`);
     } catch (error) {
       console.log(`${test.name}: ✅ Caught error - ${error.message}`);
@@ -249,7 +262,7 @@ async function main() {
   console.log('─'.repeat(50));
   
   async function generateWithFallback(prompt) {
-    const models = ['gemini-2.5-pro', 'gemini-2.5-flash'];
+    const models = ['gemini-2.5-pro', 'gemini-2.0-pro-exp'];
     
     for (const modelName of models) {
       try {
@@ -257,7 +270,7 @@ async function main() {
         const result = await generateText({
           model: gemini(modelName),
           prompt,
-          maxTokens: 50,
+          maxOutputTokens: 50,
         });
         console.log(`✅ Success with ${modelName}`);
         return result;
@@ -272,7 +285,7 @@ async function main() {
   
   try {
     const result = await generateWithFallback('Say hello');
-    console.log('Result:', result.text);
+    console.log('Result:', result.content[0].text);
   } catch (error) {
     console.log('❌ All models failed');
   }

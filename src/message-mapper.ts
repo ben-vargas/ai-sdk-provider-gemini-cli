@@ -1,8 +1,6 @@
 import type {
-  LanguageModelV1CallOptions,
-  LanguageModelV1Message,
-  LanguageModelV1ImagePart,
-  LanguageModelV1ToolResultPart,
+  LanguageModelV2CallOptions,
+  LanguageModelV2Message,
 } from '@ai-sdk/provider';
 import type { Content, Part } from '@google/genai';
 
@@ -15,21 +13,21 @@ export interface GeminiPromptResult {
  * Maps Vercel AI SDK messages to Gemini format
  */
 export function mapPromptToGeminiFormat(
-  options: LanguageModelV1CallOptions
+  options: LanguageModelV2CallOptions
 ): GeminiPromptResult {
   let messages = options.prompt;
   const contents: Content[] = [];
   let systemInstruction: Content | undefined;
 
-  // If in object-json mode, enhance the last user message with schema information
+  // If in json response format, enhance the last user message with schema information
   if (
-    options.mode?.type === 'object-json' &&
-    options.mode.schema &&
+    options.responseFormat?.type === 'json' &&
+    options.responseFormat.schema &&
     messages.length > 0
   ) {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage.role === 'user' && Array.isArray(lastMessage.content)) {
-      const schemaPrompt = `\n\nYou must respond with a JSON object that exactly matches this schema:\n${JSON.stringify(options.mode.schema, null, 2)}\n\nIMPORTANT: Use the exact field names from the schema. Do not add extra fields.`;
+      const schemaPrompt = `\n\nYou must respond with a JSON object that exactly matches this schema:\n${JSON.stringify(options.responseFormat.schema, null, 2)}\n\nIMPORTANT: Use the exact field names from the schema. Do not add extra fields.`;
 
       // Clone the messages array and modify the last message
       messages = [...messages];
@@ -72,16 +70,27 @@ export function mapPromptToGeminiFormat(
         contents.push(mapAssistantMessage(message));
         break;
 
-      case 'tool':
-        // Tool results are typically merged with the previous assistant message
-        // For now, we'll add them as a user message
+      case 'tool': {
+        // Tool results in v5 are part of tool messages
+        const parts: Part[] = [];
+        for (const part of message.content) {
+          if (part.type === 'tool-result') {
+            parts.push({
+              functionResponse: {
+                name: part.toolName,
+                response: (typeof part.output === 'string'
+                  ? { result: part.output }
+                  : part.output) as Record<string, unknown>,
+              },
+            });
+          }
+        }
         contents.push({
           role: 'user',
-          parts: message.content.map((part: LanguageModelV1ToolResultPart) =>
-            mapToolResultPart(part)
-          ),
+          parts,
         });
         break;
+      }
     }
   }
 
@@ -92,7 +101,7 @@ export function mapPromptToGeminiFormat(
  * Maps a user message to Gemini format
  */
 function mapUserMessage(
-  message: LanguageModelV1Message & { role: 'user' }
+  message: LanguageModelV2Message & { role: 'user' }
 ): Content {
   const parts: Part[] = [];
 
@@ -102,9 +111,20 @@ function mapUserMessage(
         parts.push({ text: part.text });
         break;
 
-      case 'image':
-        parts.push(mapImagePart(part));
+      case 'file': {
+        // Handle file parts (images, etc.)
+        const filePart = part as {
+          contentType?: string;
+          data: string | URL | Uint8Array;
+        };
+        const contentType = filePart.contentType || 'application/octet-stream';
+        if (contentType.startsWith('image/')) {
+          parts.push(mapImagePart(filePart));
+        } else {
+          throw new Error(`Unsupported file type: ${contentType}`);
+        }
         break;
+      }
     }
   }
 
@@ -115,7 +135,7 @@ function mapUserMessage(
  * Maps an assistant message to Gemini format
  */
 function mapAssistantMessage(
-  message: LanguageModelV1Message & { role: 'assistant' }
+  message: LanguageModelV2Message & { role: 'assistant' }
 ): Content {
   const parts: Part[] = [];
 
@@ -126,10 +146,11 @@ function mapAssistantMessage(
         break;
 
       case 'tool-call':
+        // In v5, tool calls have input as an object already
         parts.push({
           functionCall: {
             name: part.toolName,
-            args: (part.args || {}) as Record<string, unknown>,
+            args: (part.input || {}) as Record<string, unknown>,
           },
         });
         break;
@@ -142,23 +163,26 @@ function mapAssistantMessage(
 /**
  * Maps an image part to Gemini format
  */
-function mapImagePart(part: LanguageModelV1ImagePart): Part {
-  if (part.image instanceof URL) {
+function mapImagePart(part: {
+  contentType?: string;
+  data: string | URL | Uint8Array;
+}): Part {
+  if (part.data instanceof URL) {
     throw new Error(
       'URL images are not supported by Gemini CLI Core. Please provide base64-encoded image data.'
     );
   }
 
   // Extract mime type and base64 data
-  const mimeType = part.mimeType || 'image/jpeg';
+  const mimeType = part.contentType || 'image/jpeg';
   let base64Data: string;
 
-  if (typeof part.image === 'string') {
+  if (typeof part.data === 'string') {
     // Already base64 encoded
-    base64Data = part.image;
-  } else if (part.image instanceof Uint8Array) {
+    base64Data = part.data;
+  } else if (part.data instanceof Uint8Array) {
     // Convert Uint8Array to base64
-    base64Data = Buffer.from(part.image).toString('base64');
+    base64Data = Buffer.from(part.data).toString('base64');
   } else {
     throw new Error('Unsupported image format');
   }
@@ -167,18 +191,6 @@ function mapImagePart(part: LanguageModelV1ImagePart): Part {
     inlineData: {
       mimeType,
       data: base64Data,
-    },
-  };
-}
-
-/**
- * Maps a tool result part to Gemini format
- */
-function mapToolResultPart(part: LanguageModelV1ToolResultPart): Part {
-  return {
-    functionResponse: {
-      name: part.toolName,
-      response: part.result as Record<string, unknown>,
     },
   };
 }

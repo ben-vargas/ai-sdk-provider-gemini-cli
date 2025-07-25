@@ -25,10 +25,10 @@ async function main() {
     const result1 = await generateText({
       model: oauthProvider('gemini-2.5-pro'),
       prompt: 'What authentication method am I using?',
-      maxTokens: 100,
+      maxOutputTokens: 100,
     });
     
-    console.log('Response:', result1.text);
+    console.log('Response:', result1.content[0]?.text || 'No response generated');
     console.log('Auth method: OAuth with ~/.gemini/oauth_creds.json');
     console.log();
 
@@ -45,10 +45,10 @@ async function main() {
       const result2 = await generateText({
         model: apiKeyProvider('gemini-2.5-pro'),
         prompt: 'Say hello',
-        maxTokens: 50,
+        maxOutputTokens: 50,
       });
       
-      console.log('Response:', result2.text);
+      console.log('Response:', result2.content[0]?.text || 'No response generated');
       console.log('Auth method: API Key');
     } else {
       console.log('Skipping: GEMINI_API_KEY not set in environment');
@@ -72,25 +72,25 @@ async function main() {
     const result3 = await generateText({
       model: proModel,
       prompt: 'List exactly 3 programming languages',
-      maxTokens: 100,
+      maxOutputTokens: 100,
     });
     
-    console.log('Pro model response:', result3.text);
+    console.log('Pro model response:', result3.content[0]?.text || 'No response generated');
     console.log('Settings: temperature=0.2, topP=0.95');
     console.log();
 
-    // Using Flash model for faster responses
-    const flashModel = gemini('gemini-2.5-flash', {
+    // Using Pro model with higher temperature for creativity
+    const flashModel = gemini('gemini-2.5-pro', {
       temperature: 0.8,
     });
     
     const result4 = await generateText({
       model: flashModel,
       prompt: 'Write a creative tagline for a coffee shop',
-      maxTokens: 50,
+      maxOutputTokens: 50,
     });
     
-    console.log('Flash model response:', result4.text);
+    console.log('Pro model response:', result4.content[0]?.text || 'No response generated');
     console.log('Settings: temperature=0.8 (more creative)');
     console.log();
 
@@ -133,19 +133,19 @@ async function main() {
     // Both providers can be used independently
     const [response1, response2] = await Promise.all([
       generateText({
-        model: provider1('gemini-2.5-flash'),
+        model: provider1('gemini-2.5-pro'),
         prompt: 'Say "Provider 1"',
-        maxTokens: 20,
+        maxOutputTokens: 20,
       }),
       generateText({
-        model: provider2('gemini-2.5-flash'),
+        model: provider2('gemini-2.5-pro'),
         prompt: 'Say "Provider 2"',
-        maxTokens: 20,
+        maxOutputTokens: 20,
       }),
     ]);
     
-    console.log('Provider 1:', response1.text);
-    console.log('Provider 2:', response2.text);
+    console.log('Provider 1:', response1.content[0].text);
+    console.log('Provider 2:', response2.content[0].text);
     console.log('✅ Multiple instances work independently');
     console.log();
 
@@ -170,9 +170,9 @@ async function main() {
       const result = await generateText({
         model: customModel,
         prompt: `Count to ${i}`,
-        maxTokens: 20,
+        maxOutputTokens: 20,
       });
-      responses.push(result.text);
+      responses.push(result.content[0].text);
     }
     
     console.log('Responses with persistent settings:');

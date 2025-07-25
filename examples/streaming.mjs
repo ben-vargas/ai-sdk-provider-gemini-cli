@@ -24,7 +24,7 @@ async function main() {
     console.log('Generating story...\n');
 
     const result1 = await streamText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       prompt: 'Write a short story about a robot learning to paint (3 paragraphs)',
     });
 
@@ -34,8 +34,7 @@ async function main() {
     }
     
     // Get the final result
-    const finalText1 = await result1.text;
-    const usage1 = await result1.usage;
+    const { text: finalText1, usage: usage1 } = await result1;
     
     console.log('\n\nTokens used:', usage1?.totalTokens || 'N/A');
     console.log();
@@ -46,7 +45,7 @@ async function main() {
     console.log('Generating numbered list...\n');
 
     const result2 = await streamText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       system: 'You are a helpful assistant. Always format lists with emojis.',
       prompt: 'List 5 tips for learning a new programming language',
     });
@@ -70,7 +69,7 @@ async function main() {
 
     try {
       const result3 = await streamText({
-        model: gemini('gemini-2.5-flash'),
+        model: gemini('gemini-2.5-pro'),
         prompt: 'Count from 1 to 20 slowly, with a description for each number',
         abortSignal: controller.signal,
       });
@@ -97,7 +96,7 @@ async function main() {
     console.log('Analyzing text as it streams...\n');
 
     const result4 = await streamText({
-      model: gemini('gemini-2.5-flash'), // Using faster model
+      model: gemini('gemini-2.5-pro'), // Using pro model for quality
       prompt: 'List the planets in our solar system with one interesting fact each',
     });
 
@@ -118,7 +117,7 @@ async function main() {
     console.log(`Words streamed: ${wordCount}`);
     console.log(`Planet mentions: ${planetCount}`);
     
-    const usage4 = await result4.usage;
+    const { usage: usage4 } = await result4;
     console.log(`Tokens used: ${usage4?.totalTokens || 'N/A'}`);
     
     console.log('\n✅ All streaming examples completed!');

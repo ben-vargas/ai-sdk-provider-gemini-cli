@@ -34,7 +34,10 @@ describe('createGeminiProvider', () => {
     const provider = createGeminiProvider();
     const settings = { temperature: 0.5, maxTokens: 1000 };
     const model = provider('gemini-2.5-pro', settings);
-    expect(model.settings).toEqual(settings);
+    expect(model.settings).toEqual({
+      maxOutputTokens: 65536, // Default value added by provider
+      ...settings,
+    });
   });
 
   it('should work with oauth-personal auth', () => {

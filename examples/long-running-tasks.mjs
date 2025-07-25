@@ -5,6 +5,16 @@
  * 
  * This example demonstrates how to handle complex, long-running tasks
  * with proper timeout management, progress tracking, and cancellation.
+ * 
+ * Key patterns shown:
+ * 1. Timeout management with AbortController
+ * 2. Real-time progress tracking with streaming
+ * 3. User-initiated cancellation (Ctrl+C)
+ * 4. Chunked processing for very large tasks
+ * 
+ * LIMITATION: The underlying gemini-cli-core does not support request
+ * cancellation. While abort signals are handled correctly and will throw
+ * AbortError, the actual Gemini API request continues in the background.
  */
 
 import { generateText, streamText } from 'ai';
@@ -17,53 +27,104 @@ const gemini = createGeminiProvider({
 });
 
 // Progress indicator
+let activeProgress = null;
+
 function createProgressIndicator(message) {
+  // Stop any existing progress indicator
+  if (activeProgress) {
+    activeProgress.stop();
+  }
+  
   const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
   let i = 0;
+  let stopped = false;
   
   const interval = setInterval(() => {
-    process.stdout.write(`\r${frames[i]} ${message}`);
-    i = (i + 1) % frames.length;
+    if (!stopped) {
+      process.stdout.write(`\r${frames[i]} ${message}`);
+      i = (i + 1) % frames.length;
+    }
   }, 100);
   
-  return {
+  const progress = {
     stop: () => {
-      clearInterval(interval);
-      process.stdout.write('\r' + ' '.repeat(message.length + 3) + '\r');
+      if (!stopped) {
+        stopped = true;
+        clearInterval(interval);
+        // Clear the entire line more thoroughly
+        process.stdout.write('\r\x1b[K');
+        if (activeProgress === progress) {
+          activeProgress = null;
+        }
+      }
     }
   };
+  
+  activeProgress = progress;
+  return progress;
 }
 
 async function main() {
   try {
-    // Example 1: Simple timeout management
-    console.log('Example 1: Task with Custom Timeout');
+    // Example 1: Timeout Management
+    console.log('Example 1: Timeout Management');
     console.log('─'.repeat(50));
+    console.log('Demonstrating both successful completion and timeout scenarios.');
+    console.log('NOTE: Due to gemini-cli limitations, requests continue in background');
+    console.log('even after timeout. The timeout only affects when YOU get the result.\n');
     
+    // First, show a task that completes successfully
     const controller1 = new AbortController();
-    const timeout1 = setTimeout(() => controller1.abort(), 10000); // 10 seconds
+    const timeout1 = setTimeout(() => controller1.abort(), 5000); // 5 seconds
     
-    console.log('Running analysis with 10-second timeout...');
-    const progress1 = createProgressIndicator('Analyzing code patterns');
+    console.log('📝 Task 1: Simple request (5-second timeout)...');
+    console.log('   (Will likely take 10+ seconds due to background processing)');
+    const progress1 = createProgressIndicator('Processing');
     
     try {
       const result = await generateText({
-        model: gemini('gemini-2.5-flash'),
-        prompt: 'Analyze the architectural patterns in a typical microservices application. Include pros, cons, and best practices.',
-        maxTokens: 500,
+        model: gemini('gemini-2.5-pro'),
+        prompt: 'Write a brief haiku about timeouts',
         abortSignal: controller1.signal,
       });
       
       clearTimeout(timeout1);
       progress1.stop();
       
-      console.log('✅ Analysis completed!');
-      console.log(`Response length: ${result.text.length} characters`);
-      console.log(`Tokens used: ${result.usage?.totalTokens || 'N/A'}`);
+      console.log('✅ Completed successfully!');
+      console.log(`   Response: "${result.content[0].text.trim()}"`);
     } catch (error) {
       progress1.stop();
       if (error.name === 'AbortError') {
-        console.log('⏱️  Task timed out after 10 seconds');
+        console.log('⏱️  Task timed out');
+      } else {
+        throw error;
+      }
+    }
+    
+    // Now show a task that will timeout
+    const controller2 = new AbortController();
+    const timeout2 = setTimeout(() => controller2.abort(), 1000); // Only 1 second!
+    
+    console.log('\n📝 Task 2: Complex request (1-second timeout)...');
+    console.log('   (Will timeout after 1s, but request continues in background)');
+    const progress2 = createProgressIndicator('Attempting complex analysis');
+    
+    try {
+      const result = await generateText({
+        model: gemini('gemini-2.5-pro'),
+        prompt: 'Write a comprehensive 1000-word analysis of quantum computing, covering history, current state, applications, challenges, and future prospects.',
+        abortSignal: controller2.signal,
+      });
+      
+      clearTimeout(timeout2);
+      progress2.stop();
+      
+      console.log('✅ Surprisingly completed within 1 second!');
+    } catch (error) {
+      progress2.stop();
+      if (error.name === 'AbortError') {
+        console.log('⏱️  Task timed out after 1 second (as expected)');
       } else {
         throw error;
       }
@@ -71,40 +132,33 @@ async function main() {
     console.log();
 
     // Example 2: Progress tracking with streaming
-    console.log('Example 2: Progress Tracking with Streaming');
+    console.log('Example 2: Real-time Progress Tracking');
     console.log('─'.repeat(50));
+    console.log('Streaming responses with live progress updates.\n');
     
-    const controller2 = new AbortController();
-    const timeout2 = setTimeout(() => controller2.abort(), 30000); // 30 seconds
+    const controller3 = new AbortController();
+    const timeout3 = setTimeout(() => controller3.abort(), 30000); // 30 seconds
     
-    console.log('Generating detailed documentation...');
+    console.log('Generating documentation...');
     
     const stream = await streamText({
-      model: gemini('gemini-2.5-flash'),
-      prompt: 'Write comprehensive documentation for a REST API with 10 endpoints. Include descriptions, parameters, responses, and examples.',
-      maxTokens: 1000,
-      abortSignal: controller2.signal,
+      model: gemini('gemini-2.5-pro'),
+      prompt: 'Write comprehensive documentation for a REST API with 5 endpoints. Include descriptions, parameters, and examples.',
+      maxOutputTokens: 500,
+      abortSignal: controller3.signal,
     });
     
     let totalChars = 0;
-    let sections = 0;
     const startTime = Date.now();
     
     try {
       for await (const chunk of stream.textStream) {
         totalChars += chunk.length;
-        
-        // Track sections (rough estimate)
-        if (chunk.includes('###') || chunk.includes('## ')) {
-          sections++;
-        }
-        
-        // Update progress
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        process.stdout.write(`\r📝 Generated: ${totalChars} chars | Sections: ${sections} | Time: ${elapsed}s`);
+        process.stdout.write(`\r📝 Generated: ${totalChars} chars | Time: ${elapsed}s`);
       }
       
-      clearTimeout(timeout2);
+      clearTimeout(timeout3);
       console.log('\n✅ Documentation generated successfully!');
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -118,164 +172,141 @@ async function main() {
     // Example 3: User-initiated cancellation
     console.log('Example 3: User-Initiated Cancellation');
     console.log('─'.repeat(50));
+    console.log('Press Ctrl+C within 5 seconds to cancel...\n');
     
-    const controller3 = new AbortController();
-    
-    console.log('Press Ctrl+C to cancel the task...');
-    console.log('Generating comprehensive business plan...\n');
+    const controller4 = new AbortController();
     
     // Handle Ctrl+C
     let cancelled = false;
-    process.on('SIGINT', () => {
+    const sigintHandler = () => {
       if (!cancelled) {
         cancelled = true;
         console.log('\n\n🛑 Cancelling task...');
-        controller3.abort();
+        controller4.abort();
       }
-    });
+    };
+    process.on('SIGINT', sigintHandler);
     
-    const progress3 = createProgressIndicator('Working on business plan');
+    // Auto-complete after 5 seconds if not cancelled
+    const autoComplete = setTimeout(() => {
+      if (!cancelled) {
+        process.removeListener('SIGINT', sigintHandler);
+      }
+    }, 5000);
+    
+    const progress4 = createProgressIndicator('Generating content (5 seconds to cancel)');
     
     try {
       const result = await generateText({
-        model: gemini('gemini-2.5-flash'),
-        prompt: 'Create a detailed business plan for a sustainable technology startup, including market analysis, financial projections, and growth strategy.',
-        maxTokens: 2000,
-        abortSignal: controller3.signal,
+        model: gemini('gemini-2.5-pro'),
+        prompt: 'Write a short story about a robot learning to paint.',
+        abortSignal: controller4.signal,
       });
       
-      progress3.stop();
-      console.log('✅ Business plan completed!');
-      console.log(`Generated ${result.text.split(/\s+/).length} words`);
+      clearTimeout(autoComplete);
+      progress4.stop();
+      
+      if (!cancelled) {
+        console.log('✅ Completed! (You didn\'t cancel)');
+        console.log(`   Generated ${result.content[0].text.split(/\s+/).length} words`);
+      }
     } catch (error) {
-      progress3.stop();
+      progress4.stop();
       if (error.name === 'AbortError') {
-        console.log('✅ Task cancelled by user');
+        console.log('✅ Successfully cancelled by user');
       } else {
         throw error;
       }
+    } finally {
+      // Ensure progress is stopped
+      progress4.stop();
     }
     
-    // Reset SIGINT handler
-    process.removeAllListeners('SIGINT');
+    // Clean up
+    process.removeListener('SIGINT', sigintHandler);
+    clearTimeout(autoComplete);
     console.log();
 
-    // Example 4: Chunked processing for very long tasks
+    // Example 4: Chunked processing
     console.log('Example 4: Chunked Processing');
     console.log('─'.repeat(50));
+    console.log('Breaking large tasks into smaller chunks.\n');
     
-    const chapters = [
-      'Introduction to Machine Learning',
-      'Supervised Learning Algorithms',
-      'Unsupervised Learning Techniques',
-      'Deep Learning Fundamentals',
-      'Practical Applications'
+    const sections = [
+      'Introduction',
+      'Core Concepts',
+      'Best Practices',
+      'Conclusion'
     ];
     
-    console.log('Generating a 5-chapter technical book...\n');
+    const controller5 = new AbortController();
+    const timeout5 = setTimeout(() => controller5.abort(), 45000); // 45 seconds total
     
-    const controller4 = new AbortController();
-    const timeout4 = setTimeout(() => controller4.abort(), 60000); // 1 minute total
-    
-    const bookContent = [];
+    const results = [];
     
     try {
-      for (let i = 0; i < chapters.length; i++) {
-        const chapter = chapters[i];
-        console.log(`📖 Chapter ${i + 1}: ${chapter}`);
+      for (let i = 0; i < sections.length; i++) {
+        const section = sections[i];
+        console.log(`📖 Section ${i + 1}/${sections.length}: ${section}`);
         
-        const progress = createProgressIndicator(`Writing chapter ${i + 1} of ${chapters.length}`);
+        const progress = createProgressIndicator(`Writing ${section}`);
         
         const result = await generateText({
-          model: gemini('gemini-2.5-flash'), // Using faster model for chunks
-          prompt: `Write Chapter ${i + 1}: "${chapter}" for a technical book on machine learning. Make it detailed but concise (about 200 words).`,
-          maxTokens: 300,
-          abortSignal: controller4.signal,
+          model: gemini('gemini-2.5-pro'),
+          prompt: `Write a brief section titled "${section}" for a guide about effective API design. Keep it concise (2-3 paragraphs).`,
+          abortSignal: controller5.signal,
         });
         
         progress.stop();
-        bookContent.push({
-          chapter: chapter,
-          content: result.text,
+        results.push({
+          section: section,
+          wordCount: result.content[0].text.split(/\s+/).length,
           tokens: result.usage?.totalTokens || 0
         });
         
         console.log(`   ✅ Completed (${result.usage?.totalTokens || 0} tokens)\n`);
       }
       
-      clearTimeout(timeout4);
+      clearTimeout(timeout5);
       
-      const totalTokens = bookContent.reduce((sum, ch) => sum + ch.tokens, 0);
-      console.log('✅ Book generation completed!');
-      console.log(`Total tokens used: ${totalTokens}`);
-      console.log(`Total chapters: ${bookContent.length}`);
+      const totalTokens = results.reduce((sum, r) => sum + r.tokens, 0);
+      const totalWords = results.reduce((sum, r) => sum + r.wordCount, 0);
+      
+      console.log('✅ All sections completed!');
+      console.log(`   Total: ${totalWords} words, ${totalTokens} tokens`);
     } catch (error) {
+      // Ensure any active progress indicator is stopped
+      process.stdout.write('\r\x1b[K');
       if (error.name === 'AbortError') {
-        console.log('\n⏱️  Task timed out');
-        console.log(`Completed ${bookContent.length} of ${chapters.length} chapters`);
+        console.log('⏱️  Task timed out');
+        console.log(`   Completed ${results.length} of ${sections.length} sections`);
       } else {
         throw error;
       }
     }
-    console.log();
-
-    // Example 5: Adaptive timeout based on complexity
-    console.log('Example 5: Adaptive Timeout');
-    console.log('─'.repeat(50));
     
-    const tasks = [
-      { prompt: 'Say hello', complexity: 'simple', timeoutMs: 5000 },
-      { prompt: 'Explain quantum computing in one paragraph', complexity: 'medium', timeoutMs: 15000 },
-      { prompt: 'Write a detailed comparison of 5 programming paradigms with examples', complexity: 'complex', timeoutMs: 30000 }
-    ];
-    
-    for (const task of tasks) {
-      console.log(`\n🎯 Task (${task.complexity}): "${task.prompt.substring(0, 50)}..."`);
-      console.log(`   Timeout: ${task.timeoutMs / 1000} seconds`);
-      
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), task.timeoutMs);
-      
-      const startTime = Date.now();
-      const progress = createProgressIndicator('Processing');
-      
-      try {
-        const result = await generateText({
-          model: gemini('gemini-2.5-flash'),
-          prompt: task.prompt,
-          maxTokens: task.complexity === 'complex' ? 1000 : 200,
-          abortSignal: controller.signal,
-        });
-        
-        clearTimeout(timeout);
-        progress.stop();
-        
-        const duration = Date.now() - startTime;
-        console.log(`   ✅ Completed in ${(duration / 1000).toFixed(1)}s`);
-        console.log(`   Response length: ${result.text.length} chars`);
-      } catch (error) {
-        progress.stop();
-        if (error.name === 'AbortError') {
-          console.log(`   ⏱️  Timed out after ${task.timeoutMs / 1000}s`);
-        } else {
-          console.log(`   ❌ Error: ${error.message}`);
-        }
-      }
-    }
-    
-    console.log('\n✅ All long-running task examples completed!');
-    console.log('\n💡 Best practices for long-running tasks:');
-    console.log('- Always use AbortController for cancellation');
-    console.log('- Set appropriate timeouts based on task complexity');
-    console.log('- Provide visual feedback for progress');
-    console.log('- Consider chunking very large tasks');
-    console.log('- Use faster models (flash) when appropriate');
-    console.log('- Handle cancellation gracefully');
-    console.log('- Save partial results when possible');
+    console.log('\n✅ All examples completed!');
+    console.log('\n💡 Key takeaways:');
+    console.log('- Use AbortController with setTimeout for timeouts');
+    console.log('- Track progress with streaming for better UX');
+    console.log('- Handle Ctrl+C gracefully for user cancellation');
+    console.log('- Break large tasks into chunks for reliability');
+    console.log('- Remember: Gemini requests continue in background even after abort');
 
   } catch (error) {
     console.error('❌ Error:', error.message);
+  } finally {
+    // Clean up any active progress indicator
+    if (activeProgress) {
+      activeProgress.stop();
+    }
   }
 }
 
-main().catch(console.error);
+main().catch(console.error).finally(() => {
+  // Final cleanup
+  if (activeProgress) {
+    activeProgress.stop();
+  }
+  process.stdout.write('\r\x1b[K');
+});

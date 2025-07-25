@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { mapToolsToGeminiFormat } from '../tool-mapper';
-import type { LanguageModelV1FunctionTool } from '@ai-sdk/provider';
+import type { LanguageModelV2FunctionTool } from '@ai-sdk/provider';
 import { z } from 'zod';
 
 describe('mapToolsToGeminiFormat', () => {
   describe('basic tool mapping', () => {
     it('should map a simple tool with Zod schema', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'getWeather',
           description: 'Get the weather for a location',
-          parameters: z.object({
+          inputSchema: z.object({
             location: z.string().describe('The location to get weather for'),
             unit: z.enum(['celsius', 'fahrenheit']).optional(),
           }),
@@ -42,18 +42,18 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should map multiple tools', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'getWeather',
           description: 'Get weather',
-          parameters: z.object({ location: z.string() }),
+          inputSchema: z.object({ location: z.string() }),
         },
         {
           type: 'function',
           name: 'getTime',
           description: 'Get current time',
-          parameters: z.object({ timezone: z.string() }),
+          inputSchema: z.object({ timezone: z.string() }),
         },
       ];
 
@@ -66,7 +66,7 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should handle empty tools array', () => {
-      const tools: LanguageModelV1FunctionTool[] = [];
+      const tools: LanguageModelV2FunctionTool[] = [];
       const result = mapToolsToGeminiFormat(tools);
 
       expect(result).toHaveLength(1);
@@ -76,12 +76,12 @@ describe('mapToolsToGeminiFormat', () => {
 
   describe('JSON schema parameters', () => {
     it('should map tool with JSON schema parameters', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'createUser',
           description: 'Create a new user',
-          parameters: {
+          inputSchema: {
             type: 'object',
             properties: {
               name: { type: 'string' },
@@ -107,12 +107,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should clean $schema from JSON schema', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: {
+          inputSchema: {
             $schema: 'http://json-schema.org/draft-07/schema#',
             type: 'object',
             properties: {
@@ -131,12 +131,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should clean $ref, $defs, and definitions', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: {
+          inputSchema: {
             $ref: '#/definitions/User',
             $defs: { User: { type: 'object' } },
             definitions: { User: { type: 'object' } },
@@ -158,12 +158,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should clean nested properties', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: {
+          inputSchema: {
             type: 'object',
             properties: {
               nested: {
@@ -190,12 +190,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should clean array items', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: {
+          inputSchema: {
             type: 'array',
             items: {
               $schema: 'should-be-removed',
@@ -213,12 +213,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should clean additionalProperties', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: {
+          inputSchema: {
             type: 'object',
             additionalProperties: {
               $schema: 'should-be-removed',
@@ -236,12 +236,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should clean allOf, anyOf, oneOf arrays', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: {
+          inputSchema: {
             type: 'object',
             allOf: [
               { $schema: 'remove1', type: 'string' },
@@ -284,12 +284,12 @@ describe('mapToolsToGeminiFormat', () => {
 
   describe('complex Zod schemas', () => {
     it('should handle nested Zod objects', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'createOrder',
           description: 'Create an order',
-          parameters: z.object({
+          inputSchema: z.object({
             customer: z.object({
               name: z.string(),
               email: z.string().email(),
@@ -320,12 +320,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should handle Zod unions', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'processValue',
           description: 'Process a value',
-          parameters: z.object({
+          inputSchema: z.object({
             value: z.union([z.string(), z.number(), z.boolean()]),
           }),
         },
@@ -343,12 +343,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should handle Zod optional fields', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'updateUser',
           description: 'Update user',
-          parameters: z.object({
+          inputSchema: z.object({
             id: z.string(),
             name: z.string().optional(),
             email: z.string().optional(),
@@ -367,12 +367,12 @@ describe('mapToolsToGeminiFormat', () => {
 
   describe('edge cases', () => {
     it('should handle non-schema parameters', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: 'not-a-schema' as any,
+          inputSchema: 'not-a-schema' as any,
         },
       ];
 
@@ -382,12 +382,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should handle null parameters', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: null as any,
+          inputSchema: null as any,
         },
       ];
 
@@ -397,12 +397,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should handle undefined parameters', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: undefined as any,
+          inputSchema: undefined as any,
         },
       ];
 
@@ -412,12 +412,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should handle primitive types in cleanJsonSchema', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: {
+          inputSchema: {
             type: 'object',
             properties: {
               primitiveString: 'string',
@@ -439,12 +439,12 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should handle boolean additionalProperties', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           description: 'Test function',
-          parameters: {
+          inputSchema: {
             type: 'object',
             additionalProperties: true,
           },
@@ -458,13 +458,13 @@ describe('mapToolsToGeminiFormat', () => {
     });
 
     it('should handle missing description', () => {
-      const tools: LanguageModelV1FunctionTool[] = [
+      const tools: LanguageModelV2FunctionTool[] = [
         {
           type: 'function',
           name: 'test',
           // No description
-          parameters: z.object({ value: z.string() }),
-        } as LanguageModelV1FunctionTool,
+          inputSchema: z.object({ value: z.string() }),
+        } as LanguageModelV2FunctionTool,
       ];
 
       const result = mapToolsToGeminiFormat(tools);

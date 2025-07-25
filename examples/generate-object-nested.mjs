@@ -64,7 +64,7 @@ async function example1_organizationStructure() {
   });
 
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-flash'),
+    model: gemini('gemini-2.5-pro'),
     schema: orgSchema,
     prompt: 'Generate a structure for a mid-sized AI research company with 3 departments.',
   });
@@ -128,7 +128,7 @@ async function example2_productCatalog() {
   });
 
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-flash'),
+    model: gemini('gemini-2.5-pro'),
     schema: catalogSchema,
     prompt: 'Generate a product catalog for an electronics store with 2 categories, each having 2-3 products.',
   });
@@ -188,7 +188,7 @@ async function example3_courseStructure() {
   });
 
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-flash'),
+    model: gemini('gemini-2.5-pro'),
     schema: courseSchema,
     prompt: 'Generate a computer science course on "Introduction to Machine Learning" with 3 modules.',
   });
@@ -265,7 +265,7 @@ async function example4_apiResponse() {
   });
 
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-flash'),
+    model: gemini('gemini-2.5-pro'),
     schema: apiResponseSchema,
     prompt: 'Generate a social media API response for fetching a user profile with recent posts.',
   });
@@ -349,7 +349,7 @@ async function example5_configFile() {
   });
 
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-flash'),
+    model: gemini('gemini-2.5-pro'),
     schema: configSchema,
     prompt: 'Generate a production configuration for a SaaS web application.',
   });

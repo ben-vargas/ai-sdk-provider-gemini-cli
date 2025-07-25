@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/warning-alpha-FF6700" alt="alpha warning">
-  <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/v/ai-sdk-provider-gemini-cli?color=00A79E" alt="npm version" /></a>
+  <img src="https://img.shields.io/badge/status-beta-FF6700" alt="beta status">
+  <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/v/ai-sdk-provider-gemini-cli/beta?color=00A79E" alt="npm beta version" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/unpacked-size/ai-sdk-provider-gemini-cli?color=00A79E" alt="install size" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/dy/ai-sdk-provider-gemini-cli.svg?color=00A79E" alt="npm downloads" /></a>
   <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/badge/node-%3E%3D18-00A79E" alt="Node.js ≥ 18" /></a>
@@ -9,7 +9,30 @@
 
 # AI SDK Provider for Gemini CLI
 
+> **Beta Release**: This is the v5-beta compatible version. For AI SDK v4 support, use version 0.x.
+
 A community provider for the [Vercel AI SDK](https://sdk.vercel.ai/docs) that enables using Google's Gemini models through the [@google/gemini-cli-core](https://www.npmjs.com/package/@google/gemini-cli-core) library and Google Cloud Code endpoints.
+
+## Version Compatibility
+
+| Provider Version | AI SDK Version | Status | Branch                                                                                 |
+| ---------------- | -------------- | ------ | -------------------------------------------------------------------------------------- |
+| 0.x              | v4             | Stable | [`ai-sdk-v4`](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/tree/ai-sdk-v4) |
+| 1.x-beta         | v5-beta        | Beta   | `main`                                                                                 |
+
+### Installing the Right Version
+
+**For AI SDK v4 (stable):**
+
+```bash
+npm install ai-sdk-provider-gemini-cli@^0.1.1 ai@^4.3.16
+```
+
+**For AI SDK v5-beta:**
+
+```bash
+npm install ai-sdk-provider-gemini-cli@beta ai@beta
+```
 
 ## Disclaimer
 
@@ -23,7 +46,7 @@ Please ensure you have appropriate permissions and comply with all applicable te
 
 ## Features
 
-- 🚀 Compatible with Vercel AI SDK
+- 🚀 Compatible with Vercel AI SDK (v4 and v5-beta)
 - ☁️ Uses Google Cloud Code endpoints (https://cloudcode-pa.googleapis.com)
 - 🔄 Streaming support for real-time responses
 - 🛠️ Tool/function calling capabilities
@@ -44,10 +67,16 @@ gemini  # Follow the interactive authentication setup
 ### 2. Add the provider
 
 ```bash
-npm install ai-sdk-provider-gemini-cli ai
+# For v5-beta
+npm install ai-sdk-provider-gemini-cli@beta ai@beta
+
+# For v4 (stable)
+npm install ai-sdk-provider-gemini-cli@^0.1.1 ai@^4.3.16
 ```
 
 ## Quick Start
+
+### AI SDK v5-beta
 
 ```typescript
 import { generateText } from 'ai';
@@ -63,14 +92,45 @@ const result = await generateText({
   prompt: 'Write a haiku about coding',
 });
 
-console.log(result.text);
+console.log(result.content[0].text);
 ```
+
+### AI SDK v4
+
+```typescript
+import { generateText } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+const { text } = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Write a haiku about coding',
+});
+
+console.log(text);
+```
+
+## Breaking Changes in v1.x-beta
+
+See [CHANGELOG.md](CHANGELOG.md) for details on migrating from v0.x to v1.x-beta.
+
+Key changes:
+
+- Requires AI SDK v5-beta
+- New response format with content arrays
+- Updated parameter names (maxTokens → maxOutputTokens)
+- New streaming API patterns
+- Updated token usage properties
 
 ## Documentation
 
 - **[Examples](examples/)** - Comprehensive examples demonstrating all features
 - **[API Reference](docs/)** - Technical documentation and implementation details
 - **[Authentication Guide](docs/gemini-cli-auth-options.md)** - Detailed authentication options
+- **[Migration Guide](CHANGELOG.md)** - v0.x to v1.x-beta migration guide
 
 ## Examples
 
@@ -157,6 +217,8 @@ export GEMINI_API_KEY="your-api-key-here"
 
 ### Text Generation
 
+**AI SDK v5-beta:**
+
 ```typescript
 import { generateText } from 'ai';
 import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
@@ -168,11 +230,24 @@ const gemini = createGeminiProvider({
 const result = await generateText({
   model: gemini('gemini-2.5-pro'),
   prompt: 'Explain quantum computing in simple terms',
+  maxOutputTokens: 500,
+});
+
+console.log(result.content[0].text);
+console.log(`Tokens used: ${result.usage?.totalTokens}`);
+```
+
+**AI SDK v4:**
+
+```typescript
+const { text, usage } = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Explain quantum computing in simple terms',
   maxTokens: 500,
 });
 
-console.log(result.text);
-console.log(`Tokens used: ${result.usage?.totalTokens}`);
+console.log(text);
+console.log(`Tokens used: ${usage?.totalTokens}`);
 ```
 
 ### Streaming Responses
@@ -190,9 +265,12 @@ const result = await streamText({
   prompt: 'Write a story about a robot learning to paint',
 });
 
+// v5-beta: Access text stream
 for await (const chunk of result.textStream) {
   process.stdout.write(chunk);
 }
+
+// v4: Same API for streaming
 ```
 
 ### Object Generation (Structured Output)
@@ -221,6 +299,8 @@ console.log(result.object);
 
 ### System Messages
 
+**AI SDK v5-beta:**
+
 ```typescript
 import { generateText } from 'ai';
 import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
@@ -235,10 +315,24 @@ const result = await generateText({
   prompt: 'How do I read a file in Node.js?',
 });
 
-console.log(result.text);
+console.log(result.content[0].text);
+```
+
+**AI SDK v4:**
+
+```typescript
+const { text } = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  system: 'You are a helpful coding assistant. Always include code examples.',
+  prompt: 'How do I read a file in Node.js?',
+});
+
+console.log(text);
 ```
 
 ### Conversation History
+
+**AI SDK v5-beta:**
 
 ```typescript
 const result = await generateText({
@@ -250,7 +344,22 @@ const result = await generateText({
   ],
 });
 
-console.log(result.text); // Should mention "Alice"
+console.log(result.content[0].text); // Should mention "Alice"
+```
+
+**AI SDK v4:**
+
+```typescript
+const { text } = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  messages: [
+    { role: 'user', content: 'My name is Alice' },
+    { role: 'assistant', content: 'Nice to meet you, Alice!' },
+    { role: 'user', content: 'What is my name?' },
+  ],
+});
+
+console.log(text); // Should mention "Alice"
 ```
 
 ## Supported Models
@@ -264,9 +373,22 @@ console.log(result.text); // Should mention "Alice"
 
 ### Model Settings
 
+**AI SDK v5-beta:**
+
 ```typescript
 const model = gemini('gemini-2.5-pro', {
-  // Standard AI SDK parameters:
+  // Standard AI SDK v5 parameters:
+  temperature: 0.7,
+  maxOutputTokens: 1000,
+  topP: 0.95,
+});
+```
+
+**AI SDK v4:**
+
+```typescript
+const model = gemini('gemini-2.5-pro', {
+  // Standard AI SDK v4 parameters:
   temperature: 0.7,
   maxTokens: 1000,
   topP: 0.95,
@@ -301,6 +423,7 @@ This provider uses Google's Cloud Code endpoints through the Gemini CLI Core lib
 - Image URLs not supported (use base64-encoded images)
 - Some AI SDK parameters not supported: `frequencyPenalty`, `presencePenalty`, `seed`
 - Only function tools supported (no provider-defined tools)
+- **Abort signals have limited support**: While the provider correctly handles abort signals and throws `AbortError`, the underlying `gemini-cli-core` does not support request cancellation. This means aborted requests will continue running in the background until completion, though the provider will throw an `AbortError` as soon as it detects the abort signal
 
 ## Contributing
 

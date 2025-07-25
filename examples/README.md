@@ -193,8 +193,10 @@ try {
 ## Cloud Code Endpoints
 
 This provider uses Google Cloud Code endpoints (https://cloudcode-pa.googleapis.com) through the gemini-cli-core library. The available models include:
-- `gemini-2.5-pro` - Most capable model (64K output tokens)
+- `gemini-2.5-pro` - Most capable model (64K output tokens) - **Recommended for all examples**
 - `gemini-2.5-flash` - Faster, efficient model (64K output tokens)
+- `gemini-2.0-pro-exp` - Experimental model with latest features
+- And more models as they become available
 
 **Note**: The provider defaults to 64K output tokens to take full advantage of Gemini 2.5's capabilities. You can override this with the `maxTokens` parameter if needed.
 
@@ -206,13 +208,17 @@ If you encounter authentication issues:
 3. Run `node examples/check-auth.mjs` to verify
 
 If you encounter rate limit errors:
-- `gemini-2.5-pro` has stricter rate limits
-- Consider using `gemini-2.5-flash` for testing and development
 - Add delays between requests if running multiple examples
+- Consider reducing the number of concurrent requests
+- Check your quota in the Google Cloud Console
 
 For object generation issues:
 - Very strict character length constraints (e.g., exactly 60-80 chars) can be challenging
 - Consider using ranges or slightly more flexible constraints
 - The model may occasionally exceed limits by a few characters
+- **Important**: When using `generateObject`, validation failures will throw an error saying "No object generated: could not parse the response"
+  - This error message is misleading - the JSON was likely parsed successfully but failed schema validation
+  - The actual generated object is available in the error's `text` property
+  - For production use with strict schemas, consider using `generateText` with JSON mode for more control over validation
 
 For more details, see the main [README](../README.md).

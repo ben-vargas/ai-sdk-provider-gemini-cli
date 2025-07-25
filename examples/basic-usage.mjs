@@ -24,43 +24,43 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result1 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       prompt: 'Explain quantum computing in one paragraph.',
     });
 
     console.log('Response:');
-    console.log(result1.text);
+    console.log(result1.content[0]?.text || 'No response generated');
     console.log(`\nTokens used: ${result1.usage?.totalTokens || 'N/A'}`);
     console.log();
 
-    // Example 2: Generation with max tokens
-    console.log('Example 2: Controlled Length Response');
+    // Example 2: Using pro model
+    console.log('Example 2: Using Pro Model');
     console.log('─'.repeat(50));
     
     const result2 = await generateText({
-      model: gemini('gemini-2.5-flash'),
-      prompt: 'List 3 benefits of TypeScript',
-      maxTokens: 150,
+      model: gemini('gemini-2.5-pro'),
+      prompt: 'Write a haiku about artificial intelligence',
     });
 
     console.log('Response:');
-    console.log(result2.text);
-    console.log(`\nPrompt tokens: ${result2.usage?.promptTokens || 'N/A'}`);
-    console.log(`Completion tokens: ${result2.usage?.completionTokens || 'N/A'}`);
+    console.log(result2.content[0]?.text || 'No response generated');
+    console.log(`\nModel used: gemini-2.5-pro`);
+    console.log(`Input tokens: ${result2.usage?.inputTokens || 'N/A'}`);
+    console.log(`Output tokens: ${result2.usage?.outputTokens || 'N/A'}`);
     console.log();
 
-    // Example 3: Using different models
-    console.log('Example 3: Using Flash Model');
+    // Example 3: Using temperature settings
+    console.log('Example 3: Using Temperature Settings');
     console.log('─'.repeat(50));
     
     const result3 = await generateText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-2.5-pro'),
       prompt: 'Write a haiku about programming',
     });
 
     console.log('Response:');
-    console.log(result3.text);
-    console.log(`\nModel used: gemini-2.5-flash`);
+    console.log(result3.content[0]?.text || 'No response generated');
+    console.log(`\nModel used: gemini-2.5-pro`);
     console.log(`Total tokens: ${result3.usage?.totalTokens || 'N/A'}`);
     console.log();
 
@@ -68,7 +68,7 @@ async function main() {
     console.log('Example 4: Provider Information');
     console.log('─'.repeat(50));
     
-    const model = gemini('gemini-2.5-flash');
+    const model = gemini('gemini-2.5-pro');
     console.log(`Provider: ${model.provider}`);
     console.log(`Model ID: ${model.modelId}`);
     console.log(`Specification: ${JSON.stringify(model.specificationVersion)}`);
