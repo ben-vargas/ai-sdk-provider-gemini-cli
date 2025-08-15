@@ -1,19 +1,19 @@
-# Development Status for AI SDK v5-beta
+# Development Status for AI SDK v5
 
 ## Overview
 
-This document tracks the development status of the Gemini CLI Provider for Vercel AI SDK v5-beta compatibility.
+This document tracks the development status of the Gemini CLI Provider for Vercel AI SDK v5 compatibility.
 
 ## Current Status: ✅ COMPLETE
 
-The provider has been fully migrated to support AI SDK v5-beta.
+The provider has been fully migrated to support AI SDK v5.
 
 ## Completed Features
 
 ### Core Functionality
 - ✅ **Provider Interface**: Extends `ProviderV2` correctly
 - ✅ **Language Model**: Implements `LanguageModelV2` interface
-- ✅ **Text Generation**: Full `generateText` support with v5-beta response format
+- ✅ **Text Generation**: Full `generateText` support with v5 response format
 - ✅ **Streaming**: Complete `streamText` implementation with promise-based API
 - ✅ **Object Generation**: `generateObject` with Zod schema validation
 - ✅ **System Messages**: Proper system instruction support
@@ -30,18 +30,18 @@ The provider has been fully migrated to support AI SDK v5-beta.
 - ✅ **gemini-2.5-flash**: Full support for faster responses
 
 ### Error Handling
-- ✅ **Error Mapping**: Proper error types for v5-beta
+- ✅ **Error Mapping**: Proper error types for v5
 - ✅ **Abort Signals**: Correct AbortError handling (with limitations)
 - ✅ **Validation Errors**: Clear error messages for schema failures
 
 ### Documentation
 - ✅ **Breaking Changes Guide**: Complete migration guide from v4
-- ✅ **Usage Guide**: Comprehensive v5-beta patterns and examples
+- ✅ **Usage Guide**: Comprehensive v5 patterns and examples
 - ✅ **Troubleshooting**: Common issues and solutions documented
 - ✅ **API Documentation**: All interfaces documented
 
 ### Examples
-- ✅ All 14 example files updated and tested with v5-beta
+- ✅ All 14 example files updated and tested with v5
 - ✅ Examples use gemini-2.5-pro for consistency
 - ✅ Clear documentation of patterns and best practices
 
@@ -74,7 +74,7 @@ The provider has been fully migrated to support AI SDK v5-beta.
 ## Testing Status
 
 ### Unit Tests
-- ✅ All tests updated for v5-beta compatibility
+- ✅ All tests updated for v5 compatibility
 - ✅ 98.85% test coverage achieved
 - ✅ All tests passing
 
@@ -94,7 +94,7 @@ The provider has been fully migrated to support AI SDK v5-beta.
 
 ## Migration Checklist
 
-- [x] Update dependencies to v5-beta versions
+- [x] Update dependencies to v5 versions
 - [x] Implement ProviderV2 interface
 - [x] Implement LanguageModelV2 interface
 - [x] Update message format handling

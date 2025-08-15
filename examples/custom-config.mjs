@@ -144,8 +144,8 @@ async function main() {
       }),
     ]);
     
-    console.log('Provider 1:', response1.content[0].text);
-    console.log('Provider 2:', response2.content[0].text);
+    console.log('Provider 1:', response1.content[0]?.text || 'No response generated');
+    console.log('Provider 2:', response2.content[0]?.text || 'No response generated');
     console.log('✅ Multiple instances work independently');
     console.log();
 
@@ -172,7 +172,7 @@ async function main() {
         prompt: `Count to ${i}`,
         maxOutputTokens: 20,
       });
-      responses.push(result.content[0].text);
+      responses.push(result.content[0]?.text || 'No response');
     }
     
     console.log('Responses with persistent settings:');

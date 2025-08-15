@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### BREAKING CHANGES
 
-This version is compatible with Vercel AI SDK v5-beta. For v4 compatibility, please use version 0.x.x.
+This version is compatible with Vercel AI SDK v5. For v4 compatibility, please use version 0.x.x.
 
 ### Changed
 
