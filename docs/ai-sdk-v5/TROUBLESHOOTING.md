@@ -1,6 +1,6 @@
-# Troubleshooting Guide for AI SDK v5-beta
+# Troubleshooting Guide for AI SDK v5
 
-This guide helps resolve common issues when using the Gemini CLI Provider with AI SDK v5-beta.
+This guide helps resolve common issues when using the Gemini CLI Provider with AI SDK v5.
 
 ## Common Issues
 
@@ -134,17 +134,17 @@ try {
 
 ### 5. TypeScript Type Errors
 
-**Problem**: Getting type errors after upgrading to v5-beta.
+**Problem**: Getting type errors after upgrading to v5.
 
 ```typescript
 // Type error: Property 'promptTokens' does not exist
 console.log(result.usage.promptTokens);
 ```
 
-**Solution**: Update to v5-beta property names:
+**Solution**: Update to v5 property names:
 
 ```typescript
-// v4 → v5-beta mapping
+// v4 → v5 mapping
 console.log(result.usage.inputTokens);   // was promptTokens
 console.log(result.usage.outputTokens);  // was completionTokens
 console.log(result.text);                // was result (destructured)
@@ -162,10 +162,10 @@ const { textStream } = await streamText({
 });
 ```
 
-**Solution**: v5-beta returns a promise with stream properties:
+**Solution**: v5 returns a promise with stream properties:
 
 ```typescript
-// Correct v5-beta pattern
+// Correct v5 pattern
 const result = await streamText({
   model: gemini('gemini-2.5-pro'),
   prompt: 'Tell a story',
@@ -308,7 +308,7 @@ npm list ai-sdk-provider-gemini-cli
 ### 3. Verify AI SDK Version
 
 ```bash
-# Ensure AI SDK is v5-beta
+# Ensure AI SDK is v5
 npm list ai
 # Should show: ai@5.x.x-beta.x
 ```

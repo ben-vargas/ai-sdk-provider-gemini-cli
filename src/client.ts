@@ -39,7 +39,10 @@ export async function initializeGeminiClient(
     authType = AuthType.USE_GEMINI;
   }
 
-  // Create a minimal config object that implements the required methods
+  // Create a config object that will hold the generated config
+  let config: ContentGeneratorConfig;
+  
+  // Create the mock config object with all required methods
   const configMock = {
     getModel: () => modelId,
     getProxy: () =>
@@ -47,10 +50,12 @@ export async function initializeGeminiClient(
       process.env.HTTP_PROXY ||
       process.env.HTTPS_PROXY ||
       undefined,
+    getUsageStatisticsEnabled: () => false,
+    getContentGeneratorConfig: () => config,
   };
 
   // Create the configuration
-  const config = createContentGeneratorConfig(
+  config = createContentGeneratorConfig(
     configMock as Parameters<typeof createContentGeneratorConfig>[0],
     authType
   );

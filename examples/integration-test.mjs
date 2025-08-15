@@ -48,7 +48,7 @@ async function main() {
       model: gemini('gemini-2.5-pro'),
       prompt: 'Say hello',
     });
-    // In v5-beta, check both .text and .content
+    // In v5, check both .text and .content
     if (!result.text || result.text.length === 0) {
       throw new Error('No text generated');
     }

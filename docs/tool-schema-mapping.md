@@ -4,12 +4,12 @@
 
 This document outlines the mapping between Vercel AI SDK's Zod-based tool schemas and Google Gemini's FunctionDeclaration format.
 
-**Note**: This mapping applies to both AI SDK v4 and v5-beta. The tool schema format remains consistent across versions.
+**Note**: This mapping applies to both AI SDK v4 and v5. The tool schema format remains consistent across versions.
 
 ## Vercel AI SDK Tool Structure
 
 ```typescript
-// Note: In v5-beta, this is LanguageModelV2FunctionTool
+// Note: In v5, this is LanguageModelV2FunctionTool
 // but the structure remains the same
 interface LanguageModelV1FunctionTool {
   type: 'function';

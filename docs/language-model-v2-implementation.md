@@ -1,14 +1,14 @@
-# LanguageModelV2 Implementation Summary for AI SDK v5-beta
+# LanguageModelV2 Implementation Summary for AI SDK v5
 
 ## Overview
 
-The `doGenerate` and `doStream` methods are the core generation methods that all Language Model V2 providers must implement for AI SDK v5-beta compatibility. These methods handle standardized prompts and options, call the underlying model API, and return standardized results.
+The `doGenerate` and `doStream` methods are the core generation methods that all Language Model V2 providers must implement for AI SDK v5 compatibility. These methods handle standardized prompts and options, call the underlying model API, and return standardized results.
 
 ## Key Interfaces and Types
 
 ### 1. LanguageModelV2 Interface
 
-The main interface that providers must implement for v5-beta:
+The main interface that providers must implement for v5:
 
 ```typescript
 export type LanguageModelV2 = {
@@ -45,7 +45,7 @@ export type LanguageModelV2 = {
 
 ### 2. LanguageModelV2CallOptions
 
-The options passed to doGenerate and doStream in v5-beta:
+The options passed to doGenerate and doStream in v5:
 
 ```typescript
 export type LanguageModelV1CallOptions = LanguageModelV1CallSettings & {

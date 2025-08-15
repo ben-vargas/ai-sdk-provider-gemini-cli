@@ -7,7 +7,7 @@ ai-sdk-provider-gemini-cli/
 ├── src/                                      # Source code
 │   ├── index.ts                              # Main exports
 │   ├── gemini-provider.ts                    # Provider factory function
-│   ├── gemini-language-model.ts              # Core LanguageModelV2 implementation (v5-beta)
+│   ├── gemini-language-model.ts              # Core LanguageModelV2 implementation (v5)
 │   ├── client.ts                             # Gemini CLI Core client initialization
 │   ├── message-mapper.ts                     # Maps AI SDK messages to Gemini format
 │   ├── tool-mapper.ts                        # Maps AI SDK tools to Gemini format
@@ -50,7 +50,7 @@ ai-sdk-provider-gemini-cli/
 │   ├── language-model-v2-implementation.md   # AI SDK v5 interface
 │   ├── tool-schema-mapping.md                # Tool schema conversion
 │   ├── zod-to-gemini-mapping.md              # Zod to Gemini mapping
-│   └── ai-sdk-v5/                            # v5-beta specific docs
+│   └── ai-sdk-v5/                            # v5 specific docs
 │       ├── BREAKING_CHANGES.md               # Migration guide from v4
 │       ├── DEVELOPMENT_STATUS.md             # Current development status
 │       ├── GUIDE.md                          # Comprehensive usage guide
@@ -89,7 +89,7 @@ ai-sdk-provider-gemini-cli/
   - `gemini-provider.ts` - Factory function for creating providers
 
 - **Language Model**
-  - `gemini-language-model.ts` - Implements Vercel AI SDK's LanguageModelV2 interface for v5-beta
+  - `gemini-language-model.ts` - Implements Vercel AI SDK's LanguageModelV2 interface for v5
   - Handles both streaming and non-streaming generation
   - Manages authentication and client initialization
   - Supports abort signals (with limitations)
@@ -131,7 +131,7 @@ Technical documentation covering:
 - **Minimal Dependencies**: Only essential packages included
 - **Direct Integration**: Uses Gemini CLI Core directly without abstraction layers
 - **Type Safety**: Full TypeScript support with comprehensive types
-- **AI SDK Compatibility**: Implements standard LanguageModelV2 interface for v5-beta
+- **AI SDK Compatibility**: Implements standard LanguageModelV2 interface for v5
 - **OAuth First**: Designed for OAuth authentication via Gemini CLI
 
 ## Test Coverage

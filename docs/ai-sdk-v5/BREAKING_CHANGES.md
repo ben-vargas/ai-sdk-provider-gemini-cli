@@ -1,10 +1,10 @@
-# Breaking Changes: AI SDK v5-beta
+# Breaking Changes: AI SDK v5
 
-This document outlines the breaking changes when migrating from AI SDK v4 to v5-beta for the Gemini CLI provider.
+This document outlines the breaking changes when migrating from AI SDK v4 to v5 for the Gemini CLI provider.
 
 ## Overview
 
-The Vercel AI SDK v5-beta introduces significant architectural changes that affect how providers are implemented and used. This provider has been updated to be fully compatible with v5-beta.
+The Vercel AI SDK v5 introduces significant architectural changes that affect how providers are implemented and used. This provider has been updated to be fully compatible with v5.
 
 ## Key Breaking Changes
 
@@ -18,7 +18,7 @@ const { text, usage } = await generateText({
 });
 ```
 
-**v5-beta Response:**
+**v5 Response:**
 ```typescript
 const result = await generateText({
   model: gemini('gemini-2.5-pro'),
@@ -33,9 +33,9 @@ console.log(result.content[0].text); // Alternative access
 
 ### 2. Parameter Name Changes
 
-Several parameter names have been updated to align with v5-beta conventions:
+Several parameter names have been updated to align with v5 conventions:
 
-| v4 Parameter | v5-beta Parameter | Notes |
+| v4 Parameter | v5 Parameter | Notes |
 |--------------|-------------------|-------|
 | `maxTokens` | `maxOutputTokens` | Maximum tokens to generate |
 | `stopWords` | `stopSequences` | Sequences that stop generation |
@@ -54,7 +54,7 @@ for await (const chunk of textStream) {
 }
 ```
 
-**v5-beta Streaming:**
+**v5 Streaming:**
 ```typescript
 const result = await streamText({
   model: gemini('gemini-2.5-pro'),
@@ -83,7 +83,7 @@ Token usage reporting has been standardized:
 }
 ```
 
-**v5-beta:**
+**v5:**
 ```typescript
 {
   inputTokens: 10,
@@ -94,7 +94,7 @@ Token usage reporting has been standardized:
 
 ### 5. Message Format Requirements
 
-v5-beta enforces stricter message formats:
+v5 enforces stricter message formats:
 
 ```typescript
 // Messages must have proper role types
@@ -214,6 +214,6 @@ npm run example:test
 
 ## Need Help?
 
-- Check the [examples](../../examples/) directory for v5-beta usage patterns
+- Check the [examples](../../examples/) directory for v5 usage patterns
 - Review the [GUIDE.md](./GUIDE.md) for detailed usage instructions
 - See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for common issues

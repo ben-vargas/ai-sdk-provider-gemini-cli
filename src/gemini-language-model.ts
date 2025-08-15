@@ -194,7 +194,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       // Generate content
       let response;
       try {
-        response = await contentGenerator.generateContent(request);
+        response = await contentGenerator.generateContent(
+          request,
+          'ai-sdk-provider'
+        );
 
         // Check if aborted during generation
         if (options.abortSignal?.aborted) {
@@ -354,7 +357,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       // Create streaming response
       let streamResponse;
       try {
-        streamResponse = await contentGenerator.generateContentStream(request);
+        streamResponse = await contentGenerator.generateContentStream(
+          request,
+          'ai-sdk-provider'
+        );
 
         // Check if aborted during stream creation
         if (options.abortSignal?.aborted) {

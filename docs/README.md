@@ -2,13 +2,13 @@
 
 This directory contains technical documentation for the AI SDK Provider for Gemini CLI implementation.
 
-## AI SDK v5-beta Documentation
+## AI SDK v5 Documentation
 
-This provider is compatible with Vercel AI SDK v5-beta. For v5-specific documentation, see:
+This provider is compatible with Vercel AI SDK v5. For v5-specific documentation, see:
 
-- **[ai-sdk-v5/GUIDE.md](ai-sdk-v5/GUIDE.md)** - Comprehensive usage guide for v5-beta
+- **[ai-sdk-v5/GUIDE.md](ai-sdk-v5/GUIDE.md)** - Comprehensive usage guide for v5
 - **[ai-sdk-v5/BREAKING_CHANGES.md](ai-sdk-v5/BREAKING_CHANGES.md)** - Breaking changes and migration guide from v4
-- **[ai-sdk-v5/TROUBLESHOOTING.md](ai-sdk-v5/TROUBLESHOOTING.md)** - Common issues and solutions for v5-beta
+- **[ai-sdk-v5/TROUBLESHOOTING.md](ai-sdk-v5/TROUBLESHOOTING.md)** - Common issues and solutions for v5
 
 ## Documentation Overview
 
@@ -22,7 +22,7 @@ Comprehensive guide to the three authentication methods supported by `@google/ge
 - Vertex AI (`vertex-ai`)
 
 ### 3. [Language Model V2 Implementation](./language-model-v2-implementation.md)
-Detailed specification of the Vercel AI SDK Language Model V2 interface implementation for v5-beta:
+Detailed specification of the Vercel AI SDK Language Model V2 interface implementation for v5:
 - Core interfaces and types
 - Message format specifications
 - Tool calling interfaces
@@ -77,6 +77,6 @@ The provider implements a direct integration with Google's Cloud Code endpoints 
 - Native OAuth support with cached credentials
 - Direct access to Gemini models
 - Optimal performance without intermediate layers
-- Full compatibility with Vercel AI SDK v5-beta patterns
+- Full compatibility with Vercel AI SDK v5 patterns
 
 For implementation examples, see the [examples directory](../examples/).

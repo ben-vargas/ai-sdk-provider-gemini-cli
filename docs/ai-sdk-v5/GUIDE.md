@@ -1,6 +1,6 @@
-# Gemini CLI Provider for AI SDK v5-beta Guide
+# Gemini CLI Provider for AI SDK v5 Guide
 
-This guide covers how to use the Gemini CLI Provider with Vercel AI SDK v5-beta.
+This guide covers how to use the Gemini CLI Provider with Vercel AI SDK v5.
 
 ## Table of Contents
 
