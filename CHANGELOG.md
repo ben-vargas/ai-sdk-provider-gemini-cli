@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2025-08-15
+
+### Changed
+
+- **Stable Release**: Vercel AI SDK v5 is now stable (no longer beta)
+- Updated all references from "v5-beta" to "v5"
+- Package marked as stable release
+
+### Fixed
+
+- Improved documentation clarity for abort signal limitations
+- Updated examples to reflect stable v5 API
+
+### Notes
+
+This is the stable release of v1.0.0-beta.1 with Vercel AI SDK v5 now being officially stable. No breaking changes from v1.0.0-beta.1.
+
 ## [1.0.0-beta.1] - 2025-07-24
 
 ### BREAKING CHANGES
@@ -143,6 +160,7 @@ This version is compatible with Vercel AI SDK v5. For v4 compatibility, please u
 - Streaming support
 - Basic error handling
 
+[1.0.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.0-beta.1...v1.0.1
 [1.0.0-beta.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.1.1...v1.0.0-beta.1
 [0.1.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.0.4...v0.1.0
