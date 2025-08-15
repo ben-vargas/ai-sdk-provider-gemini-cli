@@ -41,7 +41,7 @@ export async function initializeGeminiClient(
 
   // Create a config object that will hold the generated config
   let config: ContentGeneratorConfig;
-  
+
   // Create the mock config object with all required methods
   const configMock = {
     getModel: () => modelId,
