@@ -5,6 +5,7 @@
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/dy/ai-sdk-provider-gemini-cli.svg?color=00A79E" alt="npm downloads" /></a>
   <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/badge/node-%3E%3D18-00A79E" alt="Node.js ≥ 18" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/l/ai-sdk-provider-gemini-cli?color=00A79E" alt="License: MIT" /></a>
+  <a href="https://github.com/Piebald-AI/awesome-gemini-cli"><img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Gemini CLI" /></a>
 </p>
 
 # AI SDK Provider for Gemini CLI
