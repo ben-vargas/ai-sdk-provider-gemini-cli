@@ -1,6 +1,6 @@
 {
   "name": "ai-sdk-provider-gemini-cli",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Community AI SDK provider for Google Gemini using the official CLI/SDK",
   "author": "Ben Vargas",
   "license": "MIT",
@@ -68,7 +68,6 @@
     "@google/gemini-cli-core": "0.1.21",
     "@google/genai": "1.14.0",
     "google-auth-library": "10.2.1",
-    "zod": "3.25.76",
     "zod-to-json-schema": "3.24.6"
   },
   "devDependencies": {
@@ -85,10 +84,11 @@
     "tsx": "^4.16.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.35.0",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "zod": "^3.25.76"
   },
   "peerDependencies": {
-    "zod": "^3.23.8"
+    "zod": "^3.0.0 || ^4.0.0"
   },
   "engines": {
     "node": ">=18"
