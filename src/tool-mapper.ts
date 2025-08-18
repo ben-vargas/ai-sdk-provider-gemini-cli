@@ -1,6 +1,5 @@
 import type { LanguageModelV2FunctionTool } from '@ai-sdk/provider';
 import type { Tool, FunctionDeclaration, Schema } from '@google/genai';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 import { z } from 'zod';
 
 // Type for JSON Schema objects with common properties
@@ -38,6 +37,49 @@ export function mapToolsToGeminiFormat(
 }
 
 /**
+ * Attempts to convert a Zod schema to JSON Schema using available methods
+ */
+function convertZodToJsonSchema(zodSchema: z.ZodSchema): unknown {
+  // Try Zod v4's native toJSONSchema function first (if available)
+  const zodWithToJSONSchema = z as unknown as {
+    toJSONSchema?: (schema: z.ZodSchema) => unknown;
+  };
+
+  if (
+    zodWithToJSONSchema.toJSONSchema &&
+    typeof zodWithToJSONSchema.toJSONSchema === 'function'
+  ) {
+    try {
+      // Zod v4 uses z.toJSONSchema(schema) as a standalone function
+      return zodWithToJSONSchema.toJSONSchema(zodSchema);
+    } catch {
+      // Method exists but failed, try fallback
+    }
+  }
+
+  // Try zod-to-json-schema for Zod v3 compatibility
+  try {
+    // Lazy load zod-to-json-schema to avoid import errors with Zod v4
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+    const zodToJsonSchemaModule = require('zod-to-json-schema');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    return zodToJsonSchemaModule.zodToJsonSchema(zodSchema);
+  } catch {
+    // zod-to-json-schema not available or not compatible
+  }
+
+  // No conversion method available
+  console.warn(
+    'Unable to convert Zod schema to JSON Schema. ' +
+      'For Zod v3, install zod-to-json-schema. ' +
+      'For Zod v4, use z.toJSONSchema() function.'
+  );
+
+  // Return a basic object schema as fallback
+  return { type: 'object' };
+}
+
+/**
  * Converts tool parameters from Zod schema or JSON schema to Gemini format
  */
 function convertToolParameters(parameters: unknown): Schema {
@@ -48,8 +90,8 @@ function convertToolParameters(parameters: unknown): Schema {
 
   // If it's a Zod schema, convert to JSON schema first
   if (isZodSchema(parameters)) {
-    const jsonSchema = zodToJsonSchema(parameters as z.ZodSchema);
-    return cleanJsonSchema(jsonSchema) as Schema;
+    const jsonSchema = convertZodToJsonSchema(parameters as z.ZodSchema);
+    return cleanJsonSchema(jsonSchema as JsonSchemaObject) as Schema;
   }
 
   // Return a basic schema if we can't identify the format

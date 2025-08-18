@@ -334,12 +334,26 @@ describe('mapToolsToGeminiFormat', () => {
       const result = mapToolsToGeminiFormat(tools);
       const params = result[0].functionDeclarations[0].parameters as any;
 
-      // zod-to-json-schema converts unions to type arrays
-      expect(params.properties.value.type).toEqual([
-        'string',
-        'number',
-        'boolean',
-      ]);
+      // Zod v3 with zod-to-json-schema converts unions to type arrays
+      // Zod v4 uses anyOf for unions
+      // Check for either format
+      if (params.properties.value.type) {
+        // Zod v3 format: type array
+        expect(params.properties.value.type).toEqual([
+          'string',
+          'number',
+          'boolean',
+        ]);
+      } else if (params.properties.value.anyOf) {
+        // Zod v4 format: anyOf array
+        expect(params.properties.value.anyOf).toEqual([
+          { type: 'string' },
+          { type: 'number' },
+          { type: 'boolean' },
+        ]);
+      } else {
+        throw new Error('Union type not properly converted to JSON Schema');
+      }
     });
 
     it('should handle Zod optional fields', () => {

@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2025-08-18
+
+### Added
+
+- **Zod 4 Compatibility**: Added support for Zod v4 while maintaining backward compatibility with Zod v3
+  - Runtime detection automatically uses the appropriate conversion method
+  - Zod v3: Uses `zod-to-json-schema` package
+  - Zod v4: Uses native `z.toJSONSchema()` function
+  - Both versions listed in peerDependencies: `"^3.0.0 || ^4.0.0"`
+
+### Changed
+
+- Moved `zod` from dependencies to devDependencies to allow users to choose their version
+- Updated tool mapping to handle different JSON Schema outputs between Zod versions
+  - Union types: Arrays in v3 vs `anyOf` in v4
+
+### Technical Details
+
+- Added `convertZodToJsonSchema` function for runtime version detection
+- Tests updated to handle both Zod v3 and v4 union type representations
+- Maintained full compatibility with existing API
+
 ## [1.0.1] - 2025-08-15
 
 ### Changed
@@ -160,6 +182,7 @@ This version is compatible with Vercel AI SDK v5. For v4 compatibility, please u
 - Streaming support
 - Basic error handling
 
+[1.1.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.0-beta.1...v1.0.1
 [1.0.0-beta.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.1.1...v1.0.0-beta.1
 [0.1.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.1.0...v0.1.1
