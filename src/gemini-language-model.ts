@@ -184,7 +184,10 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       }
 
       // Generate content (new signature requires userPromptId)
-      const response = await contentGenerator.generateContent(request, randomUUID());
+      const response = await contentGenerator.generateContent(
+        request,
+        randomUUID()
+      );
 
       // Extract the result
       const candidate = response.candidates?.[0];
@@ -302,8 +305,10 @@ export class GeminiLanguageModel implements LanguageModelV1 {
       }
 
       // Create streaming response (new signature requires userPromptId)
-      const streamResponse =
-        await contentGenerator.generateContentStream(request, randomUUID());
+      const streamResponse = await contentGenerator.generateContentStream(
+        request,
+        randomUUID()
+      );
 
       // Transform the stream to AI SDK format
       const stream = new ReadableStream<LanguageModelV1StreamPart>({
