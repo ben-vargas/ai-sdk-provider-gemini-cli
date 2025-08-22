@@ -51,11 +51,12 @@ describe('initializeGeminiClient', () => {
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
         expect.any(Object), // Proxy object
-        undefined // sessionId parameter
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -73,11 +74,12 @@ describe('initializeGeminiClient', () => {
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
         expect.any(Object), // Proxy object
-        undefined // sessionId parameter
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -99,11 +101,12 @@ describe('initializeGeminiClient', () => {
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
         expect.any(Object), // Proxy object
-        undefined // sessionId parameter
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -123,11 +126,12 @@ describe('initializeGeminiClient', () => {
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
         expect.any(Object), // Proxy object
-        undefined // sessionId parameter
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -148,6 +152,7 @@ describe('initializeGeminiClient', () => {
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -172,11 +177,12 @@ describe('initializeGeminiClient', () => {
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
         expect.any(Object), // Proxy object
-        undefined // sessionId parameter
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -197,6 +203,7 @@ describe('initializeGeminiClient', () => {
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -219,11 +226,12 @@ describe('initializeGeminiClient', () => {
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
         expect.any(Object), // Proxy object
-        undefined // sessionId parameter
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -243,11 +251,12 @@ describe('initializeGeminiClient', () => {
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
         expect.any(Object), // Proxy object
-        undefined // sessionId parameter
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -265,11 +274,12 @@ describe('initializeGeminiClient', () => {
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
         expect.any(Object), // Proxy object
-        undefined // sessionId parameter
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -436,6 +446,86 @@ describe('initializeGeminiClient', () => {
 
       process.env.HTTP_PROXY = originalHttpProxy;
       process.env.HTTPS_PROXY = originalHttpsProxy;
+    });
+  });
+
+  describe('OAuth config methods', () => {
+    it('should provide OAuth config methods (isBrowserLaunchSuppressed)', async () => {
+      const options: GeminiProviderOptions = { authType: 'oauth' };
+      await initializeGeminiClient(options, 'gemini-2.5-pro');
+      
+      const configArg = vi.mocked(createContentGeneratorConfig).mock.calls[0][0];
+      
+      expect(typeof configArg.isBrowserLaunchSuppressed).toBe('function');
+      expect(configArg.isBrowserLaunchSuppressed()).toBe(false);
+    });
+  });
+
+  describe('Proxy pattern for unknown methods', () => {
+    it('should handle unknown is* and has* methods through Proxy', async () => {
+      const options: GeminiProviderOptions = { authType: 'oauth-personal' };
+      await initializeGeminiClient(options, 'gemini-2.5-pro');
+      
+      const configArg = vi.mocked(createContentGeneratorConfig).mock.calls[0][0];
+      
+      // Test is* methods
+      expect(typeof configArg.isUnknownFeatureEnabled).toBe('function');
+      expect(configArg.isUnknownFeatureEnabled()).toBe(false);
+      
+      // Test has* methods
+      expect(typeof configArg.hasSpecialCapability).toBe('function');
+      expect(configArg.hasSpecialCapability()).toBe(false);
+      
+      // Test get* methods still work
+      expect(typeof configArg.getSomeUnknownConfig).toBe('function');
+      expect(configArg.getSomeUnknownConfig()).toEqual({});
+    });
+
+    it('should return appropriate defaults for unknown getter methods', async () => {
+      const options: GeminiProviderOptions = { authType: 'oauth-personal' };
+      await initializeGeminiClient(options, 'gemini-2.5-pro');
+      
+      const configArg = vi.mocked(createContentGeneratorConfig).mock.calls[0][0];
+      
+      // Test various getter patterns
+      expect(configArg.getSomeEnabled()).toBe(false);
+      expect(configArg.getSomeMode()).toBe(false);
+      expect(configArg.getSomeRegistry()).toBeUndefined();
+      expect(configArg.getSomeClient()).toBeUndefined();
+      expect(configArg.getSomeService()).toBeUndefined();
+      expect(configArg.getSomeConfig()).toEqual({});
+      expect(configArg.getSomeOptions()).toEqual({});
+      expect(configArg.getSomeCommand()).toBeUndefined();
+      expect(configArg.getSomePath()).toBeUndefined();
+      expect(configArg.getSomeRandomThing()).toBeUndefined();
+    });
+  });
+
+  describe('Session ID generation', () => {
+    it('should generate and use a stable session ID', async () => {
+      const options: GeminiProviderOptions = { authType: 'oauth-personal' };
+      const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
+      
+      // Verify sessionId is a valid UUID
+      expect(result.sessionId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      );
+      
+      // Verify same sessionId is used in config and passed to createContentGenerator
+      const configArg = vi.mocked(createContentGeneratorConfig).mock.calls[0][0];
+      expect(configArg.getSessionId()).toBe(result.sessionId);
+      
+      const createGeneratorCall = vi.mocked(createContentGenerator).mock.calls[0];
+      expect(createGeneratorCall[2]).toBe(result.sessionId);
+    });
+
+    it('should generate different session IDs for different provider instances', async () => {
+      const options: GeminiProviderOptions = { authType: 'oauth-personal' };
+      
+      const result1 = await initializeGeminiClient(options, 'gemini-2.5-pro');
+      const result2 = await initializeGeminiClient(options, 'gemini-2.5-pro');
+      
+      expect(result1.sessionId).not.toBe(result2.sessionId);
     });
   });
 });
