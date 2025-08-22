@@ -1,0 +1,90 @@
+# Dependency Version Pinning Notes
+
+## @google/gemini-cli-core
+
+**Current Version:** 0.1.22 (EXACT - no caret or tilde)
+
+### Why Exact Version Pinning?
+
+The `@google/gemini-cli-core` package has been introducing breaking changes in patch versions, which violates semantic versioning principles. Examples of breaking changes observed:
+
+### Breaking Changes Timeline
+
+| Version | Release Date | Breaking Changes |
+|---------|-------------|------------------|
+| 0.1.12 | 2025-07-13 | Baseline version |
+| 0.1.13 | 2025-07-19 | Unknown - worked with original code |
+| 0.1.14 | 2025-07-25 | Potential breaking changes introduced |
+| 0.1.15 | 2025-07-30 | - |
+| 0.1.16 | 2025-08-02 | - |
+| 0.1.17 | 2025-08-05 | - |
+| 0.1.18 | 2025-08-06 | - |
+| 0.1.19 | 2025-08-12 | - |
+| 0.1.20 | 2025-08-13 | - |
+| 0.1.21 | 2025-08-14 | Added telemetry tracking (session events, install IDs) |
+| 0.1.22 | 2025-08-18 | Added session ID support |
+
+### Specific Breaking Changes (0.1.13 → 0.1.22)
+
+1. **Config Object Requirements:**
+   - Added required `getUsageStatisticsEnabled()` method to config object
+   - This method is used for telemetry control (introduced around v0.1.21)
+
+2. **ContentGenerator Method Signatures:**
+   - `generateContent()` now requires `userPromptId: string` as second parameter
+   - `generateContentStream()` now requires `userPromptId: string` as second parameter
+   - These are used for API request logging and telemetry
+
+3. **Factory Function Changes:**
+   - `createContentGenerator()` now accepts optional third parameter `sessionId`
+   - Used for session tracking (added in v0.1.22)
+
+### Evidence from Source Code
+
+From `google-gemini/gemini-cli` repository, the current implementation shows:
+```typescript
+// Method calls now require prompt_id
+contentGenerator.generateContent(request, prompt_id)
+contentGenerator.generateContentStream(request, prompt_id)
+```
+
+These changes were made without incrementing the minor or major version, violating semantic versioning where:
+- Patch versions (0.0.X) should only contain backwards-compatible bug fixes
+- Minor versions (0.X.0) should contain backwards-compatible functionality
+- Major versions (X.0.0) should contain breaking changes
+
+### Version Compatibility Matrix
+
+| ai-sdk-provider-gemini-cli | @google/gemini-cli-core | Status |
+|---------------------------|------------------------|---------|
+| 0.1.0 - 0.1.1            | ~0.1.13                | ❌ Broken with 0.1.22 |
+| 0.1.2+                   | 0.1.22 (exact)         | ✅ Working |
+
+### Upgrade Strategy
+
+Before upgrading `@google/gemini-cli-core`:
+
+1. Review the changelog for breaking changes (if available)
+2. Test thoroughly with the new version
+3. Update our code to handle any breaking changes
+4. Update this document with new compatibility information
+5. Consider maintaining multiple versions if needed for backward compatibility
+
+### Recommendation
+
+Until Google/Gemini follows proper semantic versioning (where breaking changes only occur in major versions), we should:
+
+1. **Pin exact versions** - Use `"0.1.22"` instead of `"^0.1.22"`
+2. **Test before upgrading** - Never auto-upgrade this dependency
+3. **Document breaking changes** - Keep this file updated with each version change
+4. **Consider abstraction layer** - Add an adapter pattern if breaking changes become too frequent
+
+### Related Issues
+
+- Initial compatibility issue discovered: August 2025
+- Breaking changes were introduced without major version bump
+- No official migration guide provided by Google
+
+### Contact
+
+For questions about version compatibility, please open an issue on the repository.

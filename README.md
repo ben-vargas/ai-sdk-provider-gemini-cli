@@ -302,6 +302,10 @@ This provider uses Google's Cloud Code endpoints through the Gemini CLI Core lib
 - Some AI SDK parameters not supported: `frequencyPenalty`, `presencePenalty`, `seed`
 - Only function tools supported (no provider-defined tools)
 
+## Important: Dependency Version Pinning
+
+⚠️ **Note:** The `@google/gemini-cli-core` dependency is pinned to an exact version (0.1.22) because Google has been introducing breaking changes in patch releases, violating semantic versioning principles. See [dependency-notes.md](./docs/dependency-notes.md) for details and upgrade instructions.
+
 ## Contributing
 
 Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for details.

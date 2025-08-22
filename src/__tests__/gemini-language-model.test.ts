@@ -401,7 +401,8 @@ describe('GeminiLanguageModel', () => {
             topP: 0.9,
             maxOutputTokens: 1000,
           }),
-        })
+        }),
+        expect.any(String) // userPromptId parameter
       );
     });
 

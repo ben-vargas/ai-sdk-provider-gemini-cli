@@ -47,6 +47,7 @@ export async function initializeGeminiClient(
       process.env.HTTP_PROXY ||
       process.env.HTTPS_PROXY ||
       undefined,
+    getUsageStatisticsEnabled: () => false, // Disable telemetry by default
   };
 
   // Create the configuration
@@ -67,10 +68,11 @@ export async function initializeGeminiClient(
     // handled through environment variables or other means
   }
 
-  // Create content generator - pass the configMock as the second parameter
+  // Create content generator - pass the configMock as the second parameter and optional sessionId
   const client = await createContentGenerator(
     config,
-    configMock as Parameters<typeof createContentGenerator>[1]
+    configMock as Parameters<typeof createContentGenerator>[1],
+    undefined // Optional sessionId parameter
   );
 
   return { client, config };
