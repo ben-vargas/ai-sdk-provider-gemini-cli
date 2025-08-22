@@ -39,8 +39,9 @@ export async function initializeGeminiClient(
     authType = AuthType.USE_GEMINI;
   }
 
-  // Create a minimal config object that implements the required methods
-  const configMock = {
+  // Phase 1: Core config methods with safe defaults
+  const baseConfig = {
+    // Required methods (currently working)
     getModel: () => modelId,
     getProxy: () =>
       options.proxy ||
@@ -48,11 +49,73 @@ export async function initializeGeminiClient(
       process.env.HTTPS_PROXY ||
       undefined,
     getUsageStatisticsEnabled: () => false, // Disable telemetry by default
+    getContentGeneratorConfig: () => ({
+      authType: authType as string | undefined,
+      model: modelId,
+      apiKey: (options as any).apiKey as string | undefined,
+      vertexai: options.authType === 'vertex-ai' ? true : undefined,
+      proxy: options.proxy,
+    }),
+
+    // Core safety methods - most likely to be called
+    getSessionId: () => undefined,
+    getDebugMode: () => false,
+    getTelemetryEnabled: () => false,
+    getTargetDir: () => process.cwd(),
+    getFullContext: () => false,
+    getIdeMode: () => false,
+    getCoreTools: () => [],
+    getExcludeTools: () => [],
+    getMaxSessionTurns: () => 100,
+    getFileFilteringRespectGitIgnore: () => true,
   };
+
+  // Phase 2: Proxy wrapper to catch any unknown method calls
+  const configMock = new Proxy(baseConfig, {
+    get(target, prop) {
+      if (prop in target) {
+        return target[prop as keyof typeof target];
+      }
+
+      // Log unknown method calls (helps identify what else might be needed)
+      if (typeof prop === 'string' && prop.startsWith('get')) {
+        if (process.env.DEBUG) {
+          console.warn(
+            `[ai-sdk-provider-gemini-cli] Unknown config method called: ${prop}()`
+          );
+        }
+
+        // Return safe defaults for unknown getters
+        return () => {
+          // Return undefined for most unknown methods (safest default)
+          // Could enhance this with smarter defaults based on method name
+          if (prop.includes('Enabled') || prop.includes('Mode')) {
+            return false; // Booleans default to false
+          }
+          if (
+            prop.includes('Registry') ||
+            prop.includes('Client') ||
+            prop.includes('Service')
+          ) {
+            return undefined; // Objects/services default to undefined
+          }
+          if (prop.includes('Config') || prop.includes('Options')) {
+            return {}; // Config objects default to empty
+          }
+          if (prop.includes('Command') || prop.includes('Path')) {
+            return undefined; // Strings default to undefined
+          }
+          return undefined; // Default fallback
+        };
+      }
+
+      return undefined;
+    },
+  });
 
   // Create the configuration
   const config = createContentGeneratorConfig(
-    configMock as Parameters<typeof createContentGeneratorConfig>[0],
+    configMock as unknown as Parameters<typeof createContentGeneratorConfig>[0],
     authType
   );
 
@@ -71,7 +134,7 @@ export async function initializeGeminiClient(
   // Create content generator - pass the configMock as the second parameter and optional sessionId
   const client = await createContentGenerator(
     config,
-    configMock as Parameters<typeof createContentGenerator>[1],
+    configMock as unknown as Parameters<typeof createContentGenerator>[1],
     undefined // Optional sessionId parameter
   );
 

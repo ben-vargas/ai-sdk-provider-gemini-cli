@@ -70,14 +70,53 @@ Before upgrading `@google/gemini-cli-core`:
 4. Update this document with new compatibility information
 5. Consider maintaining multiple versions if needed for backward compatibility
 
+### Current Implementation: Hybrid Approach
+
+We've implemented a robust hybrid solution that protects against future breaking changes:
+
+#### Phase 1: Core Safety Methods ✅
+- Implemented 14 commonly-used config methods with safe defaults
+- Covers telemetry, session, debug, and file handling methods
+- Provides immediate protection against known breaking changes
+
+#### Phase 2: Proxy Safety Net ✅
+- Proxy wrapper catches ALL unknown method calls
+- Returns intelligent defaults based on method naming patterns
+- Prevents runtime errors from missing methods
+
+#### Phase 3: Debug Logging ✅
+- Set `DEBUG=true` environment variable to log unknown method calls
+- Helps identify which methods are actually used in practice
+- Guides future implementation decisions
+
+### How the Proxy Works
+
+```typescript
+// Unknown methods are caught and handled gracefully:
+config.getSomeNewMethod() // Returns safe default, logs if DEBUG=true
+
+// Smart defaults based on naming:
+- *Enabled/*Mode methods → false
+- *Registry/*Client/*Service methods → undefined  
+- *Config/*Options methods → {}
+- All others → undefined
+```
+
+### Benefits
+
+1. **Future-proof**: New methods in gemini-cli-core won't break the integration
+2. **Observable**: Debug logging shows what's actually being called
+3. **Maintainable**: Only implement methods that are actually used
+4. **Safe**: All unknown methods return appropriate defaults
+
 ### Recommendation
 
-Until Google/Gemini follows proper semantic versioning (where breaking changes only occur in major versions), we should:
+Until Google/Gemini follows proper semantic versioning:
 
-1. **Pin exact versions** - Use `"0.1.22"` instead of `"^0.1.22"`
-2. **Test before upgrading** - Never auto-upgrade this dependency
-3. **Document breaking changes** - Keep this file updated with each version change
-4. **Consider abstraction layer** - Add an adapter pattern if breaking changes become too frequent
+1. **Keep exact version pinning** - `"0.1.22"` without caret
+2. **Monitor debug logs** - Track which methods are actually called
+3. **Test thoroughly** before any version updates
+4. **Use the Proxy pattern** - Provides safety net for unknown methods
 
 ### Related Issues
 
