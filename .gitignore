@@ -28,6 +28,9 @@ Thumbs.db
 # Build output
 dist/
 
+# npm package files
+*.tgz
+
 # Test coverage
 coverage/
 .nyc_output/

@@ -48,6 +48,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         AuthType.LOGIN_WITH_GOOGLE
       );
@@ -56,7 +57,9 @@ describe('initializeGeminiClient', () => {
         expect.objectContaining({
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
-        })
+          getUsageStatisticsEnabled: expect.any(Function),
+        }),
+        undefined // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
@@ -75,6 +78,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         AuthType.LOGIN_WITH_GOOGLE
       );
@@ -83,7 +87,9 @@ describe('initializeGeminiClient', () => {
         expect.objectContaining({
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
-        })
+          getUsageStatisticsEnabled: expect.any(Function),
+        }),
+        undefined // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
@@ -105,6 +111,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         AuthType.USE_GEMINI
       );
@@ -114,7 +121,9 @@ describe('initializeGeminiClient', () => {
         expect.objectContaining({
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
-        })
+          getUsageStatisticsEnabled: expect.any(Function),
+        }),
+        undefined // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
@@ -134,6 +143,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         AuthType.USE_GEMINI
       );
@@ -143,7 +153,9 @@ describe('initializeGeminiClient', () => {
         expect.objectContaining({
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
-        })
+          getUsageStatisticsEnabled: expect.any(Function),
+        }),
+        undefined // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
@@ -163,6 +175,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         AuthType.USE_GEMINI
       );
@@ -191,6 +204,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         AuthType.USE_VERTEX_AI
       );
@@ -200,7 +214,9 @@ describe('initializeGeminiClient', () => {
         expect.objectContaining({
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
-        })
+          getUsageStatisticsEnabled: expect.any(Function),
+        }),
+        undefined // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
@@ -220,6 +236,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         AuthType.USE_VERTEX_AI
       );
@@ -247,6 +264,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         AuthType.USE_GEMINI
       );
@@ -255,7 +273,9 @@ describe('initializeGeminiClient', () => {
         expect.objectContaining({
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
-        })
+          getUsageStatisticsEnabled: expect.any(Function),
+        }),
+        undefined // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
@@ -276,6 +296,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         undefined
       );
@@ -284,7 +305,9 @@ describe('initializeGeminiClient', () => {
         expect.objectContaining({
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
-        })
+          getUsageStatisticsEnabled: expect.any(Function),
+        }),
+        undefined // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
@@ -303,6 +326,7 @@ describe('initializeGeminiClient', () => {
         {
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
+          getUsageStatisticsEnabled: expect.any(Function),
         },
         undefined
       );
@@ -311,7 +335,9 @@ describe('initializeGeminiClient', () => {
         expect.objectContaining({
           getModel: expect.any(Function),
           getProxy: expect.any(Function),
-        })
+          getUsageStatisticsEnabled: expect.any(Function),
+        }),
+        undefined // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
@@ -340,6 +366,7 @@ describe('initializeGeminiClient', () => {
           {
             getModel: expect.any(Function),
             getProxy: expect.any(Function),
+            getUsageStatisticsEnabled: expect.any(Function),
           },
           AuthType.LOGIN_WITH_GOOGLE
         );
