@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2025-08-22
+
+### Fixed
+
+- **Critical OAuth Fix**: Added `isBrowserLaunchSuppressed()` config method to prevent crashes during OAuth authentication (LOGIN_WITH_GOOGLE)
+- **Compatibility**: Full compatibility with @google/gemini-cli-core@0.1.22
+  - Updated `generateContent` and `generateContentStream` to use UUID for `userPromptId` parameter
+  - Added third `sessionId` parameter to `createContentGenerator` call
+  - Pinned exact version `0.1.22` to prevent breaking changes from patch updates
+
+### Added
+
+- **Robust Proxy Pattern**: Enhanced config Proxy to handle multiple method patterns
+  - Supports `is*` methods (return false by default)
+  - Supports `has*` methods (return false by default)
+  - Existing `get*` methods with intelligent defaults based on naming
+- **Session Management**: Generate and cache stable session ID per provider instance for better telemetry correlation
+- **Comprehensive Documentation**: Added `docs/dependency-notes.md` explaining version pinning rationale and Proxy implementation
+
+### Changed
+
+- Improved type consistency for `authType` in config object
+- Updated tests to cover OAuth methods and Proxy behavior
+
 ## [1.1.0] - 2025-08-18
 
 ### Added
@@ -182,6 +206,7 @@ This version is compatible with Vercel AI SDK v5. For v4 compatibility, please u
 - Streaming support
 - Basic error handling
 
+[1.1.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.0-beta.1...v1.0.1
 [1.0.0-beta.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.1.1...v1.0.0-beta.1

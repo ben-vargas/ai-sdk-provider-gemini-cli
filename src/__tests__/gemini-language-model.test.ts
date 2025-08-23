@@ -372,7 +372,7 @@ describe('GeminiLanguageModel', () => {
             maxOutputTokens: 1000,
           }),
         }),
-        'ai-sdk-provider'
+        expect.any(String) // UUID for userPromptId
       );
     });
 
