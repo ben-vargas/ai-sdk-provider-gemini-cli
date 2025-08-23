@@ -191,12 +191,12 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         });
       }
 
-      // Generate content
+      // Generate content (new signature requires userPromptId)
       let response;
       try {
         response = await contentGenerator.generateContent(
           request,
-          'ai-sdk-provider'
+          randomUUID()
         );
 
         // Check if aborted during generation
@@ -354,12 +354,12 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         });
       }
 
-      // Create streaming response
+      // Create streaming response (new signature requires userPromptId)
       let streamResponse;
       try {
         streamResponse = await contentGenerator.generateContentStream(
           request,
-          'ai-sdk-provider'
+          randomUUID()
         );
 
         // Check if aborted during stream creation

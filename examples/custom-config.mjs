@@ -25,7 +25,6 @@ async function main() {
     const result1 = await generateText({
       model: oauthProvider('gemini-2.5-pro'),
       prompt: 'What authentication method am I using?',
-      maxOutputTokens: 100,
     });
     
     console.log('Response:', result1.content[0]?.text || 'No response generated');
@@ -45,7 +44,6 @@ async function main() {
       const result2 = await generateText({
         model: apiKeyProvider('gemini-2.5-pro'),
         prompt: 'Say hello',
-        maxOutputTokens: 50,
       });
       
       console.log('Response:', result2.content[0]?.text || 'No response generated');
@@ -72,7 +70,6 @@ async function main() {
     const result3 = await generateText({
       model: proModel,
       prompt: 'List exactly 3 programming languages',
-      maxOutputTokens: 100,
     });
     
     console.log('Pro model response:', result3.content[0]?.text || 'No response generated');
@@ -87,7 +84,6 @@ async function main() {
     const result4 = await generateText({
       model: flashModel,
       prompt: 'Write a creative tagline for a coffee shop',
-      maxOutputTokens: 50,
     });
     
     console.log('Pro model response:', result4.content[0]?.text || 'No response generated');
@@ -135,12 +131,10 @@ async function main() {
       generateText({
         model: provider1('gemini-2.5-pro'),
         prompt: 'Say "Provider 1"',
-        maxOutputTokens: 20,
       }),
       generateText({
         model: provider2('gemini-2.5-pro'),
         prompt: 'Say "Provider 2"',
-        maxOutputTokens: 20,
       }),
     ]);
     
@@ -170,7 +164,6 @@ async function main() {
       const result = await generateText({
         model: customModel,
         prompt: `Count to ${i}`,
-        maxOutputTokens: 20,
       });
       responses.push(result.content[0]?.text || 'No response');
     }

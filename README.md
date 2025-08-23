@@ -14,6 +14,8 @@
 
 A community provider for the [Vercel AI SDK](https://sdk.vercel.ai/docs) that enables using Google's Gemini models through the [@google/gemini-cli-core](https://www.npmjs.com/package/@google/gemini-cli-core) library and Google Cloud Code endpoints.
 
+> **Note**: This provider includes robust compatibility measures for @google/gemini-cli-core, protecting against breaking changes in patch versions through intelligent proxy patterns and exact version pinning.
+
 ## Version Compatibility
 
 | Provider Version | AI SDK Version | NPM Tag     | Status | Branch                                                                                 |

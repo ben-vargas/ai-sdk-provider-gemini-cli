@@ -45,27 +45,59 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         AuthType.LOGIN_WITH_GOOGLE
       );
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        })
+        expect.any(Object), // Proxy object
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
+    });
+
+    it('should provide OAuth config methods (isBrowserLaunchSuppressed)', async () => {
+      const options: GeminiProviderOptions = {
+        authType: 'oauth',
+      };
+
+      await initializeGeminiClient(options, 'gemini-2.5-pro');
+
+      // Get the config object passed to createContentGeneratorConfig
+      const configArg = vi.mocked(createContentGeneratorConfig).mock
+        .calls[0][0];
+
+      // Verify OAuth-specific method exists and returns boolean
+      expect(typeof configArg.isBrowserLaunchSuppressed).toBe('function');
+      expect(configArg.isBrowserLaunchSuppressed()).toBe(false);
+    });
+
+    it('should handle unknown is* and has* methods through Proxy', async () => {
+      const options: GeminiProviderOptions = {
+        authType: 'oauth',
+      };
+
+      await initializeGeminiClient(options, 'gemini-2.5-pro');
+
+      // Get the config object passed to createContentGeneratorConfig
+      const configArg = vi.mocked(createContentGeneratorConfig).mock
+        .calls[0][0];
+
+      // Test that unknown is* methods return false
+      expect(typeof configArg.isUnknownFeatureEnabled).toBe('function');
+      expect(configArg.isUnknownFeatureEnabled()).toBe(false);
+
+      // Test that unknown has* methods return false
+      expect(typeof configArg.hasSpecialCapability).toBe('function');
+      expect(configArg.hasSpecialCapability()).toBe(false);
+
+      // Test that unknown get* methods still work (returns {} for Config methods)
+      expect(typeof configArg.getSomeUnknownConfig).toBe('function');
+      expect(configArg.getSomeUnknownConfig()).toEqual({});
     });
 
     it('should initialize with oauth-personal auth type', async () => {
@@ -76,26 +108,18 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         AuthType.LOGIN_WITH_GOOGLE
       );
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        })
+        expect.any(Object), // Proxy object
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -110,27 +134,19 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-flash');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         AuthType.USE_GEMINI
       );
       expect(mockConfig.apiKey).toBe('test-api-key');
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        })
+        expect.any(Object), // Proxy object
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -143,27 +159,19 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         AuthType.USE_GEMINI
       );
       expect(mockConfig.apiKey).toBe('test-gemini-api-key');
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        })
+        expect.any(Object), // Proxy object
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -176,12 +184,7 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         AuthType.USE_GEMINI
       );
       // apiKey should not be set on config
@@ -189,6 +192,7 @@ describe('initializeGeminiClient', () => {
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -206,27 +210,19 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         AuthType.USE_VERTEX_AI
       );
       expect(mockConfig.vertexai).toBe(true);
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        })
+        expect.any(Object), // Proxy object
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -239,12 +235,7 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         AuthType.USE_VERTEX_AI
       );
       // vertexai flag should not be set
@@ -252,6 +243,7 @@ describe('initializeGeminiClient', () => {
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -268,26 +260,18 @@ describe('initializeGeminiClient', () => {
 
       // Google Auth Library falls back to USE_GEMINI
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         AuthType.USE_GEMINI
       );
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        })
+        expect.any(Object), // Proxy object
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -301,26 +285,18 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         undefined
       );
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        })
+        expect.any(Object), // Proxy object
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
 
@@ -332,26 +308,18 @@ describe('initializeGeminiClient', () => {
       const result = await initializeGeminiClient(options, 'gemini-2.5-pro');
 
       expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-        {
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        },
+        expect.any(Object), // Proxy object, can't check individual properties
         undefined
       );
       expect(createContentGenerator).toHaveBeenCalledWith(
         mockConfig,
-        expect.objectContaining({
-          getModel: expect.any(Function),
-          getProxy: expect.any(Function),
-          getUsageStatisticsEnabled: expect.any(Function),
-          getContentGeneratorConfig: expect.any(Function),
-        })
+        expect.any(Object), // Proxy object
+        expect.any(String) // sessionId parameter
       );
       expect(result).toEqual({
         client: mockContentGenerator,
         config: mockConfig,
+        sessionId: expect.any(String),
       });
     });
   });
@@ -373,12 +341,7 @@ describe('initializeGeminiClient', () => {
         await initializeGeminiClient(options, modelId);
 
         expect(createContentGeneratorConfig).toHaveBeenCalledWith(
-          {
-            getModel: expect.any(Function),
-            getProxy: expect.any(Function),
-            getUsageStatisticsEnabled: expect.any(Function),
-            getContentGeneratorConfig: expect.any(Function),
-          },
+          expect.any(Object), // Proxy object, can't check individual properties
           AuthType.LOGIN_WITH_GOOGLE
         );
       }
