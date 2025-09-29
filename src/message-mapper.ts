@@ -1,5 +1,6 @@
 import type {
   LanguageModelV2CallOptions,
+  LanguageModelV2FilePart,
   LanguageModelV2Message,
 } from '@ai-sdk/provider';
 import type { Content, Part } from '@google/genai';
@@ -113,15 +114,11 @@ function mapUserMessage(
 
       case 'file': {
         // Handle file parts (images, etc.)
-        const filePart = part as {
-          contentType?: string;
-          data: string | URL | Uint8Array;
-        };
-        const contentType = filePart.contentType || 'application/octet-stream';
-        if (contentType.startsWith('image/')) {
-          parts.push(mapImagePart(filePart));
+        const mediaType = part.mediaType || 'application/octet-stream';
+        if (mediaType.startsWith('image/')) {
+          parts.push(mapImagePart(part));
         } else {
-          throw new Error(`Unsupported file type: ${contentType}`);
+          throw new Error(`Unsupported file type: ${mediaType}`);
         }
         break;
       }
@@ -163,10 +160,7 @@ function mapAssistantMessage(
 /**
  * Maps an image part to Gemini format
  */
-function mapImagePart(part: {
-  contentType?: string;
-  data: string | URL | Uint8Array;
-}): Part {
+function mapImagePart(part: LanguageModelV2FilePart): Part {
   if (part.data instanceof URL) {
     throw new Error(
       'URL images are not supported by Gemini CLI Core. Please provide base64-encoded image data.'
@@ -174,7 +168,7 @@ function mapImagePart(part: {
   }
 
   // Extract mime type and base64 data
-  const mimeType = part.contentType || 'image/jpeg';
+  const mimeType = part.mediaType || 'image/jpeg';
   let base64Data: string;
 
   if (typeof part.data === 'string') {
