@@ -22,6 +22,7 @@ vi.mock('../message-mapper', () => ({
 
 vi.mock('../tool-mapper', () => ({
   mapToolsToGeminiFormat: vi.fn(),
+  mapGeminiToolConfig: vi.fn(() => undefined),
 }));
 
 vi.mock('../error', () => ({
