@@ -492,7 +492,9 @@ describe('mapToolsToGeminiFormat', () => {
 
   describe('mapGeminiToolConfig', () => {
     it('should return undefined when no toolChoice provided', () => {
-      const result = mapGeminiToolConfig({} as any as LanguageModelV2CallOptions);
+      const result = mapGeminiToolConfig(
+        {} as any as LanguageModelV2CallOptions
+      );
       expect(result).toBeUndefined();
     });
 
@@ -505,7 +507,9 @@ describe('mapToolsToGeminiFormat', () => {
       expect(result!.functionCallingConfig.mode).toBe(
         FunctionCallingConfigMode.AUTO
       );
-      expect(result!.functionCallingConfig.allowedFunctionNames).toBeUndefined();
+      expect(
+        result!.functionCallingConfig.allowedFunctionNames
+      ).toBeUndefined();
     });
 
     it('should map none toolChoice to NONE mode', () => {
@@ -517,7 +521,9 @@ describe('mapToolsToGeminiFormat', () => {
       expect(result!.functionCallingConfig.mode).toBe(
         FunctionCallingConfigMode.NONE
       );
-      expect(result!.functionCallingConfig.allowedFunctionNames).toBeUndefined();
+      expect(
+        result!.functionCallingConfig.allowedFunctionNames
+      ).toBeUndefined();
     });
 
     it('should map required toolChoice to ANY mode (no restriction)', () => {
@@ -529,7 +535,9 @@ describe('mapToolsToGeminiFormat', () => {
       expect(result!.functionCallingConfig.mode).toBe(
         FunctionCallingConfigMode.ANY
       );
-      expect(result!.functionCallingConfig.allowedFunctionNames).toBeUndefined();
+      expect(
+        result!.functionCallingConfig.allowedFunctionNames
+      ).toBeUndefined();
     });
 
     it('should map tool toolChoice to ANY mode and restrict allowedFunctionNames', () => {
