@@ -7,6 +7,7 @@ import type {
   LanguageModelV2FunctionTool,
   LanguageModelV2CallOptions,
 } from '@ai-sdk/provider';
+import { FunctionCallingConfigMode } from '@google/genai';
 
 // Mock dependencies
 vi.mock('../client');
@@ -697,6 +698,52 @@ describe('GeminiLanguageModel', () => {
       const textDelta = streamParts.find((p) => p.type === 'text-delta');
       expect(textDelta).toBeDefined();
       expect(textDelta.delta).toBe('{"name": "John"}');
+    });
+
+    it('should pass toolConfig when toolChoice is provided (streaming)', async () => {
+      const mockStream = {
+        async *[Symbol.asyncIterator]() {
+          yield {
+            candidates: [
+              {
+                content: {
+                  role: 'model',
+                  parts: [{ text: 'ok' }],
+                },
+                finishReason: 'STOP',
+              },
+            ],
+            usageMetadata: {
+              promptTokenCount: 1,
+              candidatesTokenCount: 1,
+            },
+          };
+        },
+      };
+
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test toolChoice' }],
+        },
+      ];
+
+      await model.doStream({
+        prompt: messages,
+        toolChoice: { type: 'tool', toolName: 'getWeather' },
+      });
+
+      expect(mockClient.generateContentStream).toHaveBeenCalled();
+      const callArg = mockClient.generateContentStream.mock.calls[0][0];
+      expect(callArg.config.toolConfig).toBeDefined();
+      expect(
+        callArg.config.toolConfig.functionCallingConfig.allowedFunctionNames
+      ).toEqual(['getWeather']);
+      expect(callArg.config.toolConfig.functionCallingConfig.mode).toBe(
+        FunctionCallingConfigMode.ANY
+      );
     });
   });
 

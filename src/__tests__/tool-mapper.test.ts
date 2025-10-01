@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mapToolsToGeminiFormat } from '../tool-mapper';
+import { mapToolsToGeminiFormat, mapGeminiToolConfig } from '../tool-mapper';
+import type { LanguageModelV2CallOptions } from '@ai-sdk/provider';
+import { FunctionCallingConfigMode } from '@google/genai';
 import type { LanguageModelV2FunctionTool } from '@ai-sdk/provider';
 import { z } from 'zod';
 
@@ -485,6 +487,71 @@ describe('mapToolsToGeminiFormat', () => {
 
       expect(result[0].functionDeclarations[0].name).toBe('test');
       expect(result[0].functionDeclarations[0].description).toBeUndefined();
+    });
+  });
+
+  describe('mapGeminiToolConfig', () => {
+    it('should return undefined when no toolChoice provided', () => {
+      const result = mapGeminiToolConfig(
+        {} as any as LanguageModelV2CallOptions
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it('should map auto toolChoice to AUTO mode', () => {
+      const result = mapGeminiToolConfig({
+        toolChoice: { type: 'auto' },
+      } as any as LanguageModelV2CallOptions);
+
+      expect(result).toBeDefined();
+      expect(result!.functionCallingConfig.mode).toBe(
+        FunctionCallingConfigMode.AUTO
+      );
+      expect(
+        result!.functionCallingConfig.allowedFunctionNames
+      ).toBeUndefined();
+    });
+
+    it('should map none toolChoice to NONE mode', () => {
+      const result = mapGeminiToolConfig({
+        toolChoice: { type: 'none' },
+      } as any as LanguageModelV2CallOptions);
+
+      expect(result).toBeDefined();
+      expect(result!.functionCallingConfig.mode).toBe(
+        FunctionCallingConfigMode.NONE
+      );
+      expect(
+        result!.functionCallingConfig.allowedFunctionNames
+      ).toBeUndefined();
+    });
+
+    it('should map required toolChoice to ANY mode (no restriction)', () => {
+      const result = mapGeminiToolConfig({
+        toolChoice: { type: 'required' },
+      } as any as LanguageModelV2CallOptions);
+
+      expect(result).toBeDefined();
+      expect(result!.functionCallingConfig.mode).toBe(
+        FunctionCallingConfigMode.ANY
+      );
+      expect(
+        result!.functionCallingConfig.allowedFunctionNames
+      ).toBeUndefined();
+    });
+
+    it('should map tool toolChoice to ANY mode and restrict allowedFunctionNames', () => {
+      const result = mapGeminiToolConfig({
+        toolChoice: { type: 'tool', toolName: 'getWeather' },
+      } as any as LanguageModelV2CallOptions);
+
+      expect(result).toBeDefined();
+      expect(result!.functionCallingConfig.mode).toBe(
+        FunctionCallingConfigMode.ANY
+      );
+      expect(result!.functionCallingConfig.allowedFunctionNames).toEqual([
+        'getWeather',
+      ]);
     });
   });
 });

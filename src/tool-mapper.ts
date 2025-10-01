@@ -1,5 +1,15 @@
-import type { LanguageModelV2FunctionTool } from '@ai-sdk/provider';
-import type { Tool, FunctionDeclaration, Schema } from '@google/genai';
+import type {
+  LanguageModelV2CallOptions,
+  LanguageModelV2FunctionTool,
+  LanguageModelV2ToolChoice,
+} from '@ai-sdk/provider';
+import {
+  Tool,
+  FunctionDeclaration,
+  Schema,
+  ToolConfig,
+  FunctionCallingConfigMode,
+} from '@google/genai';
 import { z } from 'zod';
 
 // Type for JSON Schema objects with common properties
@@ -171,4 +181,46 @@ function cleanJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
   }
 
   return cleaned;
+}
+
+/**
+ * Maps Vercel AI SDK tool config options to Gemini format
+ */
+export function mapGeminiToolConfig(
+  options: LanguageModelV2CallOptions
+): ToolConfig | undefined {
+  if (options.toolChoice) {
+    // Restrict allowed function names when a specific tool is forced.
+    // Gemini expects that when forcing a tool call, the function name is
+    // provided via `allowedFunctionNames` while `mode` is set to ANY.
+    const allowedFunctionNames =
+      options.toolChoice.type === 'tool'
+        ? [options.toolChoice.toolName]
+        : undefined;
+
+    return {
+      functionCallingConfig: {
+        allowedFunctionNames,
+        mode: mapToolChoiceToGeminiFormat(options.toolChoice),
+      },
+    };
+  }
+  return undefined;
+}
+
+function mapToolChoiceToGeminiFormat(
+  toolChoice: LanguageModelV2ToolChoice
+): FunctionCallingConfigMode {
+  switch (toolChoice.type) {
+    case 'auto':
+      return FunctionCallingConfigMode.AUTO;
+    case 'none':
+      return FunctionCallingConfigMode.NONE;
+    case 'required':
+    case 'tool':
+      return FunctionCallingConfigMode.ANY;
+    default:
+      // this should never happen if types are correct
+      return FunctionCallingConfigMode.MODE_UNSPECIFIED;
+  }
 }

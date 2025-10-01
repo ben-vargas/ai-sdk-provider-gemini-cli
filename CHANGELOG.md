@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2025-10-01
+
+### Fixed
+
+- **Multimodal Support**: Fixed image handling crash due to AI SDK v5 API change
+  - Updated `LanguageModelV2FilePart` property from `contentType` to `mediaType`
+  - Resolves critical issue preventing image attachments from working
+- **Import Style**: Changed to use `import type` for type-only imports for better tree-shaking
+
+### Added
+
+- **ToolChoice Support**: Complete implementation of AI SDK toolChoice functionality
+  - Added `mapGeminiToolConfig()` function to convert AI SDK toolChoice to Gemini format
+  - Proper `allowedFunctionNames` mapping when specific tool is forced
+  - Support for all toolChoice types: `auto`, `none`, `required`, `tool`
+- **Streaming Parity**: Added `toolConfig` to both `doGenerate` and `doStream` methods
+- **Test Coverage**: Added 5 comprehensive tests for `mapGeminiToolConfig` covering all toolChoice scenarios
+
+### Changed
+
+- **Dependency Update**: Updated `@google/gemini-cli-core` from 0.1.22 to 0.6.1
+  - Fully tested for backward compatibility
+  - All 205 tests passing
+  - All 12 examples verified working
+
+### Technical Details
+
+- Combines fixes from community PRs #16 (multimodal crash) and #17 (toolChoice support)
+- Enhanced with additional refinements, streaming parity, and comprehensive testing
+- No breaking changes - fully backward compatible
+
 ## [1.1.1] - 2025-08-22
 
 ### Fixed

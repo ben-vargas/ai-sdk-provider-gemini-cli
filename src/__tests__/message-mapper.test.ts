@@ -109,7 +109,7 @@ describe('mapPromptToGeminiFormat', () => {
               {
                 type: 'file',
                 data: 'base64encodeddata',
-                contentType: 'image/png',
+                mediaType: 'image/png',
               },
             ],
           },
@@ -144,7 +144,7 @@ describe('mapPromptToGeminiFormat', () => {
               {
                 type: 'file',
                 data: imageData,
-                contentType: 'image/jpeg',
+                mediaType: 'image/jpeg',
               },
             ],
           },
@@ -170,7 +170,7 @@ describe('mapPromptToGeminiFormat', () => {
               {
                 type: 'file',
                 data: 'base64data',
-                contentType: 'image/jpeg',
+                mediaType: 'image/jpeg',
               },
             ],
           },
@@ -196,7 +196,7 @@ describe('mapPromptToGeminiFormat', () => {
               {
                 type: 'file',
                 data: new URL('https://example.com/image.jpg'),
-                contentType: 'image/jpeg',
+                mediaType: 'image/jpeg',
               },
             ],
           },
@@ -217,7 +217,7 @@ describe('mapPromptToGeminiFormat', () => {
               {
                 type: 'file',
                 data: { invalid: 'format' } as any,
-                contentType: 'image/jpeg',
+                mediaType: 'image/jpeg',
               },
             ],
           },
@@ -396,7 +396,7 @@ describe('mapPromptToGeminiFormat', () => {
             role: 'user',
             content: [
               { type: 'text', text: 'Describe this:' },
-              { type: 'file', data: 'base64data', contentType: 'image/jpeg' },
+              { type: 'file', data: 'base64data', mediaType: 'image/jpeg' },
               { type: 'text', text: 'in JSON format' },
             ],
           },

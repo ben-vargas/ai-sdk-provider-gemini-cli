@@ -19,7 +19,7 @@ import type {
 } from '@google/genai';
 import { initializeGeminiClient } from './client';
 import { mapPromptToGeminiFormat } from './message-mapper';
-import { mapToolsToGeminiFormat } from './tool-mapper';
+import { mapGeminiToolConfig, mapToolsToGeminiFormat } from './tool-mapper';
 import { mapGeminiError } from './error';
 import { extractJson } from './extract-json';
 import type { GeminiProviderOptions } from './types';
@@ -144,6 +144,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
           options.responseFormat?.type === 'json'
             ? 'application/json'
             : 'text/plain',
+        toolConfig: mapGeminiToolConfig(options),
       };
 
       // Map tools if provided in regular mode
@@ -307,6 +308,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
           options.responseFormat?.type === 'json'
             ? 'application/json'
             : 'text/plain',
+        toolConfig: mapGeminiToolConfig(options),
       };
 
       // Map tools if provided in regular mode
