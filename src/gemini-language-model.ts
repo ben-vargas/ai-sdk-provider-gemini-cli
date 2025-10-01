@@ -13,9 +13,9 @@ import type {
   ContentGenerator,
   ContentGeneratorConfig,
 } from '@google/gemini-cli-core';
-import {
-  type GenerateContentParameters,
-  type GenerateContentConfig,
+import type {
+  GenerateContentParameters,
+  GenerateContentConfig,
 } from '@google/genai';
 import { initializeGeminiClient } from './client';
 import { mapPromptToGeminiFormat } from './message-mapper';
@@ -308,6 +308,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
           options.responseFormat?.type === 'json'
             ? 'application/json'
             : 'text/plain',
+        toolConfig: mapGeminiToolConfig(options),
       };
 
       // Map tools if provided in regular mode

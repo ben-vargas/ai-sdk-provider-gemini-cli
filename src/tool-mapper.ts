@@ -190,17 +190,25 @@ export function mapGeminiToolConfig(
   options: LanguageModelV2CallOptions
 ): ToolConfig | undefined {
   if (options.toolChoice) {
+    // Restrict allowed function names when a specific tool is forced.
+    // Gemini expects that when forcing a tool call, the function name is
+    // provided via `allowedFunctionNames` while `mode` is set to ANY.
+    const allowedFunctionNames =
+      options.toolChoice.type === 'tool'
+        ? [options.toolChoice.toolName]
+        : undefined;
+
     return {
       functionCallingConfig: {
-        allowedFunctionNames: undefined, // TODO: also map activeTools?: Array<keyof NoInfer<TOOLS>>;
-        mode: mapToolChoiceTOGeminiFormat(options.toolChoice),
+        allowedFunctionNames,
+        mode: mapToolChoiceToGeminiFormat(options.toolChoice),
       },
     };
   }
   return undefined;
 }
 
-function mapToolChoiceTOGeminiFormat(
+function mapToolChoiceToGeminiFormat(
   toolChoice: LanguageModelV2ToolChoice
 ): FunctionCallingConfigMode {
   switch (toolChoice.type) {
