@@ -2,6 +2,84 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2025-10-21
+
+### Added
+
+- **Comprehensive debug logging and verbose mode** - Enhanced logging capabilities for better debugging and troubleshooting
+  - Added `debug` and `info` log levels to complement existing `warn` and `error` levels
+  - New `verbose` setting to control debug/info logging visibility
+  - Detailed execution tracing including request/response flow, token usage, and timing information
+  - `createVerboseLogger()` utility that filters debug/info logs based on verbose mode
+  - When `verbose: false` (default), only `warn` and `error` messages are logged
+  - When `verbose: true`, all log levels including `debug` and `info` are logged
+  - Comprehensive test coverage for all logging scenarios and custom logger implementations
+
+### Changed
+
+- **Logger Interface**: Extended the `Logger` interface from 2 methods to 4 methods
+  - Added `debug(message: string): void` - for detailed execution tracing (verbose mode only)
+  - Added `info(message: string): void` - for general flow information (verbose mode only)
+  - Existing `warn(message: string): void` - for warnings (always shown)
+  - Existing `error(message: string): void` - for errors (always shown)
+- **Settings**: Added optional `logger` and `verbose` settings to model configuration
+  - `logger`: `Logger | false | undefined` - custom logger, disabled, or default console
+  - `verbose`: `boolean` - enable/disable debug and info logging (default: false)
+
+### Migration for custom logger users
+
+**Who is affected:** Only users with custom `Logger` implementations.
+
+**What changed:** The `Logger` interface now requires 4 methods instead of 2:
+
+```typescript
+// Before (v1.1.2 and earlier) - if you had a custom logger
+const logger = {
+  warn: (msg) => myLogger.warn(msg),
+  error: (msg) => myLogger.error(msg),
+};
+
+// After (v1.1.3+)
+const logger = {
+  debug: (msg) => myLogger.debug(msg), // Add this
+  info: (msg) => myLogger.info(msg),   // Add this
+  warn: (msg) => myLogger.warn(msg),
+  error: (msg) => myLogger.error(msg),
+};
+```
+
+**Most users are unaffected:**
+- Users without a custom logger (using default `console`) - no changes needed
+- Users with `logger: false` - no changes needed
+- The default logger automatically handles all log levels
+
+### Example Usage
+
+```typescript
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+// Enable verbose logging for debugging
+const gemini = createGeminiProvider({
+  authType: 'gemini-api-key',
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+const model = gemini('gemini-2.5-flash', {
+  verbose: true, // Enable debug and info logging
+});
+
+// Use with custom logger
+const modelWithCustomLogger = gemini('gemini-2.5-flash', {
+  verbose: true,
+  logger: {
+    debug: (msg) => console.log(`[DEBUG] ${msg}`),
+    info: (msg) => console.log(`[INFO] ${msg}`),
+    warn: (msg) => console.warn(`[WARN] ${msg}`),
+    error: (msg) => console.error(`[ERROR] ${msg}`),
+  },
+});
+```
+
 ## [1.1.2] - 2025-10-01
 
 ### Fixed

@@ -3,7 +3,7 @@ export { createGeminiProvider } from './gemini-provider';
 
 // Type exports
 export type { GeminiProvider } from './gemini-provider';
-export type { GeminiProviderOptions } from './types';
+export type { GeminiProviderOptions, Logger } from './types';
 
 // Legacy compatibility exports (for backward compatibility)
 export { createGeminiProvider as createGeminiCliCoreProvider } from './gemini-provider';
