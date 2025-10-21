@@ -79,7 +79,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
 
     // Create logger that respects verbose setting
     const baseLogger = getLogger(options.settings?.logger);
-    this.logger = createVerboseLogger(baseLogger, options.settings?.verbose ?? false);
+    this.logger = createVerboseLogger(
+      baseLogger,
+      options.settings?.verbose ?? false
+    );
   }
 
   private async ensureInitialized(): Promise<{
@@ -132,7 +135,9 @@ export class GeminiLanguageModel implements LanguageModelV2 {
     };
     warnings: LanguageModelV2CallWarning[];
   }> {
-    this.logger.debug(`[gemini-cli] Starting doGenerate request with model: ${this.modelId}`);
+    this.logger.debug(
+      `[gemini-cli] Starting doGenerate request with model: ${this.modelId}`
+    );
 
     try {
       const { contentGenerator } = await this.ensureInitialized();
@@ -324,7 +329,9 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       rawSettings: Record<string, unknown>;
     };
   }> {
-    this.logger.debug(`[gemini-cli] Starting doStream request with model: ${this.modelId}`);
+    this.logger.debug(
+      `[gemini-cli] Starting doStream request with model: ${this.modelId}`
+    );
 
     try {
       const { contentGenerator } = await this.ensureInitialized();
@@ -406,7 +413,9 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       // Create streaming response (new signature requires userPromptId)
       let streamResponse;
       try {
-        this.logger.debug('[gemini-cli] Starting generateContentStream request');
+        this.logger.debug(
+          '[gemini-cli] Starting generateContentStream request'
+        );
 
         streamResponse = await contentGenerator.generateContentStream(
           request,
@@ -524,8 +533,12 @@ export class GeminiLanguageModel implements LanguageModelV2 {
                   `[gemini-cli] Stream token usage - Input: ${totalInputTokens}, Output: ${totalOutputTokens}, Total: ${totalInputTokens + totalOutputTokens}`
                 );
 
-                const finishReason = mapGeminiFinishReason(candidate.finishReason);
-                logger.debug(`[gemini-cli] Stream finish reason: ${finishReason}`);
+                const finishReason = mapGeminiFinishReason(
+                  candidate.finishReason
+                );
+                logger.debug(
+                  `[gemini-cli] Stream finish reason: ${finishReason}`
+                );
 
                 // Emit response metadata
                 controller.enqueue({

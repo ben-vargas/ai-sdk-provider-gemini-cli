@@ -42,13 +42,14 @@ const logger = {
 // After (v1.1.3+)
 const logger = {
   debug: (msg) => myLogger.debug(msg), // Add this
-  info: (msg) => myLogger.info(msg),   // Add this
+  info: (msg) => myLogger.info(msg), // Add this
   warn: (msg) => myLogger.warn(msg),
   error: (msg) => myLogger.error(msg),
 };
 ```
 
 **Most users are unaffected:**
+
 - Users without a custom logger (using default `console`) - no changes needed
 - Users with `logger: false` - no changes needed
 - The default logger automatically handles all log levels
