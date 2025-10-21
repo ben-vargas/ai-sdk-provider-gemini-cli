@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.1.3] - 2025-10-21
+## [1.2.0] - 2025-10-21
 
 ### Added
 
@@ -39,7 +39,7 @@ const logger = {
   error: (msg) => myLogger.error(msg),
 };
 
-// After (v1.1.3+)
+// After (v1.2.0+)
 const logger = {
   debug: (msg) => myLogger.debug(msg), // Add this
   info: (msg) => myLogger.info(msg), // Add this
