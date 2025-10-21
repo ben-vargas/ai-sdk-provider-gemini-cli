@@ -43,23 +43,75 @@ node examples/conversation-history.mjs
 ```
 **Key concepts**: Message history, context preservation, multi-turn conversations
 
+## Logging Examples
+
+The provider includes a flexible logging system that can be configured for different use cases. These examples demonstrate all logging modes:
+
+### 4. Default Logging (`logging-default.mjs`)
+
+**Purpose**: Understand the default logging behavior (non-verbose mode).
+
+```bash
+node examples/logging-default.mjs
+```
+
+**Key concepts**: Default behavior, warn/error only, clean output
+
+**What you'll see**: Only warning and error messages appear. Debug and info logs are suppressed for clean output.
+
+### 5. Verbose Logging (`logging-verbose.mjs`)
+
+**Purpose**: Enable detailed logging for development and troubleshooting.
+
+```bash
+node examples/logging-verbose.mjs
+```
+
+**Key concepts**: Verbose mode, debug/info logs, execution tracing
+
+**What you'll see**: All log levels (debug, info, warn, error) showing detailed provider activity.
+
+### 6. Custom Logger (`logging-custom-logger.mjs`)
+
+**Purpose**: Integrate with external logging systems (Winston, Pino, Datadog, etc.).
+
+```bash
+node examples/logging-custom-logger.mjs
+```
+
+**Key concepts**: Custom logger implementation, external integration, log formatting
+
+**What you'll see**: Custom-formatted logs with timestamps and prefixes, demonstrating integration patterns.
+
+### 7. Disabled Logging (`logging-disabled.mjs`)
+
+**Purpose**: Completely silent operation with no logs.
+
+```bash
+node examples/logging-disabled.mjs
+```
+
+**Key concepts**: Silent mode, production deployments, zero output
+
+**What you'll see**: No provider logs at all - completely silent operation.
+
 ## Advanced Configuration
 
-### 4. Custom Config (`custom-config.mjs`)
+### 8. Custom Config (`custom-config.mjs`)
 **Purpose**: Demonstrate provider configuration options.
 ```bash
 node examples/custom-config.mjs
 ```
 **Key concepts**: API key auth, OAuth auth, model settings
 
-### 5. System Messages (`system-messages.mjs`)
+### 9. System Messages (`system-messages.mjs`)
 **Purpose**: Use system prompts to control model behavior.
 ```bash
 node examples/system-messages.mjs
 ```
 **Key concepts**: System instructions, persona control, response formatting
 
-### 6. Long-Running Tasks (`long-running-tasks.mjs`)
+### 10. Long-Running Tasks (`long-running-tasks.mjs`)
 **Purpose**: Handle complex tasks with proper timeout management.
 ```bash
 node examples/long-running-tasks.mjs
@@ -68,28 +120,28 @@ node examples/long-running-tasks.mjs
 
 ## Object Generation (Structured Output)
 
-### 7. Object Generation Basic (`generate-object-basic.mjs`)
+### 11. Object Generation Basic (`generate-object-basic.mjs`)
 **Purpose**: Learn structured output generation step-by-step.
 ```bash
 node examples/generate-object-basic.mjs
 ```
 **Key concepts**: Zod schemas, JSON generation, validation
 
-### 8. Nested Structures (`generate-object-nested.mjs`)
+### 12. Nested Structures (`generate-object-nested.mjs`)
 **Purpose**: Generate complex hierarchical data structures.
 ```bash
 node examples/generate-object-nested.mjs
 ```
 **Key concepts**: Nested objects, arrays of objects, complex relationships
 
-### 9. Validation Constraints (`generate-object-constraints.mjs`)
+### 13. Validation Constraints (`generate-object-constraints.mjs`)
 **Purpose**: Enforce data quality with validation rules.
 ```bash
 node examples/generate-object-constraints.mjs
 ```
 **Key concepts**: Enums, ranges, patterns, business rules
 
-### 10. Advanced Object Generation (`generate-object-advanced.mjs`)
+### 14. Advanced Object Generation (`generate-object-advanced.mjs`)
 **Purpose**: Real-world examples of complex object generation.
 ```bash
 node examples/generate-object-advanced.mjs
@@ -98,21 +150,21 @@ node examples/generate-object-advanced.mjs
 
 ## Testing & Troubleshooting
 
-### 11. Check Authentication (`check-auth.mjs`)
+### 15. Check Authentication (`check-auth.mjs`)
 **Purpose**: Verify Google Cloud Code authentication status.
 ```bash
 node examples/check-auth.mjs
 ```
 **Key concepts**: OAuth validation, credential refresh, troubleshooting
 
-### 12. Integration Test (`integration-test.mjs`)
+### 16. Integration Test (`integration-test.mjs`)
 **Purpose**: Comprehensive test suite to verify all features.
 ```bash
 node examples/integration-test.mjs
 ```
 **Key concepts**: Feature verification, error handling, test patterns
 
-### 13. Error Handling (`error-handling.mjs`)
+### 17. Error Handling (`error-handling.mjs`)
 **Purpose**: Demonstrate proper error handling patterns.
 ```bash
 node examples/error-handling.mjs
@@ -177,6 +229,10 @@ try {
 | basic-usage | Getting started | Simple generation |
 | streaming | Responsive UIs | Real-time output |
 | conversation-history | Chatbots | Context retention |
+| logging-default | Default behavior | Warn/error only |
+| logging-verbose | Development/debugging | All log levels |
+| logging-custom-logger | External integration | Custom logger impl |
+| logging-disabled | Silent operation | No logs at all |
 | custom-config | Authentication | OAuth vs API key |
 | system-messages | Response control | System prompts |
 | generate-object-basic | Learning | Structured output |
@@ -185,10 +241,11 @@ try {
 
 ## Learning Path
 
-1. **Beginners**: `check-auth.mjs` → `basic-usage.mjs` → `streaming.mjs`
-2. **Object Generation**: `generate-object-basic.mjs` → `generate-object-nested.mjs` → `generate-object-advanced.mjs`
-3. **Advanced**: `system-messages.mjs` → `long-running-tasks.mjs` → `error-handling.mjs`
-4. **Testing**: Run `integration-test.mjs` to verify everything works
+1. **Beginners**: `check-auth.mjs` → `basic-usage.mjs` → `streaming.mjs` → `conversation-history.mjs`
+2. **Logging**: `logging-default.mjs` → `logging-verbose.mjs` → `logging-custom-logger.mjs` → `logging-disabled.mjs`
+3. **Object Generation**: `generate-object-basic.mjs` → `generate-object-nested.mjs` → `generate-object-advanced.mjs`
+4. **Advanced**: `system-messages.mjs` → `long-running-tasks.mjs` → `error-handling.mjs`
+5. **Testing**: Run `integration-test.mjs` to verify everything works
 
 ## Cloud Code Endpoints
 
