@@ -22,12 +22,16 @@ import { mapPromptToGeminiFormat } from './message-mapper';
 import { mapGeminiToolConfig, mapToolsToGeminiFormat } from './tool-mapper';
 import { mapGeminiError } from './error';
 import { extractJson } from './extract-json';
-import type { GeminiProviderOptions } from './types';
+import type { GeminiProviderOptions, Logger } from './types';
+import { getLogger, createVerboseLogger } from './logger';
 
 export interface GeminiLanguageModelOptions {
   modelId: string;
   providerOptions: GeminiProviderOptions;
-  settings?: Record<string, unknown>;
+  settings?: Record<string, unknown> & {
+    logger?: Logger | false;
+    verbose?: boolean;
+  };
 }
 
 /**
@@ -66,11 +70,19 @@ export class GeminiLanguageModel implements LanguageModelV2 {
   readonly modelId: string;
   readonly settings?: Record<string, unknown>;
   private providerOptions: GeminiProviderOptions;
+  private logger: Logger;
 
   constructor(options: GeminiLanguageModelOptions) {
     this.modelId = options.modelId;
     this.providerOptions = options.providerOptions;
     this.settings = options.settings;
+
+    // Create logger that respects verbose setting
+    const baseLogger = getLogger(options.settings?.logger);
+    this.logger = createVerboseLogger(
+      baseLogger,
+      options.settings?.verbose ?? false
+    );
   }
 
   private async ensureInitialized(): Promise<{
@@ -123,11 +135,23 @@ export class GeminiLanguageModel implements LanguageModelV2 {
     };
     warnings: LanguageModelV2CallWarning[];
   }> {
+    this.logger.debug(
+      `[gemini-cli] Starting doGenerate request with model: ${this.modelId}`
+    );
+
     try {
       const { contentGenerator } = await this.ensureInitialized();
 
       // Map the prompt to Gemini format
       const { contents, systemInstruction } = mapPromptToGeminiFormat(options);
+
+      this.logger.debug(
+        `[gemini-cli] Request mode: ${options.responseFormat?.type === 'json' ? 'object-json' : 'regular'}, response format: ${options.responseFormat?.type ?? 'none'}`
+      );
+
+      this.logger.debug(
+        `[gemini-cli] Converted ${options.prompt.length} messages`
+      );
 
       // Prepare generation config
       const generationConfig: GenerateContentConfig = {
@@ -194,10 +218,18 @@ export class GeminiLanguageModel implements LanguageModelV2 {
 
       // Generate content (new signature requires userPromptId)
       let response;
+      const startTime = Date.now();
       try {
+        this.logger.debug('[gemini-cli] Executing generateContent request');
+
         response = await contentGenerator.generateContent(
           request,
           randomUUID()
+        );
+
+        const duration = Date.now() - startTime;
+        this.logger.info(
+          `[gemini-cli] Request completed - Duration: ${duration}ms`
         );
 
         // Check if aborted during generation
@@ -254,9 +286,16 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         totalTokens,
       };
 
+      this.logger.debug(
+        `[gemini-cli] Token usage - Input: ${inputTokens}, Output: ${outputTokens}, Total: ${totalTokens}`
+      );
+
+      const finishReason = mapGeminiFinishReason(candidate?.finishReason);
+      this.logger.debug(`[gemini-cli] Finish reason: ${finishReason}`);
+
       return {
         content,
-        finishReason: mapGeminiFinishReason(candidate?.finishReason),
+        finishReason,
         usage,
         rawCall: {
           rawPrompt: { contents, systemInstruction, generationConfig, tools },
@@ -273,6 +312,9 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         warnings: [],
       };
     } catch (error) {
+      this.logger.debug(
+        `[gemini-cli] Error during doGenerate: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw mapGeminiError(error);
     }
   }
@@ -287,11 +329,23 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       rawSettings: Record<string, unknown>;
     };
   }> {
+    this.logger.debug(
+      `[gemini-cli] Starting doStream request with model: ${this.modelId}`
+    );
+
     try {
       const { contentGenerator } = await this.ensureInitialized();
 
       // Map the prompt to Gemini format
       const { contents, systemInstruction } = mapPromptToGeminiFormat(options);
+
+      this.logger.debug(
+        `[gemini-cli] Stream mode: ${options.responseFormat?.type === 'json' ? 'object-json' : 'regular'}, response format: ${options.responseFormat?.type ?? 'none'}`
+      );
+
+      this.logger.debug(
+        `[gemini-cli] Converted ${options.prompt.length} messages for streaming`
+      );
 
       // Prepare generation config
       const generationConfig: GenerateContentConfig = {
@@ -359,6 +413,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       // Create streaming response (new signature requires userPromptId)
       let streamResponse;
       try {
+        this.logger.debug(
+          '[gemini-cli] Starting generateContentStream request'
+        );
+
         streamResponse = await contentGenerator.generateContentStream(
           request,
           randomUUID()
@@ -378,8 +436,9 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         throw error;
       }
 
-      // Capture modelId for use in stream
+      // Capture modelId and logger for use in stream
       const modelId = this.modelId;
+      const logger = this.logger;
 
       // Transform the stream to AI SDK v5 format
       const stream = new ReadableStream<LanguageModelV2StreamPart>({
@@ -403,6 +462,9 @@ export class GeminiLanguageModel implements LanguageModelV2 {
               type: 'stream-start',
               warnings: [],
             });
+
+            const streamStartTime = Date.now();
+            logger.debug('[gemini-cli] Stream started, processing chunks');
 
             for await (const chunk of streamResponse) {
               // Check if aborted during streaming
@@ -462,6 +524,22 @@ export class GeminiLanguageModel implements LanguageModelV2 {
                   });
                 }
 
+                const duration = Date.now() - streamStartTime;
+                logger.info(
+                  `[gemini-cli] Stream completed - Duration: ${duration}ms`
+                );
+
+                logger.debug(
+                  `[gemini-cli] Stream token usage - Input: ${totalInputTokens}, Output: ${totalOutputTokens}, Total: ${totalInputTokens + totalOutputTokens}`
+                );
+
+                const finishReason = mapGeminiFinishReason(
+                  candidate.finishReason
+                );
+                logger.debug(
+                  `[gemini-cli] Stream finish reason: ${finishReason}`
+                );
+
                 // Emit response metadata
                 controller.enqueue({
                   type: 'response-metadata',
@@ -473,7 +551,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
                 // Emit finish event
                 controller.enqueue({
                   type: 'finish',
-                  finishReason: mapGeminiFinishReason(candidate.finishReason),
+                  finishReason,
                   usage: {
                     inputTokens: totalInputTokens,
                     outputTokens: totalOutputTokens,
@@ -514,8 +592,12 @@ export class GeminiLanguageModel implements LanguageModelV2 {
               });
             }
 
+            logger.debug('[gemini-cli] Stream finalized, closing stream');
             controller.close();
           } catch (error) {
+            logger.debug(
+              `[gemini-cli] Error during doStream: ${error instanceof Error ? error.message : String(error)}`
+            );
             controller.error(mapGeminiError(error));
           } finally {
             // Clean up abort listener
@@ -540,6 +622,9 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         },
       };
     } catch (error) {
+      this.logger.debug(
+        `[gemini-cli] Error creating stream: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw mapGeminiError(error);
     }
   }

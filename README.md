@@ -57,6 +57,7 @@ Please ensure you have appropriate permissions and comply with all applicable te
 - 🔐 OAuth authentication using Gemini CLI credentials
 - 📝 TypeScript support with full type safety
 - 🎯 Structured object generation with Zod schemas
+- 🐛 Comprehensive logging with verbose mode for debugging
 
 ## Installation
 
@@ -397,6 +398,125 @@ const model = gemini('gemini-2.5-pro', {
   topP: 0.95,
 });
 ```
+
+### Logging Configuration
+
+Control how the provider logs execution information, warnings, and errors. The logger supports multiple log levels and a verbose mode for detailed debugging.
+
+#### Log Levels
+
+The provider supports four log levels:
+
+- **`debug`**: Detailed execution tracing (request/response, token usage, timing)
+- **`info`**: General execution flow information (request completion, duration)
+- **`warn`**: Warnings about configuration issues or unexpected behavior
+- **`error`**: Error messages for failures and exceptions
+
+#### Basic Configuration
+
+```typescript
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+// Default: logs warnings and errors to console
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+// Disable all logging
+const model = gemini('gemini-2.5-flash', {
+  logger: false,
+});
+
+// Custom logger - must implement all four log levels
+const customModel = gemini('gemini-2.5-flash', {
+  logger: {
+    debug: (message) => myLogger.debug('Gemini:', message),
+    info: (message) => myLogger.info('Gemini:', message),
+    warn: (message) => myLogger.warn('Gemini:', message),
+    error: (message) => myLogger.error('Gemini:', message),
+  },
+});
+```
+
+#### Verbose Mode (Debug Logging)
+
+Enable verbose mode to see detailed execution logs, including:
+
+- Request/response tracing
+- Message conversion details
+- Token usage (input, output, total)
+- Request duration and timing
+- Finish reasons
+
+**Without verbose mode** (default), only `warn` and `error` messages are logged.
+**With verbose mode enabled**, `debug` and `info` messages are also logged.
+
+```typescript
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+import { generateText } from 'ai';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+// Enable verbose logging for debugging
+const model = gemini('gemini-2.5-flash', {
+  verbose: true, // Enable debug and info logging
+});
+
+const result = await generateText({
+  model,
+  prompt: 'Hello!',
+});
+```
+
+#### Custom Logger with Verbose Mode
+
+```typescript
+const model = gemini('gemini-2.5-flash', {
+  verbose: true,
+  logger: {
+    debug: (msg) => console.log(`[DEBUG] ${msg}`),
+    info: (msg) => console.log(`[INFO] ${msg}`),
+    warn: (msg) => console.warn(`[WARN] ${msg}`),
+    error: (msg) => console.error(`[ERROR] ${msg}`),
+  },
+});
+```
+
+#### What Gets Logged in Verbose Mode
+
+With `verbose: true`, you'll see detailed execution logs:
+
+```
+[DEBUG] Starting doGenerate request with model: gemini-2.5-flash
+[DEBUG] Request mode: regular, response format: none
+[DEBUG] Converted 2 messages
+[DEBUG] Executing generateContent request
+[INFO] Request completed - Duration: 1523ms
+[DEBUG] Token usage - Input: 245, Output: 128, Total: 373
+[DEBUG] Finish reason: stop
+```
+
+For streaming requests:
+
+```
+[DEBUG] Starting doStream request with model: gemini-2.5-flash
+[DEBUG] Stream mode: regular, response format: none
+[DEBUG] Converted 2 messages for streaming
+[DEBUG] Starting generateContentStream request
+[DEBUG] Stream started, processing chunks
+[INFO] Stream completed - Duration: 2341ms
+[DEBUG] Stream token usage - Input: 512, Output: 256, Total: 768
+[DEBUG] Stream finish reason: stop
+[DEBUG] Stream finalized, closing stream
+```
+
+#### Logger Options
+
+- `undefined` (default): Uses `console.debug`, `console.info`, `console.warn`, and `console.error`
+- `false`: Disables all logging
+- Custom `Logger` object: Must implement `debug`, `info`, `warn`, and `error` methods
 
 ### Provider Options
 

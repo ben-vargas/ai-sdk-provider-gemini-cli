@@ -31,11 +31,19 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', { 
+      '@typescript-eslint/no-unused-vars': ['error', {
         argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_' 
+        varsIgnorePattern: '^_'
       }],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // Logger file - allow all console methods for logger implementation
+  {
+    files: ['src/logger.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 
