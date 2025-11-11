@@ -19,9 +19,9 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
@@ -36,15 +36,23 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # This is an optional setting that allows Claude to read CI results on PRs
-          additional_permissions: |
-            actions: read
+          # Use sticky comments (updates one comment instead of creating multiple)
+          use_sticky_comment: true
+
+          # Enable commit signing for verified commits
+          use_commit_signing: true
+
+          # Optional: Allow specific bots to trigger Claude (uncomment to enable)
+          # allowed_bots: "renovate"  # Or use "*" for all bots, or comma-separated list
 
           # Optional: Customize the trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
 
           # Optional: Trigger when specific user is assigned to an issue
           # assignee_trigger: "claude-bot"
+
+          # Optional: Trigger when a specific label is added
+          # label_trigger: "claude"
 
           # Optional: Configure Claude's behavior with CLI arguments
           # claude_args: |
