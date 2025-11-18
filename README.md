@@ -3,7 +3,7 @@
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/v/ai-sdk-provider-gemini-cli?color=00A79E" alt="npm stable version" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/unpacked-size/ai-sdk-provider-gemini-cli?color=00A79E" alt="install size" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/dy/ai-sdk-provider-gemini-cli.svg?color=00A79E" alt="npm downloads" /></a>
-  <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/badge/node-%3E%3D18-00A79E" alt="Node.js ≥ 18" /></a>
+  <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/badge/node-%3E%3D20-00A79E" alt="Node.js ≥ 20" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/l/ai-sdk-provider-gemini-cli?color=00A79E" alt="License: MIT" /></a>
   <a href="https://github.com/Piebald-AI/awesome-gemini-cli"><img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Gemini CLI" /></a>
 </p>
@@ -540,7 +540,7 @@ This provider uses Google's Cloud Code endpoints through the Gemini CLI Core lib
 
 ## Limitations
 
-- Requires Node.js ≥ 18
+- Requires Node.js ≥ 20
 - OAuth authentication requires the Gemini CLI to be installed globally
 - Rate limits may vary from the direct Gemini API
 - Very strict character length constraints in schemas may be challenging for the model

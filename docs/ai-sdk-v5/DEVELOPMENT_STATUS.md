@@ -112,7 +112,7 @@ The provider has been fully migrated to support AI SDK v5.
 - **Provider Version**: 1.0.0-beta.x
 - **AI SDK Version**: 5.0.0-beta.26+
 - **AI SDK Provider**: 2.0.0-beta.1+
-- **Node.js**: ≥18 required
+- **Node.js**: ≥20 required
 
 ## Future Considerations
 
