@@ -65,7 +65,7 @@ async function main() {
       });
       
       await generateText({
-        model: gemini('gemini-2.5-pro'),
+        model: gemini('gemini-3-pro-preview'),
         prompt: 'Test auth',
         maxOutputTokens: 10,
       });
@@ -98,7 +98,7 @@ async function main() {
     });
   } catch (error) {
     console.log('✅ Expected error caught:', error.message);
-    console.log('💡 Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-2.0-pro-exp, and more');
+    console.log('💡 Available models: gemini-3-pro-preview, gemini-2.5-flash, gemini-2.0-pro-exp, and more');
   }
   console.log();
 
@@ -119,7 +119,7 @@ async function main() {
     console.log('Making request with 3-second timeout...');
     
     const result = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       prompt: 'Write a detailed essay about quantum computing',
       maxOutputTokens: 1000,
       abortSignal: controller.signal,
@@ -150,7 +150,7 @@ async function main() {
     
     const result = await retryWithBackoff(async () => {
       return await generateText({
-        model: gemini('gemini-2.5-pro'),
+        model: gemini('gemini-3-pro-preview'),
         prompt: 'Say hello',
         maxOutputTokens: 20,
       });
@@ -178,7 +178,7 @@ async function main() {
     console.log('Starting stream...');
     
     const stream = await streamText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       prompt: 'Count to 10',
       maxOutputTokens: 100,
     });
@@ -240,13 +240,13 @@ async function main() {
         // Empty prompt may need retries due to API behavior
         await retryWithBackoff(async () => {
           return await generateText({
-            model: gemini('gemini-2.5-pro'),
+            model: gemini('gemini-3-pro-preview'),
             ...test.config,
           });
         }, 3, 500);
       } else {
         await generateText({
-          model: gemini('gemini-2.5-pro'),
+          model: gemini('gemini-3-pro-preview'),
           ...test.config,
         });
       }
@@ -262,7 +262,7 @@ async function main() {
   console.log('─'.repeat(50));
   
   async function generateWithFallback(prompt) {
-    const models = ['gemini-2.5-pro', 'gemini-2.0-pro-exp'];
+    const models = ['gemini-3-pro-preview', 'gemini-2.0-pro-exp'];
     
     for (const modelName of models) {
       try {

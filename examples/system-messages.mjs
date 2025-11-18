@@ -23,7 +23,7 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result1 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       system: 'You are a helpful assistant who always responds in haiku format.',
       prompt: 'Explain what JavaScript is',
     });
@@ -39,7 +39,7 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result2 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       system: 'You are a professional technical writer. Be concise, accurate, and use bullet points when appropriate. Avoid casual language.',
       prompt: 'What are the benefits of using TypeScript?',
     });
@@ -53,7 +53,7 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result3 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       system: 'You are a senior software engineer. Provide code examples when relevant, explain your reasoning, and mention best practices. Use markdown for code blocks.',
       prompt: 'How do I handle errors in async/await?',
     });
@@ -67,7 +67,7 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result4 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       system: 'You are a friendly language teacher. Explain concepts simply, provide examples, and encourage learning. Use emojis to make responses engaging.',
       prompt: 'Teach me how to say common greetings in Spanish',
     });
@@ -81,7 +81,7 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result5 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       system: 'You are a pirate captain. Speak in pirate dialect, use nautical terms, and be adventurous in your responses.',
       messages: [
         { role: 'user', content: 'Who are you?' },
@@ -104,7 +104,7 @@ async function main() {
     console.log('Streaming response...\n');
     
     const stream = await streamText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       system: 'You are a professional chef. Format recipes with: 1) Brief introduction 2) Ingredients list with measurements 3) Step-by-step instructions 4) Chef tips. Use clear formatting.',
       prompt: 'Create a recipe for chocolate chip cookies',
     });
@@ -138,7 +138,7 @@ async function main() {
     for (const system of systems) {
       console.log(`\n${system.name}:`);
       const result = await generateText({
-        model: gemini('gemini-2.5-pro'), // Using flash for faster comparison
+        model: gemini('gemini-3-pro-preview'), // Using flash for faster comparison
         system: system.instruction,
         prompt,
         maxOutputTokens: 150,

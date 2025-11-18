@@ -22,7 +22,7 @@ async function example1_stringConstraints() {
   console.log('1️⃣  String Constraints\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       user: z.object({
         username: z.string()
@@ -68,7 +68,7 @@ async function example2_numberConstraints() {
   console.log('2️⃣  Number Constraints\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       product: z.object({
         id: z.number().int().positive(),
@@ -119,7 +119,7 @@ async function example3_enumConstraints() {
   console.log('3️⃣  Enum and Literal Constraints\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       order: z.object({
         status: z.enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled']),
@@ -158,7 +158,7 @@ async function example4_arrayConstraints() {
   console.log('4️⃣  Array Constraints\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       playlist: z.object({
         name: z.string().min(1).max(100),
@@ -204,7 +204,7 @@ async function example5_dateConstraints() {
   console.log('5️⃣  Date and Time Constraints\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       event: z.object({
         name: z.string(),
@@ -249,7 +249,7 @@ async function example6_businessRules() {
   console.log('6️⃣  Complex Business Rules\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       insurance: z.object({
         policyNumber: z.string()
@@ -341,7 +341,7 @@ async function main() {
     
   } catch (error) {
     console.error('❌ Error:', error.message);
-    console.log('\n💡 Tip: Complex constraints may require the more capable gemini-2.5-pro model');
+    console.log('\n💡 Tip: Complex constraints may require the more capable gemini-3-pro-preview model');
   }
 }
 

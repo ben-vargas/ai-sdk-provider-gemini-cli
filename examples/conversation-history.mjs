@@ -29,7 +29,7 @@ async function main() {
     ];
 
     const result1 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       messages: messages1,
     });
 
@@ -49,7 +49,7 @@ async function main() {
     // First message
     conversation.push({ role: 'user', content: 'I need help planning a trip to Japan.' });
     let response = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       messages: conversation,
     });
     conversation.push({ role: 'assistant', content: response.content[0].text });
@@ -60,7 +60,7 @@ async function main() {
     // Second message
     conversation.push({ role: 'user', content: 'I have 10 days and I love nature and technology.' });
     response = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       messages: conversation,
     });
     conversation.push({ role: 'assistant', content: response.content[0].text });
@@ -71,7 +71,7 @@ async function main() {
     // Third message - referencing earlier context
     conversation.push({ role: 'user', content: 'What was the first thing you suggested?' });
     response = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       messages: conversation,
     });
     console.log('👤 User:', conversation[4].content);
@@ -83,7 +83,7 @@ async function main() {
     console.log('─'.repeat(50));
 
     const result3 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       system: 'You are a helpful coding tutor. Keep explanations concise and include code examples.',
       messages: [
         { role: 'user', content: 'What is a closure in JavaScript?' },
@@ -117,7 +117,7 @@ async function main() {
     console.log('🤖: ');
 
     const stream = await streamText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       messages: streamMessages,
     });
 
@@ -137,7 +137,7 @@ async function main() {
     ];
 
     const tokenResult = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       messages: tokenTestMessages,
     });
 

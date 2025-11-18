@@ -3,7 +3,7 @@
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/v/ai-sdk-provider-gemini-cli?color=00A79E" alt="npm stable version" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/unpacked-size/ai-sdk-provider-gemini-cli?color=00A79E" alt="install size" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/dy/ai-sdk-provider-gemini-cli.svg?color=00A79E" alt="npm downloads" /></a>
-  <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/badge/node-%3E%3D18-00A79E" alt="Node.js ≥ 18" /></a>
+  <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/badge/node-%3E%3D20-00A79E" alt="Node.js ≥ 20" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/l/ai-sdk-provider-gemini-cli?color=00A79E" alt="License: MIT" /></a>
   <a href="https://github.com/Piebald-AI/awesome-gemini-cli"><img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Gemini CLI" /></a>
 </p>
@@ -92,7 +92,7 @@ const gemini = createGeminiProvider({
 });
 
 const result = await generateText({
-  model: gemini('gemini-2.5-pro'),
+  model: gemini('gemini-3-pro-preview'),
   prompt: 'Write a haiku about coding',
 });
 
@@ -110,7 +110,7 @@ const gemini = createGeminiProvider({
 });
 
 const { text } = await generateText({
-  model: gemini('gemini-2.5-pro'),
+  model: gemini('gemini-3-pro-preview'),
   prompt: 'Write a haiku about coding',
 });
 
@@ -368,8 +368,9 @@ console.log(text); // Should mention "Alice"
 
 ## Supported Models
 
-- **`gemini-2.5-pro`** - Most capable model for complex tasks (64K output tokens)
-- **`gemini-2.5-flash`** - Faster model for simpler tasks (64K output tokens)
+- **`gemini-3-pro-preview`** - Latest next-generation model with enhanced reasoning capabilities (Preview)
+- **`gemini-2.5-pro`** - Previous generation production-ready model (64K output tokens)
+- **`gemini-2.5-flash`** - Faster, efficient model (64K output tokens)
 
 **Note**: This provider uses Google Cloud Code endpoints, which may have different model availability and rate limits than the direct Gemini API. The provider defaults to 64K output tokens to take full advantage of Gemini 2.5's capabilities.
 
@@ -539,7 +540,7 @@ This provider uses Google's Cloud Code endpoints through the Gemini CLI Core lib
 
 ## Limitations
 
-- Requires Node.js ≥ 18
+- Requires Node.js ≥ 20
 - OAuth authentication requires the Gemini CLI to be installed globally
 - Rate limits may vary from the direct Gemini API
 - Very strict character length constraints in schemas may be challenging for the model

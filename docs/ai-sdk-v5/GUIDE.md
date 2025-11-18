@@ -373,9 +373,9 @@ async function trackUsage() {
 
 ### 1. Model Selection
 
-- Use **gemini-2.5-pro** for complex tasks requiring high quality output
+- Use **gemini-3-pro-preview** for enhanced reasoning capabilities
+- Use **gemini-2.5-pro** for production workloads requiring the previous generation stable model
 - Use **gemini-2.5-flash** for simpler tasks where speed is important
-- Note: gemini-2.5-pro may return empty responses with `maxOutputTokens` set
 
 ### 2. Prompt Engineering
 

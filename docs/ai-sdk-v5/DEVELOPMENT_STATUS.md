@@ -26,7 +26,8 @@ The provider has been fully migrated to support AI SDK v5.
 - ✅ **Credential Management**: Uses `~/.gemini/oauth_creds.json`
 
 ### Models
-- ✅ **gemini-2.5-pro**: Full support (with maxOutputTokens caveat)
+- ✅ **gemini-3-pro-preview**: Full support (Preview)
+- ✅ **gemini-2.5-pro**: Full support (Previous generation)
 - ✅ **gemini-2.5-flash**: Full support for faster responses
 
 ### Error Handling
@@ -111,7 +112,7 @@ The provider has been fully migrated to support AI SDK v5.
 - **Provider Version**: 1.0.0-beta.x
 - **AI SDK Version**: 5.0.0-beta.26+
 - **AI SDK Provider**: 2.0.0-beta.1+
-- **Node.js**: ≥18 required
+- **Node.js**: ≥20 required
 
 ## Future Considerations
 

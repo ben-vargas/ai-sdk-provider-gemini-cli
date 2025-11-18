@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2025-11-18
+
+### Added
+
+- **Support for Gemini 3**: Added support for `gemini-3-pro-preview` model
+- **Dependency Update**: Updated `@google/gemini-cli-core` to `0.16.0` (pinned)
+- **Security Updates**: Updated dev dependencies (Vite 6, Vitest 4) to resolve security vulnerabilities
+
+### Changed
+
+- **Node.js Requirement**: Updated engine requirement to `node >= 20` to align with `@google/gemini-cli-core` v0.16.0
+- **CI/CD**: Removed Node 18 from CI matrix
+
+### Fixed
+
+- **Async Configuration**: Fixed compatibility with `gemini-cli-core` v0.16.0 async configuration loading
+- **Example Compatibility**: Ensured core health-check examples (`check-auth.mjs`, `integration-test.mjs`) use GA models (`gemini-2.5-pro`) for broader compatibility
+
 ## [1.2.0] - 2025-10-21
 
 ### Added

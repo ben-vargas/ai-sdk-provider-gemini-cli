@@ -23,7 +23,7 @@ const gemini = createGeminiProvider({
   authType: 'oauth-personal'
 });
 
-// Note: We use gemini-2.5-pro for all object generation examples
+// Note: We use gemini-3-pro-preview for all object generation examples
 // as it provides better schema adherence and constraint satisfaction
 
 // Example 1: Simple object with primitives
@@ -31,7 +31,7 @@ async function example1_simpleObject() {
   console.log('1️⃣  Simple Object with Primitives\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       name: z.string().describe('Full name of the person'),
       age: z.number().describe('Age in years'),
@@ -51,7 +51,7 @@ async function example2_arrays() {
   console.log('2️⃣  Object with Arrays\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       projectName: z.string().describe('Name of the software project'),
       languages: z.array(z.string()).describe('Programming languages used'),
@@ -72,7 +72,7 @@ async function example3_optionalFields() {
   console.log('3️⃣  Object with Optional Fields\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       title: z.string().describe('Book title'),
       author: z.string().describe('Author name'),
@@ -96,7 +96,7 @@ async function example4_dataTypes() {
   console.log('4️⃣  Various Data Types\n');
   
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       // Strings with constraints
       id: z.string().uuid().describe('Unique identifier'),
@@ -131,7 +131,7 @@ async function example5_gradualComplexity() {
   // Start simple
   console.log('Step 1 - Basic product:');
   const { object: basicProduct } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       name: z.string(),
       price: z.number(),
@@ -143,7 +143,7 @@ async function example5_gradualComplexity() {
   // Add more fields
   console.log('\nStep 2 - Enhanced product:');
   const { object: enhancedProduct } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       name: z.string(),
       price: z.number(),
@@ -170,7 +170,7 @@ async function example6_bestPractices() {
   
   // Good: Clear descriptions guide the model
   const { object: good } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       headline: z.string().describe('Engaging article headline'),
       summary: z.string().describe('Brief 2-3 sentence summary'),
