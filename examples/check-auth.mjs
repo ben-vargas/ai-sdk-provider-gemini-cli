@@ -62,7 +62,7 @@ if (process.env.GEMINI_API_KEY) {
     // Quick test
     const { generateText } = await import('ai');
     const result = await generateText({
-      model: geminiWithApiKey('gemini-3-pro-preview'),
+      model: geminiWithApiKey('gemini-2.5-pro'),
       prompt: 'Say "API key works" in 3 words'
     });
     
@@ -88,13 +88,13 @@ try {
   });
   
   console.log('✅ Provider created successfully');
-  console.log('Available models: gemini-3-pro-preview, gemini-2.5-flash, gemini-2.0-pro-exp, and more');
+  console.log('Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-2.0-pro-exp, and more');
   
   // Quick connection test
   console.log('\nTesting connection with a simple request...');
   const { generateText } = await import('ai');
   const result = await generateText({
-    model: gemini('gemini-3-pro-preview'),
+    model: gemini('gemini-2.5-pro'),
     prompt: 'Say hello in one word'
   });
   
