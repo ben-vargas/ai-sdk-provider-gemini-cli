@@ -108,7 +108,7 @@ async function example1_productCatalog() {
 
   try {
     const { object } = await generateObject({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       schema: productSchema,
       prompt: 'Generate a detailed product listing for a high-end laptop with 3 variants (different RAM/storage configurations). Include realistic pricing, inventory, and reviews. IMPORTANT: SEO description must be max 160 characters.',
       maxOutputTokens: 4000, // Provide sufficient tokens for complex output
@@ -244,7 +244,7 @@ async function example2_analyticsDashboard() {
   });
 
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'), // Use pro model for complex schemas
+    model: gemini('gemini-3-pro-preview'), // Use pro model for complex schemas
     schema: analyticsSchema,
     prompt: 'Generate comprehensive e-commerce analytics dashboard data for the last 30 days. Show positive growth trends but include some realistic challenges. Include data for a mid-sized online retailer.',
     // Let model use as many tokens as needed for complex schema
@@ -341,7 +341,7 @@ async function example3_formConfiguration() {
   });
 
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: formSchema,
     prompt: 'Generate a multi-step job application form with 4 steps: Personal Info, Education, Work Experience, and Additional Info. Include conditional fields and proper validation.',
     // Let model use as many tokens as needed for complex schema
@@ -448,7 +448,7 @@ async function example4_apiDocumentation() {
   });
 
   const { object } = await generateObject({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     schema: apiSchema,
     prompt: 'Generate comprehensive API documentation for a task management REST API with endpoints for users, projects, and tasks. Include authentication, examples, and error codes.',
     // Let model use as many tokens as needed for complex schema
@@ -497,7 +497,7 @@ async function main() {
   console.log('- Be explicit about length constraints in prompts');
   console.log('- Consider using maxOutputTokens for large schemas');
   console.log('- Break very complex schemas into smaller parts');
-  console.log('- Use gemini-2.5-pro for better constraint adherence');
+  console.log('- Use gemini-3-pro-preview for better constraint adherence');
 }
 
 main().catch(console.error);

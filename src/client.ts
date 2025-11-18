@@ -138,7 +138,7 @@ export async function initializeGeminiClient(
   });
 
   // Create the configuration
-  const config = createContentGeneratorConfig(
+  const config = await createContentGeneratorConfig(
     configMock as unknown as Parameters<typeof createContentGeneratorConfig>[0],
     authType
   );

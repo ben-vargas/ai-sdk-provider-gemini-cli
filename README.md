@@ -92,7 +92,7 @@ const gemini = createGeminiProvider({
 });
 
 const result = await generateText({
-  model: gemini('gemini-2.5-pro'),
+  model: gemini('gemini-3-pro-preview'),
   prompt: 'Write a haiku about coding',
 });
 
@@ -110,7 +110,7 @@ const gemini = createGeminiProvider({
 });
 
 const { text } = await generateText({
-  model: gemini('gemini-2.5-pro'),
+  model: gemini('gemini-3-pro-preview'),
   prompt: 'Write a haiku about coding',
 });
 
@@ -368,8 +368,9 @@ console.log(text); // Should mention "Alice"
 
 ## Supported Models
 
-- **`gemini-2.5-pro`** - Most capable model for complex tasks (64K output tokens)
-- **`gemini-2.5-flash`** - Faster model for simpler tasks (64K output tokens)
+- **`gemini-3-pro-preview`** - Latest next-generation model with enhanced reasoning capabilities (Preview)
+- **`gemini-2.5-pro`** - Previous generation production-ready model (64K output tokens)
+- **`gemini-2.5-flash`** - Faster, efficient model (64K output tokens)
 
 **Note**: This provider uses Google Cloud Code endpoints, which may have different model availability and rate limits than the direct Gemini API. The provider defaults to 64K output tokens to take full advantage of Gemini 2.5's capabilities.
 

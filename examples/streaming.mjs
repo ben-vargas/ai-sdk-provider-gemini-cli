@@ -24,7 +24,7 @@ async function main() {
     console.log('Generating story...\n');
 
     const result1 = await streamText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       prompt: 'Write a short story about a robot learning to paint (3 paragraphs)',
     });
 
@@ -45,7 +45,7 @@ async function main() {
     console.log('Generating numbered list...\n');
 
     const result2 = await streamText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       system: 'You are a helpful assistant. Always format lists with emojis.',
       prompt: 'List 5 tips for learning a new programming language',
     });
@@ -69,7 +69,7 @@ async function main() {
 
     try {
       const result3 = await streamText({
-        model: gemini('gemini-2.5-pro'),
+        model: gemini('gemini-3-pro-preview'),
         prompt: 'Count from 1 to 20 slowly, with a description for each number',
         abortSignal: controller.signal,
       });
@@ -96,7 +96,7 @@ async function main() {
     console.log('Analyzing text as it streams...\n');
 
     const result4 = await streamText({
-      model: gemini('gemini-2.5-pro'), // Using pro model for quality
+      model: gemini('gemini-3-pro-preview'), // Using pro model for quality
       prompt: 'List the planets in our solar system with one interesting fact each',
     });
 

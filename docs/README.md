@@ -59,7 +59,8 @@ const gemini = createGeminiProvider({
 ```
 
 ### Supported Models
-- `gemini-2.5-pro` - Most capable model (64K output tokens)
+- `gemini-3-pro-preview` - Latest next-generation model (Preview)
+- `gemini-2.5-pro` - Previous generation production-ready model (64K output tokens)
 - `gemini-2.5-flash` - Faster, efficient model (64K output tokens)
 
 ### Key Features

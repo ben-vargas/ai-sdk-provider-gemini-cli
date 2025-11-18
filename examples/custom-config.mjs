@@ -23,7 +23,7 @@ async function main() {
     });
     
     const result1 = await generateText({
-      model: oauthProvider('gemini-2.5-pro'),
+      model: oauthProvider('gemini-3-pro-preview'),
       prompt: 'What authentication method am I using?',
     });
     
@@ -42,7 +42,7 @@ async function main() {
       });
       
       const result2 = await generateText({
-        model: apiKeyProvider('gemini-2.5-pro'),
+        model: apiKeyProvider('gemini-3-pro-preview'),
         prompt: 'Say hello',
       });
       
@@ -62,7 +62,7 @@ async function main() {
     });
     
     // Using Pro model with specific settings
-    const proModel = gemini('gemini-2.5-pro', {
+    const proModel = gemini('gemini-3-pro-preview', {
       temperature: 0.2,
       topP: 0.95,
     });
@@ -77,7 +77,7 @@ async function main() {
     console.log();
 
     // Using Pro model with higher temperature for creativity
-    const flashModel = gemini('gemini-2.5-pro', {
+    const flashModel = gemini('gemini-3-pro-preview', {
       temperature: 0.8,
     });
     
@@ -129,11 +129,11 @@ async function main() {
     // Both providers can be used independently
     const [response1, response2] = await Promise.all([
       generateText({
-        model: provider1('gemini-2.5-pro'),
+        model: provider1('gemini-3-pro-preview'),
         prompt: 'Say "Provider 1"',
       }),
       generateText({
-        model: provider2('gemini-2.5-pro'),
+        model: provider2('gemini-3-pro-preview'),
         prompt: 'Say "Provider 2"',
       }),
     ]);
@@ -152,7 +152,7 @@ async function main() {
     });
     
     // Create model with custom settings
-    const customModel = customGemini('gemini-2.5-pro', {
+    const customModel = customGemini('gemini-3-pro-preview', {
       temperature: 0.1,
       topP: 0.9,
       topK: 10,

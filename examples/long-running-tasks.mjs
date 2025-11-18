@@ -83,7 +83,7 @@ async function main() {
     
     try {
       const result = await generateText({
-        model: gemini('gemini-2.5-pro'),
+        model: gemini('gemini-3-pro-preview'),
         prompt: 'Write a brief haiku about timeouts',
         abortSignal: controller1.signal,
       });
@@ -112,7 +112,7 @@ async function main() {
     
     try {
       const result = await generateText({
-        model: gemini('gemini-2.5-pro'),
+        model: gemini('gemini-3-pro-preview'),
         prompt: 'Write a comprehensive 1000-word analysis of quantum computing, covering history, current state, applications, challenges, and future prospects.',
         abortSignal: controller2.signal,
       });
@@ -142,7 +142,7 @@ async function main() {
     console.log('Generating documentation...');
     
     const stream = await streamText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       prompt: 'Write comprehensive documentation for a REST API with 5 endpoints. Include descriptions, parameters, and examples.',
       maxOutputTokens: 500,
       abortSignal: controller3.signal,
@@ -198,7 +198,7 @@ async function main() {
     
     try {
       const result = await generateText({
-        model: gemini('gemini-2.5-pro'),
+        model: gemini('gemini-3-pro-preview'),
         prompt: 'Write a short story about a robot learning to paint.',
         abortSignal: controller4.signal,
       });
@@ -252,7 +252,7 @@ async function main() {
         const progress = createProgressIndicator(`Writing ${section}`);
         
         const result = await generateText({
-          model: gemini('gemini-2.5-pro'),
+          model: gemini('gemini-3-pro-preview'),
           prompt: `Write a brief section titled "${section}" for a guide about effective API design. Keep it concise (2-3 paragraphs).`,
           abortSignal: controller5.signal,
         });

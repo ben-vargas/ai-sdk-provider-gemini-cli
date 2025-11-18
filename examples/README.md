@@ -200,7 +200,7 @@ const messages = [
 ];
 
 const { text } = await generateText({
-  model: gemini('gemini-2.5-pro'),
+  model: gemini('gemini-3-pro-preview'),
   messages,
 });
 ```
@@ -212,7 +212,7 @@ const timeout = setTimeout(() => controller.abort(), 60000); // 1 minute
 
 try {
   const { text } = await generateText({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-pro-preview'),
     prompt: 'Complex analysis...',
     abortSignal: controller.signal,
   });
@@ -250,9 +250,9 @@ try {
 ## Cloud Code Endpoints
 
 This provider uses Google Cloud Code endpoints (https://cloudcode-pa.googleapis.com) through the gemini-cli-core library. The available models include:
-- `gemini-2.5-pro` - Most capable model (64K output tokens) - **Recommended for all examples**
+- `gemini-3-pro-preview` - Latest next-generation model (Preview) - **Recommended for all examples**
+- `gemini-2.5-pro` - Previous generation production-ready model (64K output tokens)
 - `gemini-2.5-flash` - Faster, efficient model (64K output tokens)
-- `gemini-2.0-pro-exp` - Experimental model with latest features
 - And more models as they become available
 
 **Note**: The provider defaults to 64K output tokens to take full advantage of Gemini 2.5's capabilities. You can override this with the `maxTokens` parameter if needed.

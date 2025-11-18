@@ -24,7 +24,7 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result1 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       prompt: 'Explain quantum computing in one paragraph.',
     });
 
@@ -38,13 +38,13 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result2 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       prompt: 'Write a haiku about artificial intelligence',
     });
 
     console.log('Response:');
     console.log(result2.content[0]?.text || 'No response generated');
-    console.log(`\nModel used: gemini-2.5-pro`);
+    console.log(`\nModel used: gemini-3-pro-preview`);
     console.log(`Input tokens: ${result2.usage?.inputTokens || 'N/A'}`);
     console.log(`Output tokens: ${result2.usage?.outputTokens || 'N/A'}`);
     console.log();
@@ -54,13 +54,13 @@ async function main() {
     console.log('─'.repeat(50));
     
     const result3 = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-pro-preview'),
       prompt: 'Write a haiku about programming',
     });
 
     console.log('Response:');
     console.log(result3.content[0]?.text || 'No response generated');
-    console.log(`\nModel used: gemini-2.5-pro`);
+    console.log(`\nModel used: gemini-3-pro-preview`);
     console.log(`Total tokens: ${result3.usage?.totalTokens || 'N/A'}`);
     console.log();
 
@@ -68,7 +68,7 @@ async function main() {
     console.log('Example 4: Provider Information');
     console.log('─'.repeat(50));
     
-    const model = gemini('gemini-2.5-pro');
+    const model = gemini('gemini-3-pro-preview');
     console.log(`Provider: ${model.provider}`);
     console.log(`Model ID: ${model.modelId}`);
     console.log(`Specification: ${JSON.stringify(model.specificationVersion)}`);

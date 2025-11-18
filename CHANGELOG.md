@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2025-11-18
+
+### Added
+
+- **Support for Gemini 3**: Added support for `gemini-3-pro-preview` model
+- **Dependency Update**: Updated `@google/gemini-cli-core` to `0.16.0`
+
+### Fixed
+
+- **Async Configuration**: Fixed compatibility with `gemini-cli-core` v0.16.0 async configuration loading
+
 ## [1.2.0] - 2025-10-21
 
 ### Added
