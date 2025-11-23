@@ -21,7 +21,6 @@ import { initializeGeminiClient } from './client';
 import { mapPromptToGeminiFormat } from './message-mapper';
 import { mapGeminiToolConfig, mapToolsToGeminiFormat } from './tool-mapper';
 import { mapGeminiError } from './error';
-import { extractJson } from './extract-json';
 import type { GeminiProviderOptions, Logger } from './types';
 import { getLogger, createVerboseLogger } from './logger';
 
@@ -55,13 +54,66 @@ function mapGeminiFinishReason(
   }
 }
 
+/**
+ * Prepare generation config with proper handling for JSON mode.
+ *
+ * When JSON response format is requested WITHOUT a schema, we downgrade to
+ * text/plain and emit a warning. This aligns with Claude-code provider behavior
+ * and prevents raw fenced JSON from leaking to clients.
+ *
+ * When a schema IS provided, we use native responseJsonSchema for structured output.
+ */
+function prepareGenerationConfig(
+  options: LanguageModelV2CallOptions,
+  settings?: Record<string, unknown>
+): {
+  generationConfig: GenerateContentConfig;
+  warnings: LanguageModelV2CallWarning[];
+} {
+  const warnings: LanguageModelV2CallWarning[] = [];
+
+  // Extract schema if JSON mode with schema is requested
+  const responseFormat = options.responseFormat;
+  const isJsonMode = responseFormat?.type === 'json';
+  const schema = isJsonMode ? responseFormat.schema : undefined;
+  const hasSchema = isJsonMode && schema !== undefined;
+
+  // JSON without schema: downgrade to text/plain with warning
+  if (isJsonMode && !hasSchema) {
+    warnings.push({
+      type: 'unsupported-setting',
+      setting: 'responseFormat',
+      details:
+        'JSON response format without a schema is not supported. Treating as plain text. Provide a schema for structured output.',
+    });
+  }
+
+  const generationConfig: GenerateContentConfig = {
+    temperature:
+      options.temperature ?? (settings?.temperature as number | undefined),
+    topP: options.topP ?? (settings?.topP as number | undefined),
+    topK: options.topK ?? (settings?.topK as number | undefined),
+    maxOutputTokens:
+      options.maxOutputTokens ??
+      (settings?.maxOutputTokens as number | undefined),
+    stopSequences: options.stopSequences,
+    // Only use application/json when we have a schema to enforce it
+    responseMimeType: hasSchema ? 'application/json' : 'text/plain',
+    // Pass schema directly to Gemini API for native structured output
+    responseJsonSchema: hasSchema ? schema : undefined,
+    toolConfig: mapGeminiToolConfig(options),
+  };
+
+  return { generationConfig, warnings };
+}
+
 export class GeminiLanguageModel implements LanguageModelV2 {
   readonly specificationVersion = 'v2' as const;
   readonly provider = 'gemini-cli-core';
   readonly defaultObjectGenerationMode = 'json' as const;
   readonly supportsImageUrls = false; // CLI Core uses base64 data, not URLs
   readonly supportedUrls = {}; // No native URL support
-  readonly supportsStructuredOutputs = false; // V2 structured outputs not supported yet
+  readonly supportsStructuredOutputs = true; // Native Gemini responseJsonSchema support
 
   private contentGenerator?: ContentGenerator;
   private config?: ContentGeneratorConfig;
@@ -153,23 +205,12 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         `[gemini-cli] Converted ${options.prompt.length} messages`
       );
 
-      // Prepare generation config
-      const generationConfig: GenerateContentConfig = {
-        temperature:
-          options.temperature ??
-          (this.settings?.temperature as number | undefined),
-        topP: options.topP ?? (this.settings?.topP as number | undefined),
-        topK: options.topK ?? (this.settings?.topK as number | undefined),
-        maxOutputTokens:
-          options.maxOutputTokens ??
-          (this.settings?.maxOutputTokens as number | undefined),
-        stopSequences: options.stopSequences,
-        responseMimeType:
-          options.responseFormat?.type === 'json'
-            ? 'application/json'
-            : 'text/plain',
-        toolConfig: mapGeminiToolConfig(options),
-      };
+      // Prepare generation config with proper JSON mode handling
+      // (downgrades to text/plain with warning if JSON requested without schema)
+      const { generationConfig, warnings } = prepareGenerationConfig(
+        options,
+        this.settings
+      );
 
       // Map tools if provided in regular mode
       let tools;
@@ -255,14 +296,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       if (responseContent?.parts) {
         for (const part of responseContent.parts) {
           if (part.text) {
-            let text = part.text;
-            // Extract JSON if in object-json mode
-            if (options.responseFormat?.type === 'json') {
-              text = extractJson(text);
-            }
+            // With native responseJsonSchema, the output is already clean JSON
             content.push({
               type: 'text',
-              text: text,
+              text: part.text,
             });
           } else if (part.functionCall) {
             content.push({
@@ -309,7 +346,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
           timestamp: new Date(),
           modelId: this.modelId,
         },
-        warnings: [],
+        warnings,
       };
     } catch (error) {
       this.logger.debug(
@@ -347,23 +384,12 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         `[gemini-cli] Converted ${options.prompt.length} messages for streaming`
       );
 
-      // Prepare generation config
-      const generationConfig: GenerateContentConfig = {
-        temperature:
-          options.temperature ??
-          (this.settings?.temperature as number | undefined),
-        topP: options.topP ?? (this.settings?.topP as number | undefined),
-        topK: options.topK ?? (this.settings?.topK as number | undefined),
-        maxOutputTokens:
-          options.maxOutputTokens ??
-          (this.settings?.maxOutputTokens as number | undefined),
-        stopSequences: options.stopSequences,
-        responseMimeType:
-          options.responseFormat?.type === 'json'
-            ? 'application/json'
-            : 'text/plain',
-        toolConfig: mapGeminiToolConfig(options),
-      };
+      // Prepare generation config with proper JSON mode handling
+      // (downgrades to text/plain with warning if JSON requested without schema)
+      const { generationConfig, warnings } = prepareGenerationConfig(
+        options,
+        this.settings
+      );
 
       // Map tools if provided in regular mode
       let tools;
@@ -436,9 +462,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
         throw error;
       }
 
-      // Capture modelId and logger for use in stream
+      // Capture modelId, logger, and warnings for use in stream
       const modelId = this.modelId;
       const logger = this.logger;
+      const streamWarnings = warnings;
 
       // Transform the stream to AI SDK v5 format
       const stream = new ReadableStream<LanguageModelV2StreamPart>({
@@ -451,16 +478,13 @@ export class GeminiLanguageModel implements LanguageModelV2 {
               controller.error(abortError);
               return;
             }
-            let accumulatedText = '';
-            const isObjectJsonMode = options.responseFormat?.type === 'json';
-            let currentToolCallId: string | undefined;
             let totalInputTokens = 0;
             let totalOutputTokens = 0;
 
-            // Emit stream-start event
+            // Emit stream-start event with any warnings
             controller.enqueue({
               type: 'stream-start',
-              warnings: [],
+              warnings: streamWarnings,
             });
 
             const streamStartTime = Date.now();
@@ -488,42 +512,26 @@ export class GeminiLanguageModel implements LanguageModelV2 {
               if (content?.parts) {
                 for (const part of content.parts) {
                   if (part.text) {
-                    if (isObjectJsonMode) {
-                      // In object-json mode, accumulate text
-                      accumulatedText += part.text;
-                    } else {
-                      // In regular mode, stream text directly
-                      controller.enqueue({
-                        type: 'text-delta',
-                        id: randomUUID(),
-                        delta: part.text,
-                      });
-                    }
+                    // With native responseJsonSchema, stream text directly
+                    // (output is already clean JSON when schema is provided)
+                    controller.enqueue({
+                      type: 'text-delta',
+                      id: randomUUID(),
+                      delta: part.text,
+                    });
                   } else if (part.functionCall) {
                     // Emit tool call as a single event
-                    currentToolCallId = randomUUID();
                     controller.enqueue({
                       type: 'tool-call',
-                      toolCallId: currentToolCallId,
+                      toolCallId: randomUUID(),
                       toolName: part.functionCall.name || '',
                       input: JSON.stringify(part.functionCall.args || {}),
                     });
-                    currentToolCallId = undefined;
                   }
                 }
               }
 
               if (candidate?.finishReason) {
-                // If in object-json mode, extract and emit the JSON before finishing
-                if (isObjectJsonMode && accumulatedText) {
-                  const extractedJson = extractJson(accumulatedText);
-                  controller.enqueue({
-                    type: 'text-delta',
-                    id: randomUUID(),
-                    delta: extractedJson,
-                  });
-                }
-
                 const duration = Date.now() - streamStartTime;
                 logger.info(
                   `[gemini-cli] Stream completed - Duration: ${duration}ms`
@@ -559,37 +567,6 @@ export class GeminiLanguageModel implements LanguageModelV2 {
                   },
                 });
               }
-            }
-
-            // Final check for object-json mode if we didn't get a finish reason
-            if (
-              isObjectJsonMode &&
-              accumulatedText &&
-              !controller.desiredSize
-            ) {
-              const extractedJson = extractJson(accumulatedText);
-              controller.enqueue({
-                type: 'text-delta',
-                id: randomUUID(),
-                delta: extractedJson,
-              });
-
-              // Emit response metadata and finish
-              controller.enqueue({
-                type: 'response-metadata',
-                id: randomUUID(),
-                timestamp: new Date(),
-                modelId: modelId,
-              });
-              controller.enqueue({
-                type: 'finish',
-                finishReason: 'stop',
-                usage: {
-                  inputTokens: totalInputTokens,
-                  outputTokens: totalOutputTokens,
-                  totalTokens: totalInputTokens + totalOutputTokens,
-                },
-              });
             }
 
             logger.debug('[gemini-cli] Stream finalized, closing stream');

@@ -261,7 +261,7 @@ Based on the Claude Code provider example, here's the typical implementation pat
    - Extract text, tool calls, and other content
    - Calculate token usage
    - Determine finish reason
-   - For object-json mode, extract and validate JSON
+   - For object-json mode, output is already schema-constrained via native `responseJsonSchema`
 
 5. **Return standardized result**
    - Include all required fields (text, usage, finishReason, rawCall)
@@ -274,9 +274,9 @@ Based on the Claude Code provider example, here's the typical implementation pat
 
 2. **Abort Signal**: Properly handle `options.abortSignal` for cancellation
 
-3. **Mode Handling**: 
+3. **Mode Handling**:
    - `regular`: Standard text generation with optional tools
-   - `object-json`: JSON generation mode (extract JSON from response)
+   - `object-json`: JSON generation mode (uses native `responseJsonSchema` for schema-constrained output)
    - `object-tool`: Tool-based object generation
 
 4. **Warnings**: Generate warnings for unsupported parameters or validation issues

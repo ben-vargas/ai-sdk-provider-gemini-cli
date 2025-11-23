@@ -12,46 +12,16 @@ export interface GeminiPromptResult {
 
 /**
  * Maps Vercel AI SDK messages to Gemini format
+ *
+ * Note: Schema is now passed directly via responseJsonSchema in the generation config,
+ * so we no longer inject schema instructions into the prompt.
  */
 export function mapPromptToGeminiFormat(
   options: LanguageModelV2CallOptions
 ): GeminiPromptResult {
-  let messages = options.prompt;
+  const messages = options.prompt;
   const contents: Content[] = [];
   let systemInstruction: Content | undefined;
-
-  // If in json response format, enhance the last user message with schema information
-  if (
-    options.responseFormat?.type === 'json' &&
-    options.responseFormat.schema &&
-    messages.length > 0
-  ) {
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage.role === 'user' && Array.isArray(lastMessage.content)) {
-      const schemaPrompt = `\n\nYou must respond with a JSON object that exactly matches this schema:\n${JSON.stringify(options.responseFormat.schema, null, 2)}\n\nIMPORTANT: Use the exact field names from the schema. Do not add extra fields.`;
-
-      // Clone the messages array and modify the last message
-      messages = [...messages];
-      const lastContent = [...lastMessage.content];
-
-      // Find the last text content and append to it
-      for (let i = lastContent.length - 1; i >= 0; i--) {
-        const content = lastContent[i];
-        if (content.type === 'text') {
-          lastContent[i] = {
-            ...content,
-            text: content.text + schemaPrompt,
-          };
-          break;
-        }
-      }
-
-      messages[messages.length - 1] = {
-        ...lastMessage,
-        content: lastContent,
-      };
-    }
-  }
 
   for (const message of messages) {
     switch (message.role) {
