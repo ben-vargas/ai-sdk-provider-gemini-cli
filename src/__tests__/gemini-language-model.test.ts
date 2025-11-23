@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GeminiLanguageModel } from '../gemini-language-model';
 import { initializeGeminiClient } from '../client';
 import { mapPromptToGeminiFormat } from '../message-mapper';
-import { extractJson } from '../extract-json';
 import type {
   LanguageModelV2FunctionTool,
   LanguageModelV2CallOptions,
@@ -12,7 +11,6 @@ import { FunctionCallingConfigMode } from '@google/genai';
 // Mock dependencies
 vi.mock('../client');
 vi.mock('../message-mapper');
-vi.mock('../extract-json');
 
 describe('GeminiLanguageModel', () => {
   let model: GeminiLanguageModel;
@@ -173,13 +171,14 @@ describe('GeminiLanguageModel', () => {
       expect(toolCall.input).toBe('{"location":"London"}');
     });
 
-    it('should handle JSON mode', async () => {
+    it('should handle JSON mode with native schema support', async () => {
+      // With native responseJsonSchema, Gemini returns clean JSON without markdown
       const mockResponse = {
         candidates: [
           {
             content: {
               role: 'model',
-              parts: [{ text: '```json\n{"name": "John", "age": 30}\n```' }],
+              parts: [{ text: '{"name": "John", "age": 30}' }],
             },
             finishReason: 'STOP',
           },
@@ -191,7 +190,15 @@ describe('GeminiLanguageModel', () => {
       };
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
-      vi.mocked(extractJson).mockReturnValue('{"name": "John", "age": 30}');
+
+      const jsonSchema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'number' },
+        },
+        required: ['name', 'age'],
+      };
 
       const messages: LanguageModelV2CallOptions['prompt'] = [
         {
@@ -202,16 +209,81 @@ describe('GeminiLanguageModel', () => {
 
       const result = await model.doGenerate({
         prompt: messages,
-        responseFormat: { type: 'json' },
+        responseFormat: { type: 'json', schema: jsonSchema },
       });
 
-      // Debug: The extractJson mock is being called but result.text has the JSON with code block markers
-      // This suggests the mock isn't working as expected
-      expect(extractJson).toHaveBeenCalled();
       expect(result.content[0].type).toBe('text');
       expect((result.content[0] as any).text).toBe(
         '{"name": "John", "age": 30}'
       );
+
+      // Verify responseJsonSchema is passed to Gemini API
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            responseMimeType: 'application/json',
+            responseJsonSchema: jsonSchema,
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should downgrade JSON mode without schema to text/plain with warning', async () => {
+      // When JSON is requested without a schema, should downgrade to text/plain
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Some plain text response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 20,
+          candidatesTokenCount: 30,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Generate something' }],
+        },
+      ];
+
+      const result = await model.doGenerate({
+        prompt: messages,
+        responseFormat: { type: 'json' }, // No schema provided
+      });
+
+      // Should return the text as-is
+      expect(result.content[0].type).toBe('text');
+      expect((result.content[0] as any).text).toBe('Some plain text response');
+
+      // Should emit unsupported-setting warning
+      expect(result.warnings).toHaveLength(1);
+      expect(result.warnings[0].type).toBe('unsupported-setting');
+      expect(result.warnings[0].setting).toBe('responseFormat');
+      expect(result.warnings[0].details).toContain('without a schema');
+
+      // Should use text/plain, not application/json
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            responseMimeType: 'text/plain',
+          }),
+        }),
+        expect.any(String)
+      );
+
+      // Should NOT include responseJsonSchema
+      const callArgs = mockClient.generateContent.mock.calls[0][0];
+      expect(callArgs.config.responseJsonSchema).toBeUndefined();
     });
 
     it('should handle empty response', async () => {
@@ -640,7 +712,8 @@ describe('GeminiLanguageModel', () => {
       expect(streamParts[2].type).toBe('finish');
     });
 
-    it('should handle JSON mode in streaming', async () => {
+    it('should handle JSON mode in streaming with native schema', async () => {
+      // With native responseJsonSchema, Gemini returns clean JSON directly
       const mockStream = {
         async *[Symbol.asyncIterator]() {
           yield {
@@ -648,7 +721,7 @@ describe('GeminiLanguageModel', () => {
               {
                 content: {
                   role: 'model',
-                  parts: [{ text: '```json\n{' }],
+                  parts: [{ text: '{"name":' }],
                 },
               },
             ],
@@ -658,7 +731,7 @@ describe('GeminiLanguageModel', () => {
               {
                 content: {
                   role: 'model',
-                  parts: [{ text: '"name": "John"}```' }],
+                  parts: [{ text: ' "John"}' }],
                 },
                 finishReason: 'STOP',
               },
@@ -672,7 +745,12 @@ describe('GeminiLanguageModel', () => {
       };
 
       mockClient.generateContentStream.mockResolvedValue(mockStream);
-      vi.mocked(extractJson).mockReturnValue('{"name": "John"}');
+
+      const jsonSchema = {
+        type: 'object',
+        properties: { name: { type: 'string' } },
+        required: ['name'],
+      };
 
       const messages: LanguageModelV2CallOptions['prompt'] = [
         {
@@ -683,7 +761,7 @@ describe('GeminiLanguageModel', () => {
 
       const result = await model.doStream({
         prompt: messages,
-        responseFormat: { type: 'json' },
+        responseFormat: { type: 'json', schema: jsonSchema },
       });
 
       const streamParts: any[] = [];
@@ -695,9 +773,106 @@ describe('GeminiLanguageModel', () => {
         streamParts.push(value);
       }
 
-      const textDelta = streamParts.find((p) => p.type === 'text-delta');
-      expect(textDelta).toBeDefined();
-      expect(textDelta.delta).toBe('{"name": "John"}');
+      // Now streaming outputs directly without accumulation
+      const textDeltas = streamParts.filter((p) => p.type === 'text-delta');
+      expect(textDeltas).toHaveLength(2);
+      expect(textDeltas[0].delta).toBe('{"name":');
+      expect(textDeltas[1].delta).toBe(' "John"}');
+
+      // Verify responseJsonSchema is passed to Gemini API
+      expect(mockClient.generateContentStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            responseMimeType: 'application/json',
+            responseJsonSchema: jsonSchema,
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should downgrade JSON mode without schema to text/plain with warning (streaming)', async () => {
+      // When JSON is requested without a schema in streaming, should downgrade to text/plain
+      const mockStream = {
+        async *[Symbol.asyncIterator]() {
+          yield {
+            candidates: [
+              {
+                content: {
+                  role: 'model',
+                  parts: [{ text: 'Some plain text' }],
+                },
+              },
+            ],
+          };
+          yield {
+            candidates: [
+              {
+                content: {
+                  role: 'model',
+                  parts: [{ text: ' response' }],
+                },
+                finishReason: 'STOP',
+              },
+            ],
+            usageMetadata: {
+              promptTokenCount: 20,
+              candidatesTokenCount: 30,
+            },
+          };
+        },
+      };
+
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Generate something' }],
+        },
+      ];
+
+      const result = await model.doStream({
+        prompt: messages,
+        responseFormat: { type: 'json' }, // No schema provided
+      });
+
+      const streamParts: any[] = [];
+      const reader = result.stream.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        streamParts.push(value);
+      }
+
+      // Should emit stream-start with warning
+      const streamStart = streamParts.find((p) => p.type === 'stream-start');
+      expect(streamStart).toBeDefined();
+      expect(streamStart.warnings).toHaveLength(1);
+      expect(streamStart.warnings[0].type).toBe('unsupported-setting');
+      expect(streamStart.warnings[0].setting).toBe('responseFormat');
+      expect(streamStart.warnings[0].details).toContain('without a schema');
+
+      // Text should pass through unchanged
+      const textDeltas = streamParts.filter((p) => p.type === 'text-delta');
+      expect(textDeltas).toHaveLength(2);
+      expect(textDeltas[0].delta).toBe('Some plain text');
+      expect(textDeltas[1].delta).toBe(' response');
+
+      // Should use text/plain, not application/json
+      expect(mockClient.generateContentStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            responseMimeType: 'text/plain',
+          }),
+        }),
+        expect.any(String)
+      );
+
+      // Should NOT include responseJsonSchema
+      const callArgs = mockClient.generateContentStream.mock.calls[0][0];
+      expect(callArgs.config.responseJsonSchema).toBeUndefined();
     });
 
     it('should pass toolConfig when toolChoice is provided (streaming)', async () => {
@@ -748,8 +923,8 @@ describe('GeminiLanguageModel', () => {
   });
 
   describe('supportsStructuredOutputs', () => {
-    it('should return false for gemini models', () => {
-      expect(model.supportsStructuredOutputs).toBe(false);
+    it('should return true for gemini models with native schema support', () => {
+      expect(model.supportsStructuredOutputs).toBe(true);
     });
   });
 

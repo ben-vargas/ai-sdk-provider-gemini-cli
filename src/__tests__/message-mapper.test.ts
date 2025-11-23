@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mapPromptToGeminiFormat } from '../message-mapper';
 import type { LanguageModelV2CallOptions } from '@ai-sdk/provider';
-import { z } from 'zod';
 
 describe('mapPromptToGeminiFormat', () => {
   describe('basic message mapping', () => {
@@ -327,12 +326,20 @@ describe('mapPromptToGeminiFormat', () => {
     });
   });
 
-  describe('json response format', () => {
-    it('should append schema to last user message in json response format', () => {
-      const schema = z.object({
-        name: z.string(),
-        age: z.number(),
-      });
+  describe('json response format (native schema support)', () => {
+    // Note: Schema injection has been removed - schema is now passed via responseJsonSchema
+    // in the generation config. These tests verify messages are passed through unchanged.
+
+    it('should not modify messages when json response format with schema', () => {
+      // Schema is now a JSON Schema object (the AI SDK converts Zod to JSON Schema before calling provider)
+      const schema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'number' },
+        },
+        required: ['name', 'age'],
+      };
 
       const options: LanguageModelV2CallOptions = {
         responseFormat: { type: 'json', schema },
@@ -347,16 +354,16 @@ describe('mapPromptToGeminiFormat', () => {
       const result = mapPromptToGeminiFormat(options);
 
       expect(result.contents).toHaveLength(1);
-      const userMessage = result.contents[0];
-      expect(userMessage.parts[0].text).toContain('Generate a person object');
-      expect(userMessage.parts[0].text).toContain(
-        'You must respond with a JSON object'
-      );
-      expect(userMessage.parts[0].text).toContain('matches this schema');
+      // Message should be unchanged - no schema injection
+      expect(result.contents[0].parts[0].text).toBe('Generate a person object');
     });
 
-    it('should only modify last user message', () => {
-      const schema = z.object({ result: z.string() });
+    it('should pass through all messages unchanged with json response format', () => {
+      const schema = {
+        type: 'object',
+        properties: { result: { type: 'string' } },
+        required: ['result'],
+      };
 
       const options: LanguageModelV2CallOptions = {
         responseFormat: { type: 'json', schema },
@@ -379,60 +386,9 @@ describe('mapPromptToGeminiFormat', () => {
       const result = mapPromptToGeminiFormat(options);
 
       expect(result.contents).toHaveLength(3);
-      // First user message should be unchanged
       expect(result.contents[0].parts[0].text).toBe('First question');
-      // Last user message should have schema appended
-      expect(result.contents[2].parts[0].text).toContain('Second question');
-      expect(result.contents[2].parts[0].text).toContain('JSON object');
-    });
-
-    it('should handle multipart user messages in json response format', () => {
-      const schema = z.object({ description: z.string() });
-
-      const options: LanguageModelV2CallOptions = {
-        responseFormat: { type: 'json', schema },
-        prompt: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Describe this:' },
-              { type: 'file', data: 'base64data', mediaType: 'image/jpeg' },
-              { type: 'text', text: 'in JSON format' },
-            ],
-          },
-        ],
-      };
-
-      const result = mapPromptToGeminiFormat(options);
-
-      // Should append to the last text part
-      expect(result.contents[0].parts[0].text).toBe('Describe this:');
-      expect(result.contents[0].parts[2].text).toContain('in JSON format');
-      expect(result.contents[0].parts[2].text).toContain('JSON object');
-    });
-
-    it('should not modify non-user last messages', () => {
-      const schema = z.object({ result: z.string() });
-
-      const options: LanguageModelV2CallOptions = {
-        responseFormat: { type: 'json', schema },
-        prompt: [
-          {
-            role: 'user',
-            content: [{ type: 'text', text: 'Question' }],
-          },
-          {
-            role: 'assistant',
-            content: [{ type: 'text', text: 'Answer' }],
-          },
-        ],
-      };
-
-      const result = mapPromptToGeminiFormat(options);
-
-      // User message should be unchanged since it's not the last message
-      expect(result.contents[0].parts[0].text).toBe('Question');
-      expect(result.contents[1].parts[0].text).toBe('Answer');
+      expect(result.contents[1].parts[0].text).toBe('First answer');
+      expect(result.contents[2].parts[0].text).toBe('Second question');
     });
 
     it('should handle json response format without schema', () => {
@@ -448,12 +404,14 @@ describe('mapPromptToGeminiFormat', () => {
 
       const result = mapPromptToGeminiFormat(options);
 
-      // Should not modify message when no schema is provided
       expect(result.contents[0].parts[0].text).toBe('Generate JSON');
     });
 
     it('should handle empty prompt in json response format', () => {
-      const schema = z.object({ test: z.string() });
+      const schema = {
+        type: 'object',
+        properties: { test: { type: 'string' } },
+      };
 
       const options: LanguageModelV2CallOptions = {
         responseFormat: { type: 'json', schema },

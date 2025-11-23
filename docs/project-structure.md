@@ -11,14 +11,12 @@ ai-sdk-provider-gemini-cli/
 │   ├── client.ts                             # Gemini CLI Core client initialization
 │   ├── message-mapper.ts                     # Maps AI SDK messages to Gemini format
 │   ├── tool-mapper.ts                        # Maps AI SDK tools to Gemini format
-│   ├── extract-json.ts                       # JSON extraction from markdown
 │   ├── error.ts                              # Error handling and mapping
 │   ├── validation.ts                         # Input validation utilities
 │   ├── types.ts                              # TypeScript type definitions
 │   └── __tests__/                            # Unit tests
 │       ├── client.test.ts                    # Client initialization tests
 │       ├── error.test.ts                     # Error handling tests
-│       ├── extract-json.test.ts              # JSON extraction tests
 │       ├── gemini-language-model.test.ts     # Language model tests
 │       ├── gemini-provider.test.ts           # Provider creation tests
 │       ├── index.test.ts                     # Main exports tests
@@ -100,9 +98,9 @@ ai-sdk-provider-gemini-cli/
 
 - **Utilities**
   - `client.ts` - Initializes Gemini CLI Core with proper auth
-  - `extract-json.ts` - Extracts JSON from markdown-wrapped responses
   - `error.ts` - Maps Gemini errors to AI SDK error types
   - `validation.ts` - Validates model IDs and configurations
+  - `logger.ts` - Logging utilities with verbose mode support
 
 ### Examples (`examples/`)
 
@@ -140,8 +138,8 @@ The project includes comprehensive unit tests covering:
 - Provider creation and configuration
 - Message and tool mapping
 - Error handling and validation
-- JSON extraction from responses
+- Native JSON schema structured output
 - Client initialization
 - All core functionality
 
-Current test coverage: ~98.85%
+Current test coverage: ~98%

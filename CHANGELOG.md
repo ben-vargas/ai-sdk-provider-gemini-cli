@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2025-11-23
+
+### Added
+
+- **Native Structured Output Support**: Implemented native `responseJsonSchema` support for Gemini API
+  - Enables `supportsStructuredOutputs = true` for improved AI SDK integration
+  - Schema is now passed directly to Gemini API via `responseJsonSchema` in generation config
+  - Provides cleaner, more reliable JSON output without post-processing
+
+- **JSON Without Schema Handling**: Graceful downgrade when JSON format is requested without a schema
+  - Emits `unsupported-setting` warning to inform users
+  - Downgrades to `text/plain` response format (prevents fenced/raw JSON leaking)
+  - Aligns with Claude-code provider behavior for cross-provider consistency
+  - Works in both streaming and non-streaming modes
+
+### Changed
+
+- **Dependency Updates** (aligned with @google/gemini-cli-core 0.17.1):
+  - `@ai-sdk/provider-utils`: 3.0.3 → 3.0.17
+  - `@google/gemini-cli-core`: 0.16.0 → 0.17.1
+  - `@google/genai`: 1.14.0 → 1.16.0 (aligned with gemini-cli-core)
+  - `google-auth-library`: 10.2.1 → ^9.11.0 (aligned with gemini-cli-core)
+  - `zod-to-json-schema`: 3.24.6 → 3.25.0
+
+### Removed
+
+- **Prompt-based Schema Injection**: Removed workaround that injected schema instructions into user prompts
+  - No longer needed with native `responseJsonSchema` support
+- **JSON Extraction Utility**: Removed `extract-json.ts` and related post-processing
+  - Gemini now returns clean JSON directly when schema is provided
+
+### Technical Details
+
+- Streaming now outputs JSON chunks directly without accumulation
+- Simplified codebase with shared `prepareGenerationConfig` helper for consistent behavior
+- Tests updated to use JSON Schema objects instead of Zod schemas (matching what AI SDK passes to providers)
+- All 175 tests passing (including new no-schema downgrade tests)
+
 ## [1.3.0] - 2025-11-18
 
 ### Added
