@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2025-12-10
+
+### Changed
+
+- **Dependency Updates** (aligned with @google/gemini-cli-core 0.20.0):
+  - `@google/gemini-cli-core`: 0.17.1 → 0.20.0
+  - `@google/genai`: 1.16.0 → 1.30.0
+
+### Fixed
+
+- **Config Proxy Compatibility**: Added support for new 0.20.0 configuration methods to maintain compatibility:
+  - `getContextManager()`, `getGlobalMemory()`, `getEnvironmentMemory()` - JIT context support
+  - `getHookSystem()` - Hook execution system
+  - `getModelAvailabilityService()` - Policy-driven model routing (replaces `getUseModelRouter`)
+  - `getShellToolInactivityTimeout()` - Shell command timeout
+  - `getExperimentsAsync()` - Experimental features
+
+- **Proxy Handler**: Enhanced fallback handling for `Manager`, `Memory`, and `Timeout` method patterns
+
 ## [1.4.0] - 2025-11-23
 
 ### Added

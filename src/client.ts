@@ -76,6 +76,23 @@ export async function initializeGeminiClient(
 
     // OAuth-specific methods (required for LOGIN_WITH_GOOGLE auth)
     isBrowserLaunchSuppressed: () => false, // Allow browser launch for OAuth flow
+
+    // NEW in 0.20.0 - JIT Context & Memory
+    getContextManager: () => undefined,
+    getGlobalMemory: () => '',
+    getEnvironmentMemory: () => '',
+
+    // NEW in 0.20.0 - Hook System
+    getHookSystem: () => undefined,
+
+    // NEW in 0.20.0 - Model Availability Service (replaces getUseModelRouter)
+    getModelAvailabilityService: () => undefined,
+
+    // NEW in 0.20.0 - Shell Timeout (default: 2 minutes)
+    getShellToolInactivityTimeout: () => 120000,
+
+    // NEW in 0.20.0 - Experiments (async getter)
+    getExperimentsAsync: () => Promise.resolve(undefined),
   };
 
   // Phase 2: Proxy wrapper to catch any unknown method calls
@@ -115,9 +132,16 @@ export async function initializeGeminiClient(
               if (
                 prop.includes('Registry') ||
                 prop.includes('Client') ||
-                prop.includes('Service')
+                prop.includes('Service') ||
+                prop.includes('Manager')
               ) {
                 return undefined; // Objects/services default to undefined
+              }
+              if (prop.includes('Memory')) {
+                return ''; // Memory methods return empty string
+              }
+              if (prop.includes('Timeout')) {
+                return 120000; // Timeout methods default to 2 minutes
               }
               if (prop.includes('Config') || prop.includes('Options')) {
                 return {}; // Config objects default to empty
