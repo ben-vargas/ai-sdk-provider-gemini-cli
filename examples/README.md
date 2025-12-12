@@ -95,23 +95,40 @@ node examples/logging-disabled.mjs
 
 **What you'll see**: No provider logs at all - completely silent operation.
 
+## Multimodal File Support (New in v1.5.0)
+
+### 8. PDF Document Analysis (`pdf-document-analysis.mjs`)
+**Purpose**: Analyze PDF documents (like SEC 10-Q filings) with Gemini's multimodal capabilities.
+```bash
+node examples/pdf-document-analysis.mjs
+```
+**Key concepts**: PDF input, financial analysis, document understanding, base64 encoding
+
+**What you'll see**: Executive summary, key financial metrics extraction, and risk analysis from a 10-Q filing.
+
+**Supported file types**:
+- PDF documents (`application/pdf`)
+- Audio files (`audio/mp3`, `audio/wav`, `audio/flac`, etc.)
+- Video files (`video/mp4`, `video/webm`, `video/mov`, etc.)
+- Images (`image/png`, `image/jpeg`, `image/webp`, etc.)
+
 ## Advanced Configuration
 
-### 8. Custom Config (`custom-config.mjs`)
+### 9. Custom Config (`custom-config.mjs`)
 **Purpose**: Demonstrate provider configuration options.
 ```bash
 node examples/custom-config.mjs
 ```
 **Key concepts**: API key auth, OAuth auth, model settings
 
-### 9. System Messages (`system-messages.mjs`)
+### 10. System Messages (`system-messages.mjs`)
 **Purpose**: Use system prompts to control model behavior.
 ```bash
 node examples/system-messages.mjs
 ```
 **Key concepts**: System instructions, persona control, response formatting
 
-### 10. Long-Running Tasks (`long-running-tasks.mjs`)
+### 11. Long-Running Tasks (`long-running-tasks.mjs`)
 **Purpose**: Handle complex tasks with proper timeout management.
 ```bash
 node examples/long-running-tasks.mjs
@@ -120,28 +137,28 @@ node examples/long-running-tasks.mjs
 
 ## Object Generation (Structured Output)
 
-### 11. Object Generation Basic (`generate-object-basic.mjs`)
+### 12. Object Generation Basic (`generate-object-basic.mjs`)
 **Purpose**: Learn structured output generation step-by-step.
 ```bash
 node examples/generate-object-basic.mjs
 ```
 **Key concepts**: Zod schemas, JSON generation, validation
 
-### 12. Nested Structures (`generate-object-nested.mjs`)
+### 13. Nested Structures (`generate-object-nested.mjs`)
 **Purpose**: Generate complex hierarchical data structures.
 ```bash
 node examples/generate-object-nested.mjs
 ```
 **Key concepts**: Nested objects, arrays of objects, complex relationships
 
-### 13. Validation Constraints (`generate-object-constraints.mjs`)
+### 14. Validation Constraints (`generate-object-constraints.mjs`)
 **Purpose**: Enforce data quality with validation rules.
 ```bash
 node examples/generate-object-constraints.mjs
 ```
 **Key concepts**: Enums, ranges, patterns, business rules
 
-### 14. Advanced Object Generation (`generate-object-advanced.mjs`)
+### 15. Advanced Object Generation (`generate-object-advanced.mjs`)
 **Purpose**: Real-world examples of complex object generation.
 ```bash
 node examples/generate-object-advanced.mjs
@@ -150,21 +167,21 @@ node examples/generate-object-advanced.mjs
 
 ## Testing & Troubleshooting
 
-### 15. Check Authentication (`check-auth.mjs`)
+### 16. Check Authentication (`check-auth.mjs`)
 **Purpose**: Verify Google Cloud Code authentication status.
 ```bash
 node examples/check-auth.mjs
 ```
 **Key concepts**: OAuth validation, credential refresh, troubleshooting
 
-### 16. Integration Test (`integration-test.mjs`)
+### 17. Integration Test (`integration-test.mjs`)
 **Purpose**: Comprehensive test suite to verify all features.
 ```bash
 node examples/integration-test.mjs
 ```
 **Key concepts**: Feature verification, error handling, test patterns
 
-### 17. Error Handling (`error-handling.mjs`)
+### 18. Error Handling (`error-handling.mjs`)
 **Purpose**: Demonstrate proper error handling patterns.
 ```bash
 node examples/error-handling.mjs
@@ -229,6 +246,7 @@ try {
 | basic-usage | Getting started | Simple generation |
 | streaming | Responsive UIs | Real-time output |
 | conversation-history | Chatbots | Context retention |
+| pdf-document-analysis | Document analysis | PDF/multimodal input |
 | logging-default | Default behavior | Warn/error only |
 | logging-verbose | Development/debugging | All log levels |
 | logging-custom-logger | External integration | Custom logger impl |

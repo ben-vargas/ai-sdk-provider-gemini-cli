@@ -83,10 +83,15 @@ function mapUserMessage(
         break;
 
       case 'file': {
-        // Handle file parts (images, etc.)
+        // Handle file parts (images, PDF, audio, video)
         const mediaType = part.mediaType || 'application/octet-stream';
-        if (mediaType.startsWith('image/')) {
-          parts.push(mapImagePart(part));
+        if (
+          mediaType.startsWith('image/') ||
+          mediaType.startsWith('audio/') ||
+          mediaType.startsWith('video/') ||
+          mediaType === 'application/pdf'
+        ) {
+          parts.push(mapFilePart(part));
         } else {
           throw new Error(`Unsupported file type: ${mediaType}`);
         }
@@ -128,17 +133,17 @@ function mapAssistantMessage(
 }
 
 /**
- * Maps an image part to Gemini format
+ * Maps a file part to Gemini format
  */
-function mapImagePart(part: LanguageModelV2FilePart): Part {
+function mapFilePart(part: LanguageModelV2FilePart): Part {
   if (part.data instanceof URL) {
     throw new Error(
-      'URL images are not supported by Gemini CLI Core. Please provide base64-encoded image data.'
+      'URL files are not supported by Gemini CLI Core. Please provide base64-encoded data.'
     );
   }
 
   // Extract mime type and base64 data
-  const mimeType = part.mediaType || 'image/jpeg';
+  const mimeType = part.mediaType || 'application/octet-stream';
   let base64Data: string;
 
   if (typeof part.data === 'string') {
@@ -148,7 +153,7 @@ function mapImagePart(part: LanguageModelV2FilePart): Part {
     // Convert Uint8Array to base64
     base64Data = Buffer.from(part.data).toString('base64');
   } else {
-    throw new Error('Unsupported image format');
+    throw new Error('Unsupported file format');
   }
 
   return {
