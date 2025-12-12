@@ -186,7 +186,88 @@ describe('mapPromptToGeminiFormat', () => {
       });
     });
 
-    it('should throw error for URL images', () => {
+    it('should map user message with PDF file', () => {
+      const options: LanguageModelV2CallOptions = {
+        prompt: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Analyze this document' },
+              {
+                type: 'file',
+                data: 'base64pdfdata',
+                mediaType: 'application/pdf',
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = mapPromptToGeminiFormat(options);
+
+      expect(result.contents[0].parts[1]).toEqual({
+        inlineData: {
+          mimeType: 'application/pdf',
+          data: 'base64pdfdata',
+        },
+      });
+    });
+
+    it('should map user message with audio file', () => {
+      const options: LanguageModelV2CallOptions = {
+        prompt: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Transcribe this audio' },
+              {
+                type: 'file',
+                data: 'base64audiodata',
+                mediaType: 'audio/mp3',
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = mapPromptToGeminiFormat(options);
+
+      expect(result.contents[0].parts[1]).toEqual({
+        inlineData: {
+          mimeType: 'audio/mp3',
+          data: 'base64audiodata',
+        },
+      });
+    });
+
+    it('should map user message with video file', () => {
+      const options: LanguageModelV2CallOptions = {
+        prompt: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Describe this video' },
+              {
+                type: 'file',
+                data: 'base64videodata',
+                mediaType: 'video/mp4',
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = mapPromptToGeminiFormat(options);
+
+      expect(result.contents[0].parts[1]).toEqual({
+        inlineData: {
+          mimeType: 'video/mp4',
+          data: 'base64videodata',
+        },
+      });
+    });
+
+    it('should throw error for URL files', () => {
       const options: LanguageModelV2CallOptions = {
         prompt: [
           {
@@ -203,11 +284,11 @@ describe('mapPromptToGeminiFormat', () => {
       };
 
       expect(() => mapPromptToGeminiFormat(options)).toThrow(
-        'URL images are not supported by Gemini CLI Core'
+        'URL files are not supported by Gemini CLI Core'
       );
     });
 
-    it('should throw error for unsupported image format', () => {
+    it('should throw error for unsupported file format', () => {
       const options: LanguageModelV2CallOptions = {
         prompt: [
           {
@@ -224,7 +305,7 @@ describe('mapPromptToGeminiFormat', () => {
       };
 
       expect(() => mapPromptToGeminiFormat(options)).toThrow(
-        'Unsupported image format'
+        'Unsupported file format'
       );
     });
   });
