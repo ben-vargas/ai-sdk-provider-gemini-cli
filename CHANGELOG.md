@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2025-12-11
+
+### Added
+
+- **Multimodal File Support**: Extended file input support beyond images (#27, thanks @kaiinui)
+  - PDF documents (`application/pdf`)
+  - Audio files (`audio/*` - mp3, wav, flac, etc.)
+  - Video files (`video/*` - mp4, webm, mov, etc.)
+  - All file types supported by the underlying Gemini API are now accessible
+
+### Changed
+
+- Renamed internal `mapImagePart` to `mapFilePart` to reflect broader file type support
+- Updated error messages from "image" to "file" terminology for consistency
+
+### Technical Details
+
+- File handling uses the same `inlineData` format with base64 encoding
+- URL-based files remain unsupported (base64-encoded data required)
+- All 178 tests passing
+
 ## [1.4.1] - 2025-12-10
 
 ### Changed

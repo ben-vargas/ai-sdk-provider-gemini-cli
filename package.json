@@ -1,6 +1,6 @@
 {
   "name": "ai-sdk-provider-gemini-cli",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Community AI SDK provider for Google Gemini using the official CLI/SDK",
   "author": "Ben Vargas",
   "license": "MIT",
