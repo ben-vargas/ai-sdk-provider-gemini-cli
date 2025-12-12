@@ -59,6 +59,7 @@
     "example:stream": "node examples/streaming.mjs",
     "example:conversation": "node examples/conversation-history.mjs",
     "example:object": "node examples/generate-object-basic.mjs",
+    "example:pdf": "node examples/pdf-document-analysis.mjs",
     "example:test": "node examples/integration-test.mjs",
     "examples": "npm run build && npm run example:check && npm run example:basic"
   },
