@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import type {
-  LanguageModelV2,
-  LanguageModelV2CallOptions,
-  LanguageModelV2CallWarning,
-  LanguageModelV2FinishReason,
-  LanguageModelV2FunctionTool,
-  LanguageModelV2StreamPart,
-  LanguageModelV2Content,
-  LanguageModelV2Usage,
+  LanguageModelV3,
+  LanguageModelV3CallOptions,
+  SharedV3Warning,
+  LanguageModelV3FinishReason,
+  LanguageModelV3FunctionTool,
+  LanguageModelV3StreamPart,
+  LanguageModelV3Content,
+  LanguageModelV3Usage,
 } from '@ai-sdk/provider';
 import type {
   ContentGenerator,
@@ -38,7 +38,7 @@ export interface GeminiLanguageModelOptions {
  */
 function mapGeminiFinishReason(
   geminiReason?: string
-): LanguageModelV2FinishReason {
+): LanguageModelV3FinishReason {
   switch (geminiReason) {
     case 'STOP':
       return 'stop';
@@ -64,13 +64,13 @@ function mapGeminiFinishReason(
  * When a schema IS provided, we use native responseJsonSchema for structured output.
  */
 function prepareGenerationConfig(
-  options: LanguageModelV2CallOptions,
+  options: LanguageModelV3CallOptions,
   settings?: Record<string, unknown>
 ): {
   generationConfig: GenerateContentConfig;
-  warnings: LanguageModelV2CallWarning[];
+  warnings: SharedV3Warning[];
 } {
-  const warnings: LanguageModelV2CallWarning[] = [];
+  const warnings: SharedV3Warning[] = [];
 
   // Extract schema if JSON mode with schema is requested
   const responseFormat = options.responseFormat;
@@ -81,8 +81,8 @@ function prepareGenerationConfig(
   // JSON without schema: downgrade to text/plain with warning
   if (isJsonMode && !hasSchema) {
     warnings.push({
-      type: 'unsupported-setting',
-      setting: 'responseFormat',
+      type: 'unsupported',
+      feature: 'responseFormat',
       details:
         'JSON response format without a schema is not supported. Treating as plain text. Provide a schema for structured output.',
     });
@@ -107,8 +107,8 @@ function prepareGenerationConfig(
   return { generationConfig, warnings };
 }
 
-export class GeminiLanguageModel implements LanguageModelV2 {
-  readonly specificationVersion = 'v2' as const;
+export class GeminiLanguageModel implements LanguageModelV3 {
+  readonly specificationVersion = 'v3' as const;
   readonly provider = 'gemini-cli-core';
   readonly defaultObjectGenerationMode = 'json' as const;
   readonly supportsImageUrls = false; // CLI Core uses base64 data, not URLs
@@ -169,10 +169,10 @@ export class GeminiLanguageModel implements LanguageModelV2 {
   /**
    * Non-streaming generation method
    */
-  async doGenerate(options: LanguageModelV2CallOptions): Promise<{
-    content: LanguageModelV2Content[];
-    finishReason: LanguageModelV2FinishReason;
-    usage: LanguageModelV2Usage;
+  async doGenerate(options: LanguageModelV3CallOptions): Promise<{
+    content: LanguageModelV3Content[];
+    finishReason: LanguageModelV3FinishReason;
+    usage: LanguageModelV3Usage;
     rawCall: {
       rawPrompt: unknown;
       rawSettings: Record<string, unknown>;
@@ -185,7 +185,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       timestamp?: Date;
       modelId?: string;
     };
-    warnings: LanguageModelV2CallWarning[];
+    warnings: SharedV3Warning[];
   }> {
     this.logger.debug(
       `[gemini-cli] Starting doGenerate request with model: ${this.modelId}`
@@ -217,7 +217,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       if (options.tools) {
         // Filter to only function tools (not provider-defined tools)
         const functionTools = options.tools.filter(
-          (tool): tool is LanguageModelV2FunctionTool =>
+          (tool): tool is LanguageModelV3FunctionTool =>
             tool.type === 'function'
         );
         if (functionTools.length > 0) {
@@ -290,8 +290,8 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       const candidate = response.candidates?.[0];
       const responseContent = candidate?.content;
 
-      // Build content array for v2 format
-      const content: LanguageModelV2Content[] = [];
+      // Build content array for v3 format
+      const content: LanguageModelV3Content[] = [];
 
       if (responseContent?.parts) {
         for (const part of responseContent.parts) {
@@ -307,7 +307,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
               toolCallId: randomUUID(),
               toolName: part.functionCall.name || '',
               input: JSON.stringify(part.functionCall.args || {}),
-            } as LanguageModelV2Content);
+            } as LanguageModelV3Content);
           }
         }
       }
@@ -317,10 +317,18 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       const outputTokens = response.usageMetadata?.candidatesTokenCount || 0;
       const totalTokens = inputTokens + outputTokens;
 
-      const usage: LanguageModelV2Usage = {
-        inputTokens,
-        outputTokens,
-        totalTokens,
+      const usage: LanguageModelV3Usage = {
+        inputTokens: {
+          total: inputTokens,
+          noCache: undefined,
+          cacheRead: undefined,
+          cacheWrite: undefined,
+        },
+        outputTokens: {
+          total: outputTokens,
+          text: undefined,
+          reasoning: undefined,
+        },
       };
 
       this.logger.debug(
@@ -359,8 +367,8 @@ export class GeminiLanguageModel implements LanguageModelV2 {
   /**
    * Streaming generation method
    */
-  async doStream(options: LanguageModelV2CallOptions): Promise<{
-    stream: ReadableStream<LanguageModelV2StreamPart>;
+  async doStream(options: LanguageModelV3CallOptions): Promise<{
+    stream: ReadableStream<LanguageModelV3StreamPart>;
     rawCall: {
       rawPrompt: unknown;
       rawSettings: Record<string, unknown>;
@@ -396,7 +404,7 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       if (options.tools) {
         // Filter to only function tools (not provider-defined tools)
         const functionTools = options.tools.filter(
-          (tool): tool is LanguageModelV2FunctionTool =>
+          (tool): tool is LanguageModelV3FunctionTool =>
             tool.type === 'function'
         );
         if (functionTools.length > 0) {
@@ -467,8 +475,8 @@ export class GeminiLanguageModel implements LanguageModelV2 {
       const logger = this.logger;
       const streamWarnings = warnings;
 
-      // Transform the stream to AI SDK v5 format
-      const stream = new ReadableStream<LanguageModelV2StreamPart>({
+      // Transform the stream to AI SDK v6 format
+      const stream = new ReadableStream<LanguageModelV3StreamPart>({
         async start(controller) {
           try {
             // Check for abort signal in stream
@@ -561,9 +569,17 @@ export class GeminiLanguageModel implements LanguageModelV2 {
                   type: 'finish',
                   finishReason,
                   usage: {
-                    inputTokens: totalInputTokens,
-                    outputTokens: totalOutputTokens,
-                    totalTokens: totalInputTokens + totalOutputTokens,
+                    inputTokens: {
+                      total: totalInputTokens,
+                      noCache: undefined,
+                      cacheRead: undefined,
+                      cacheWrite: undefined,
+                    },
+                    outputTokens: {
+                      total: totalOutputTokens,
+                      text: undefined,
+                      reasoning: undefined,
+                    },
                   },
                 });
               }

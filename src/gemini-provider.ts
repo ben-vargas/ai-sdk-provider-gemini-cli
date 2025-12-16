@@ -1,23 +1,23 @@
 import type {
-  ProviderV2,
-  LanguageModelV2,
-  EmbeddingModelV2,
-  ImageModelV2,
+  ProviderV3,
+  LanguageModelV3,
+  EmbeddingModelV3,
+  ImageModelV3,
 } from '@ai-sdk/provider';
 import { NoSuchModelError } from '@ai-sdk/provider';
 import { GeminiLanguageModel } from './gemini-language-model';
 import type { GeminiProviderOptions } from './types';
 import { validateAuthOptions } from './validation';
 
-export interface GeminiProvider extends ProviderV2 {
-  (modelId: string, settings?: Record<string, unknown>): LanguageModelV2;
+export interface GeminiProvider extends ProviderV3 {
+  (modelId: string, settings?: Record<string, unknown>): LanguageModelV3;
   languageModel(
     modelId: string,
     settings?: Record<string, unknown>
-  ): LanguageModelV2;
-  chat(modelId: string, settings?: Record<string, unknown>): LanguageModelV2;
-  textEmbeddingModel(modelId: string): EmbeddingModelV2<string>;
-  imageModel(modelId: string): ImageModelV2;
+  ): LanguageModelV3;
+  chat(modelId: string, settings?: Record<string, unknown>): LanguageModelV3;
+  embeddingModel(modelId: string): EmbeddingModelV3;
+  imageModel(modelId: string): ImageModelV3;
 }
 
 /**
@@ -76,13 +76,14 @@ export function createGeminiProvider(
       return createLanguageModel(modelId, settings);
     },
     {
+      specificationVersion: 'v3' as const,
       languageModel: createLanguageModel,
       chat: createLanguageModel,
-      textEmbeddingModel: (modelId: string): never => {
+      embeddingModel: (modelId: string): never => {
         throw new NoSuchModelError({
           modelId,
-          modelType: 'textEmbeddingModel',
-          message: `Gemini provider does not support text embedding models.`,
+          modelType: 'embeddingModel',
+          message: `Gemini provider does not support embedding models.`,
         });
       },
       imageModel: (modelId: string): never => {

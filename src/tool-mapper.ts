@@ -1,7 +1,7 @@
 import type {
-  LanguageModelV2CallOptions,
-  LanguageModelV2FunctionTool,
-  LanguageModelV2ToolChoice,
+  LanguageModelV3CallOptions,
+  LanguageModelV3FunctionTool,
+  LanguageModelV3ToolChoice,
 } from '@ai-sdk/provider';
 import {
   Tool,
@@ -31,7 +31,7 @@ interface JsonSchemaObject {
  * Maps Vercel AI SDK tools to Gemini format
  */
 export function mapToolsToGeminiFormat(
-  tools: LanguageModelV2FunctionTool[]
+  tools: LanguageModelV3FunctionTool[]
 ): Tool[] {
   const functionDeclarations: FunctionDeclaration[] = [];
 
@@ -187,7 +187,7 @@ function cleanJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
  * Maps Vercel AI SDK tool config options to Gemini format
  */
 export function mapGeminiToolConfig(
-  options: LanguageModelV2CallOptions
+  options: LanguageModelV3CallOptions
 ): ToolConfig | undefined {
   if (options.toolChoice) {
     // Restrict allowed function names when a specific tool is forced.
@@ -209,7 +209,7 @@ export function mapGeminiToolConfig(
 }
 
 function mapToolChoiceToGeminiFormat(
-  toolChoice: LanguageModelV2ToolChoice
+  toolChoice: LanguageModelV3ToolChoice
 ): FunctionCallingConfigMode {
   switch (toolChoice.type) {
     case 'auto':

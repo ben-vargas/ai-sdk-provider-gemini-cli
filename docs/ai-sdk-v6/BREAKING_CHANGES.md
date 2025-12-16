@@ -1,10 +1,78 @@
-# Breaking Changes: AI SDK v5
+# Breaking Changes: AI SDK v6
 
-This document outlines the breaking changes when migrating from AI SDK v4 to v5 for the Gemini CLI provider.
+This document outlines the breaking changes when migrating to AI SDK v6 for the Gemini CLI provider.
 
 ## Overview
 
-The Vercel AI SDK v5 introduces significant architectural changes that affect how providers are implemented and used. This provider has been updated to be fully compatible with v5.
+The Vercel AI SDK v6 introduces breaking changes to the provider specification, moving from `LanguageModelV2`/`ProviderV2` to `LanguageModelV3`/`ProviderV3`. This provider version 2.x is compatible with AI SDK v6.
+
+---
+
+## v5 to v6 Migration
+
+### Key Changes for AI SDK v6
+
+#### 1. Token Usage Structure
+
+The usage object is now hierarchical:
+
+**v5 Usage:**
+```typescript
+usage: {
+  inputTokens: 10,
+  outputTokens: 20,
+  totalTokens: 30,
+}
+```
+
+**v6 Usage:**
+```typescript
+usage: {
+  inputTokens: {
+    total: 10,
+    noCache: undefined,
+    cacheRead: undefined,
+    cacheWrite: undefined,
+  },
+  outputTokens: {
+    total: 20,
+    text: undefined,
+    reasoning: undefined,
+  },
+}
+```
+
+#### 2. Warning Format
+
+Warnings have changed from `unsupported-setting` to `unsupported`:
+
+**v5 Warning:**
+```typescript
+{ type: 'unsupported-setting', setting: 'responseFormat', details: '...' }
+```
+
+**v6 Warning:**
+```typescript
+{ type: 'unsupported', feature: 'responseFormat', details: '...' }
+```
+
+#### 3. Provider Method Rename
+
+The method `textEmbeddingModel()` has been renamed to `embeddingModel()`.
+
+#### 4. Type Exports
+
+All V2 types are now V3:
+- `LanguageModelV2` → `LanguageModelV3`
+- `ProviderV2` → `ProviderV3`
+- `LanguageModelV2CallWarning` → `SharedV3Warning`
+- etc.
+
+---
+
+## v4 to v5 Migration (Previous)
+
+This section documents the v4 to v5 migration for reference.
 
 ## Key Breaking Changes
 
