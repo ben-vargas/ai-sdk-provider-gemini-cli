@@ -1,6 +1,6 @@
 {
   "name": "ai-sdk-provider-gemini-cli",
-  "version": "1.5.1",
+  "version": "2.0.0-beta.1",
   "description": "Community AI SDK provider for Google Gemini using the official CLI/SDK",
   "author": "Ben Vargas",
   "license": "MIT",
@@ -64,8 +64,8 @@
     "examples": "npm run build && npm run example:check && npm run example:basic"
   },
   "dependencies": {
-    "@ai-sdk/provider": "2.0.0",
-    "@ai-sdk/provider-utils": "3.0.18",
+    "@ai-sdk/provider": "3.0.0-beta.26",
+    "@ai-sdk/provider-utils": "4.0.0-beta.51",
     "@google/gemini-cli-core": "0.20.0",
     "@google/genai": "1.30.0",
     "google-auth-library": "^9.11.0",
@@ -76,7 +76,7 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^20.19.26",
     "@vitest/coverage-v8": "^4.0.15",
-    "ai": "^5.0.109",
+    "ai": "6.0.0-beta.156",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
     "prettier": "^3.7.4",

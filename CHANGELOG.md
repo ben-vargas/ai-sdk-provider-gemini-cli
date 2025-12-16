@@ -2,24 +2,63 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.5.1] - 2025-12-17
+## [2.0.0-beta.1] - 2025-12-15
 
-### Added
+### BREAKING CHANGES
 
-- **Thinking Mode Support**: Added `thinkingConfig` settings for Gemini reasoning capabilities (#28)
-  - `thinkingLevel` for Gemini 3 models (`gemini-3-pro-preview`, `gemini-3-flash-preview`)
-    - Supports values: `low`, `medium`, `high`, `minimal`
-    - Case-insensitive string input ('HIGH', 'high', 'High' all work)
-    - Also accepts `ThinkingLevel` enum for type-safe usage
-  - `thinkingBudget` for Gemini 2.5 models (backwards compatible)
-    - Token-based control: 0 (disabled), 512, 8192 (default), -1 (unlimited)
-  - `includeThoughts` option to include reasoning in responses
-  - Re-exported `ThinkingLevel` enum from `@google/genai` for user convenience
-  - Re-exported `ThinkingConfigInput` type for TypeScript users
+This version is compatible with Vercel AI SDK v6 (beta). For v5 compatibility, use version 1.x.
 
 ### Changed
 
-- Updated documentation to include `gemini-3-flash-preview` in supported models list
+- **Provider Interface**: Migrated from `ProviderV2` to `ProviderV3` interface
+  - Updated `specificationVersion` from `'v2'` to `'v3'`
+  - Renamed `textEmbeddingModel()` to `embeddingModel()` (AI SDK v6 convention)
+  - All V2 types replaced with V3 equivalents
+
+- **Language Model**: Migrated from `LanguageModelV2` to `LanguageModelV3` interface
+  - `LanguageModelV2` → `LanguageModelV3`
+  - `LanguageModelV2CallOptions` → `LanguageModelV3CallOptions`
+  - `LanguageModelV2CallWarning` → `SharedV3Warning`
+  - `LanguageModelV2FinishReason` → `LanguageModelV3FinishReason`
+  - `LanguageModelV2FunctionTool` → `LanguageModelV3FunctionTool`
+  - `LanguageModelV2StreamPart` → `LanguageModelV3StreamPart`
+  - `LanguageModelV2Content` → `LanguageModelV3Content`
+  - `LanguageModelV2Usage` → `LanguageModelV3Usage`
+
+- **Token Usage Structure**: Changed from flat to hierarchical format
+  ```typescript
+  // v5 (flat)
+  usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 }
+
+  // v6 (hierarchical)
+  usage: {
+    inputTokens: { total: 10, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
+    outputTokens: { total: 20, text: undefined, reasoning: undefined }
+  }
+  ```
+
+- **Warning Format**: Changed from `unsupported-setting` to `unsupported`
+  ```typescript
+  // v5
+  { type: 'unsupported-setting', setting: 'responseFormat', details: '...' }
+
+  // v6
+  { type: 'unsupported', feature: 'responseFormat', details: '...' }
+  ```
+
+- **Tool Result Handling**: Updated to handle v6 typed `ToolResultOutput` union
+  - Supports `text`, `json`, `error-text`, `error-json`, `execution-denied`, and `content` output types
+
+- **Dependencies**: Updated and pinned to exact beta versions for stability
+  - `@ai-sdk/provider`: 3.0.0-beta.26
+  - `@ai-sdk/provider-utils`: 4.0.0-beta.51
+  - `ai` (devDependency): 6.0.0-beta.156
+
+### Technical Details
+
+- Documentation moved from `docs/ai-sdk-v5/` to `docs/ai-sdk-v6/`
+- Renamed `language-model-v2-implementation.md` to `language-model-v3-implementation.md`
+- All 178 tests passing
 
 ## [1.5.0] - 2025-12-11
 
@@ -431,6 +470,13 @@ This version is compatible with Vercel AI SDK v5. For v4 compatibility, please u
 - Streaming support
 - Basic error handling
 
+[2.0.0-beta.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.5.0...v2.0.0-beta.1
+[1.5.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.4.1...v1.5.0
+[1.4.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.1.2...v1.2.0
+[1.1.2]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.0-beta.1...v1.0.1

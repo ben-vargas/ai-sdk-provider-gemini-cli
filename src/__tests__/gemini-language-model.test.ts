@@ -3,8 +3,8 @@ import { GeminiLanguageModel } from '../gemini-language-model';
 import { initializeGeminiClient } from '../client';
 import { mapPromptToGeminiFormat } from '../message-mapper';
 import type {
-  LanguageModelV2FunctionTool,
-  LanguageModelV2CallOptions,
+  LanguageModelV3FunctionTool,
+  LanguageModelV3CallOptions,
 } from '@ai-sdk/provider';
 import { FunctionCallingConfigMode } from '@google/genai';
 import { ThinkingLevel } from '../gemini-language-model';
@@ -60,7 +60,7 @@ describe('GeminiLanguageModel', () => {
     it('should initialize with correct properties', () => {
       expect(model.modelId).toBe('gemini-2.5-pro');
       expect(model.provider).toBe('gemini-cli-core');
-      expect(model.specificationVersion).toBe('v2');
+      expect(model.specificationVersion).toBe('v3');
       expect(model.defaultObjectGenerationMode).toBe('json');
       expect(model.supportsImageUrls).toBe(false);
     });
@@ -86,7 +86,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'system',
           content: 'You are a helpful assistant',
@@ -106,9 +106,17 @@ describe('GeminiLanguageModel', () => {
       expect((result.content[0] as any).text).toBe('Hello, world!');
       expect(result.finishReason).toBe('stop');
       expect(result.usage).toEqual({
-        inputTokens: 10,
-        outputTokens: 20,
-        totalTokens: 30,
+        inputTokens: {
+          total: 10,
+          noCache: undefined,
+          cacheRead: undefined,
+          cacheWrite: undefined,
+        },
+        outputTokens: {
+          total: 20,
+          text: undefined,
+          reasoning: undefined,
+        },
       });
     });
 
@@ -138,7 +146,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const tools: LanguageModelV2FunctionTool[] = [
+      const tools: LanguageModelV3FunctionTool[] = [
         {
           type: 'function',
           name: 'getWeather',
@@ -152,7 +160,7 @@ describe('GeminiLanguageModel', () => {
         },
       ];
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'What is the weather in London?' }],
@@ -201,7 +209,7 @@ describe('GeminiLanguageModel', () => {
         required: ['name', 'age'],
       };
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Generate a person object' }],
@@ -250,7 +258,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Generate something' }],
@@ -266,10 +274,10 @@ describe('GeminiLanguageModel', () => {
       expect(result.content[0].type).toBe('text');
       expect((result.content[0] as any).text).toBe('Some plain text response');
 
-      // Should emit unsupported-setting warning
+      // Should emit unsupported warning (v6 format)
       expect(result.warnings).toHaveLength(1);
-      expect(result.warnings[0].type).toBe('unsupported-setting');
-      expect(result.warnings[0].setting).toBe('responseFormat');
+      expect(result.warnings[0].type).toBe('unsupported');
+      expect(result.warnings[0].feature).toBe('responseFormat');
       expect(result.warnings[0].details).toContain('without a schema');
 
       // Should use text/plain, not application/json
@@ -306,7 +314,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Hello' }],
@@ -340,7 +348,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [
@@ -381,7 +389,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'system',
           content: 'You are a helpful assistant',
@@ -424,7 +432,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -455,7 +463,7 @@ describe('GeminiLanguageModel', () => {
         new Error('API Error: Rate limit exceeded')
       );
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Hello' }],
@@ -504,7 +512,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContentStream.mockResolvedValue(mockStream);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Say hello' }],
@@ -544,9 +552,17 @@ describe('GeminiLanguageModel', () => {
           type: 'finish',
           finishReason: 'stop',
           usage: {
-            inputTokens: 10,
-            outputTokens: 20,
-            totalTokens: 30,
+            inputTokens: {
+              total: 10,
+              noCache: undefined,
+              cacheRead: undefined,
+              cacheWrite: undefined,
+            },
+            outputTokens: {
+              total: 20,
+              text: undefined,
+              reasoning: undefined,
+            },
           },
         })
       );
@@ -582,7 +598,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContentStream.mockResolvedValue(mockStream);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Get weather' }],
@@ -627,7 +643,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContentStream.mockResolvedValue(mockStream);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -686,7 +702,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContentStream.mockResolvedValue(mockStream);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -753,7 +769,7 @@ describe('GeminiLanguageModel', () => {
         required: ['name'],
       };
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Generate JSON' }],
@@ -826,7 +842,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContentStream.mockResolvedValue(mockStream);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Generate something' }],
@@ -851,8 +867,8 @@ describe('GeminiLanguageModel', () => {
       const streamStart = streamParts.find((p) => p.type === 'stream-start');
       expect(streamStart).toBeDefined();
       expect(streamStart.warnings).toHaveLength(1);
-      expect(streamStart.warnings[0].type).toBe('unsupported-setting');
-      expect(streamStart.warnings[0].setting).toBe('responseFormat');
+      expect(streamStart.warnings[0].type).toBe('unsupported');
+      expect(streamStart.warnings[0].feature).toBe('responseFormat');
       expect(streamStart.warnings[0].details).toContain('without a schema');
 
       // Text should pass through unchanged
@@ -899,7 +915,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContentStream.mockResolvedValue(mockStream);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test toolChoice' }],
@@ -956,7 +972,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -978,7 +994,7 @@ describe('GeminiLanguageModel', () => {
         new Error('Failed to initialize')
       );
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
