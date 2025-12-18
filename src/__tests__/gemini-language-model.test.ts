@@ -1363,6 +1363,65 @@ describe('GeminiLanguageModel', () => {
       );
     });
 
+    it('should merge call-time thinkingConfig with settings (not replace)', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      // Create model with thinkingLevel in settings
+      const modelWithThinking = new GeminiLanguageModel({
+        modelId: 'gemini-3-flash-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {
+          thinkingConfig: {
+            thinkingLevel: 'high',
+          },
+        },
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      // Call-time adds includeThoughts, should MERGE with settings thinkingLevel
+      await modelWithThinking.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          includeThoughts: true,
+        },
+      } as any);
+
+      // Both thinkingLevel (from settings) and includeThoughts (from call) should be present
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.HIGH,
+              includeThoughts: true,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
     it('should handle invalid thinkingLevel string gracefully', async () => {
       const mockResponse = {
         candidates: [

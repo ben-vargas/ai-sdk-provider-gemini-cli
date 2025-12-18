@@ -197,15 +197,21 @@ function prepareGenerationConfig(
     });
   }
 
-  // Handle thinkingConfig from options (call-time) or settings (model-level)
-  // Call-time options take precedence over settings
-  const userThinkingConfig =
-    ((options as Record<string, unknown>)
-      .thinkingConfig as ThinkingConfigInput) ??
-    (settings?.thinkingConfig as ThinkingConfigInput | undefined);
+  // Handle thinkingConfig from options (call-time) and settings (model-level)
+  // Merge fields: call-time options override settings per-field (like temperature/topP)
+  const settingsThinkingConfig = settings?.thinkingConfig as
+    | ThinkingConfigInput
+    | undefined;
+  const optionsThinkingConfig = (options as Record<string, unknown>)
+    .thinkingConfig as ThinkingConfigInput | undefined;
 
-  const thinkingConfig = userThinkingConfig
-    ? buildThinkingConfig(userThinkingConfig)
+  const mergedThinkingConfig =
+    settingsThinkingConfig || optionsThinkingConfig
+      ? { ...settingsThinkingConfig, ...optionsThinkingConfig }
+      : undefined;
+
+  const thinkingConfig = mergedThinkingConfig
+    ? buildThinkingConfig(mergedThinkingConfig)
     : undefined;
 
   const generationConfig: GenerateContentConfig = {
