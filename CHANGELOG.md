@@ -2,6 +2,61 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0-beta.2] - 2025-12-17
+
+### Added
+
+- **thinkingConfig Support**: Port of thinkingConfig from main branch (v1.5.1) for Gemini 3 thinking mode
+  - `thinkingLevel` for Gemini 3 models (`gemini-3-pro-preview`, `gemini-3-flash-preview`)
+    - Supports values: `low`, `medium`, `high`, `minimal`
+    - Case-insensitive string input (`'HIGH'`, `'high'`, `'High'` all work)
+    - Also accepts `ThinkingLevel` enum for type-safe usage
+  - `thinkingBudget` for Gemini 2.5 models (backwards compatible)
+    - Token-based control: `0` (disabled), `512`, `8192`, `-1` (unlimited)
+  - `includeThoughts` option to include reasoning in responses
+
+- **New Exports**:
+  - `ThinkingLevel` enum exported for type-safe thinkingLevel values
+  - `ThinkingConfigInput` type exported for TypeScript users
+
+### Technical Details
+
+- Local `ThinkingLevel` enum matching `@google/genai` v1.34.0 format (workaround until gemini-cli-core upgrades)
+- `normalizeThinkingLevel` helper for case-insensitive string handling
+- Support at both model-level settings and call-time options
+- Call-time thinkingConfig merges with settings (field-by-field override)
+- Invalid call-time thinkingLevel preserves settings value
+- 10 new tests for thinkingConfig functionality
+- Updated index.test.ts to use V3 types
+- All 191 tests passing
+
+### Example Usage
+
+```typescript
+import { createGeminiProvider, ThinkingLevel } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider();
+
+// Using string (case-insensitive)
+const result = await generateText({
+  model: gemini('gemini-3-flash-preview'),
+  prompt: 'Solve this complex problem...',
+  thinkingConfig: {
+    thinkingLevel: 'high',
+    includeThoughts: true,
+  },
+});
+
+// Or using enum
+const result = await generateText({
+  model: gemini('gemini-3-flash-preview'),
+  prompt: 'Solve this complex problem...',
+  thinkingConfig: {
+    thinkingLevel: ThinkingLevel.HIGH,
+  },
+});
+```
+
 ## [2.0.0-beta.1] - 2025-12-15
 
 ### BREAKING CHANGES
@@ -470,6 +525,7 @@ This version is compatible with Vercel AI SDK v5. For v4 compatibility, please u
 - Streaming support
 - Basic error handling
 
+[2.0.0-beta.2]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v2.0.0-beta.1...v2.0.0-beta.2
 [2.0.0-beta.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.5.0...v2.0.0-beta.1
 [1.5.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.4.0...v1.4.1

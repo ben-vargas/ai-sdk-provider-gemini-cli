@@ -51,71 +51,91 @@ describe('index exports', () => {
   });
 
   describe('AI SDK type re-exports', () => {
-    it('should re-export LanguageModelV2 type', () => {
-      type _TestType = index.LanguageModelV2;
+    it('should re-export LanguageModelV3 type', () => {
+      type _TestType = index.LanguageModelV3;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV2FunctionTool type', () => {
-      type _TestType = index.LanguageModelV2FunctionTool;
+    it('should re-export LanguageModelV3FunctionTool type', () => {
+      type _TestType = index.LanguageModelV3FunctionTool;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV2ToolCall type', () => {
-      type _TestType = index.LanguageModelV2ToolCall;
+    it('should re-export LanguageModelV3ToolCall type', () => {
+      type _TestType = index.LanguageModelV3ToolCall;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV2FinishReason type', () => {
-      type _TestType = index.LanguageModelV2FinishReason;
+    it('should re-export LanguageModelV3FinishReason type', () => {
+      type _TestType = index.LanguageModelV3FinishReason;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV2CallOptions type', () => {
-      type _TestType = index.LanguageModelV2CallOptions;
+    it('should re-export LanguageModelV3CallOptions type', () => {
+      type _TestType = index.LanguageModelV3CallOptions;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV2CallWarning type', () => {
-      type _TestType = index.LanguageModelV2CallWarning;
+    it('should re-export SharedV3Warning type', () => {
+      type _TestType = index.SharedV3Warning;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV2StreamPart type', () => {
-      type _TestType = index.LanguageModelV2StreamPart;
+    it('should re-export LanguageModelV3StreamPart type', () => {
+      type _TestType = index.LanguageModelV3StreamPart;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV2Content type', () => {
-      type _TestType = index.LanguageModelV2Content;
+    it('should re-export LanguageModelV3Content type', () => {
+      type _TestType = index.LanguageModelV3Content;
       expect(true).toBe(true);
     });
 
-    it('should re-export LanguageModelV2Usage type', () => {
-      type _TestType = index.LanguageModelV2Usage;
+    it('should re-export LanguageModelV3Usage type', () => {
+      type _TestType = index.LanguageModelV3Usage;
       expect(true).toBe(true);
     });
 
-    it('should re-export ProviderV2 type', () => {
-      type _TestType = index.ProviderV2;
+    it('should re-export ProviderV3 type', () => {
+      type _TestType = index.ProviderV3;
+      expect(true).toBe(true);
+    });
+  });
+
+  describe('thinkingConfig exports', () => {
+    it('should export ThinkingLevel enum', () => {
+      expect(index.ThinkingLevel).toBeDefined();
+      expect(index.ThinkingLevel.LOW).toBe('LOW');
+      expect(index.ThinkingLevel.MEDIUM).toBe('MEDIUM');
+      expect(index.ThinkingLevel.HIGH).toBe('HIGH');
+      expect(index.ThinkingLevel.MINIMAL).toBe('MINIMAL');
+    });
+
+    it('should export ThinkingConfigInput type', () => {
+      // TypeScript type exports are compile-time only
+      type _TestType = index.ThinkingConfigInput;
+      // This test passes if TypeScript compilation succeeds
       expect(true).toBe(true);
     });
   });
 
   describe('export completeness', () => {
     it('should export all expected named exports', () => {
-      const expectedExports = [
+      const expectedFunctionExports = [
         'createGeminiProvider',
         'createGeminiCliCoreProvider', // legacy alias
       ];
 
-      const actualExports = Object.keys(index).filter(
+      const actualFunctionExports = Object.keys(index).filter(
         (key) => typeof (index as any)[key] === 'function'
       );
 
-      for (const expectedExport of expectedExports) {
-        expect(actualExports).toContain(expectedExport);
+      for (const expectedExport of expectedFunctionExports) {
+        expect(actualFunctionExports).toContain(expectedExport);
       }
+
+      // Also verify ThinkingLevel enum is exported
+      expect(index.ThinkingLevel).toBeDefined();
     });
 
     it('should not have any default export', () => {
