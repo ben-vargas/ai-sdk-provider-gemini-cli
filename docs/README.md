@@ -42,6 +42,13 @@ Comprehensive mapping between Zod schemas and Gemini's Schema format:
 - Special case handling
 - Implementation guidelines
 
+### 6. [Known Limitations](./known-limitations.md)
+Detailed guide to Gemini API limitations and workarounds:
+- Schema complexity limits ("too many states" errors)
+- Problematic constraints (`multipleOf`, complex regex)
+- Workarounds and best practices
+- Error handling strategies
+
 ## Quick Reference
 
 ### Authentication Setup
