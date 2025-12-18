@@ -59,9 +59,52 @@ const gemini = createGeminiProvider({
 ```
 
 ### Supported Models
-- `gemini-3-pro-preview` - Latest next-generation model (Preview)
-- `gemini-2.5-pro` - Previous generation production-ready model (64K output tokens)
-- `gemini-2.5-flash` - Faster, efficient model (64K output tokens)
+- `gemini-3-pro-preview` - Latest next-generation model (Preview) - supports `thinkingLevel`
+- `gemini-3-flash-preview` - Fast Gemini 3 model (Preview) - supports `thinkingLevel`
+- `gemini-2.5-pro` - Previous generation production-ready model (64K output tokens) - supports `thinkingBudget`
+- `gemini-2.5-flash` - Faster, efficient model (64K output tokens) - supports `thinkingBudget`
+
+### Thinking Mode Configuration
+
+Enable Gemini's thinking/reasoning mode for enhanced problem-solving capabilities.
+
+```typescript
+import { createGeminiProvider, ThinkingLevel } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({
+  authType: 'gemini-api-key',
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+// Gemini 3 models - use thinkingLevel (string or enum)
+const model = gemini('gemini-3-flash-preview', {
+  thinkingConfig: {
+    thinkingLevel: 'high'  // 'low', 'medium', 'high', 'minimal' (case-insensitive)
+  }
+});
+
+// Or use the ThinkingLevel enum for type safety
+const modelWithEnum = gemini('gemini-3-pro-preview', {
+  thinkingConfig: {
+    thinkingLevel: ThinkingLevel.HIGH
+  }
+});
+
+// Gemini 2.5 models - use thinkingBudget (token count)
+const model25 = gemini('gemini-2.5-pro', {
+  thinkingConfig: {
+    thinkingBudget: 8192  // 0 (disabled), 512, 8192 (default), -1 (unlimited)
+  }
+});
+```
+
+**ThinkingLevel Values:**
+| Level | Models | Description |
+|-------|--------|-------------|
+| `low` | Gemini 3 Pro/Flash | Minimizes latency and cost |
+| `medium` | Gemini 3 Flash | Balanced thinking for most tasks |
+| `high` | Gemini 3 Pro/Flash | Maximizes reasoning depth |
+| `minimal` | Gemini 3 Flash | Matches "no thinking" for most queries |
 
 ### Key Features
 - ✅ Text generation and streaming
