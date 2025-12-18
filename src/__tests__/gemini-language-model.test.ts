@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GeminiLanguageModel } from '../gemini-language-model';
+import { GeminiLanguageModel, ThinkingLevel } from '../gemini-language-model';
 import { initializeGeminiClient } from '../client';
 import { mapPromptToGeminiFormat } from '../message-mapper';
 import type {
@@ -7,7 +7,6 @@ import type {
   LanguageModelV3CallOptions,
 } from '@ai-sdk/provider';
 import { FunctionCallingConfigMode } from '@google/genai';
-import { ThinkingLevel } from '../gemini-language-model';
 
 // Mock dependencies
 vi.mock('../client');
@@ -1077,7 +1076,7 @@ describe('GeminiLanguageModel', () => {
         settings: {},
       });
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1128,7 +1127,7 @@ describe('GeminiLanguageModel', () => {
         settings: {},
       });
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1196,7 +1195,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1241,7 +1240,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1299,7 +1298,7 @@ describe('GeminiLanguageModel', () => {
         },
       });
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1352,7 +1351,7 @@ describe('GeminiLanguageModel', () => {
         },
       });
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1409,7 +1408,7 @@ describe('GeminiLanguageModel', () => {
         },
       });
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1457,7 +1456,7 @@ describe('GeminiLanguageModel', () => {
 
       mockClient.generateContent.mockResolvedValue(mockResponse);
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1507,7 +1506,7 @@ describe('GeminiLanguageModel', () => {
         },
       });
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1560,7 +1559,7 @@ describe('GeminiLanguageModel', () => {
         settings: {},
       });
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
@@ -1628,7 +1627,7 @@ describe('GeminiLanguageModel', () => {
         settings: {},
       });
 
-      const messages: LanguageModelV2CallOptions['prompt'] = [
+      const messages: LanguageModelV3CallOptions['prompt'] = [
         {
           role: 'user',
           content: [{ type: 'text', text: 'Test' }],
