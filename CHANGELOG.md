@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] - 2025-12-17
+
+### Added
+
+- **Thinking Mode Support**: Added `thinkingConfig` settings for Gemini reasoning capabilities (#28)
+  - `thinkingLevel` for Gemini 3 models (`gemini-3-pro-preview`, `gemini-3-flash-preview`)
+    - Supports values: `low`, `medium`, `high`, `minimal`
+    - Case-insensitive string input ('HIGH', 'high', 'High' all work)
+    - Also accepts `ThinkingLevel` enum for type-safe usage
+  - `thinkingBudget` for Gemini 2.5 models (backwards compatible)
+    - Token-based control: 0 (disabled), 512, 8192 (default), -1 (unlimited)
+  - `includeThoughts` option to include reasoning in responses
+  - Re-exported `ThinkingLevel` enum from `@google/genai` for user convenience
+  - Re-exported `ThinkingConfigInput` type for TypeScript users
+
+### Changed
+
+- Updated documentation to include `gemini-3-flash-preview` in supported models list
+
 ## [1.5.0] - 2025-12-11
 
 ### Added

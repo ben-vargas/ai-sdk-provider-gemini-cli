@@ -542,12 +542,12 @@ This provider uses Google's Cloud Code endpoints through the Gemini CLI Core lib
 
 - Requires Node.js ≥ 20
 - OAuth authentication requires the Gemini CLI to be installed globally
-- Rate limits may vary from the direct Gemini API
-- Very strict character length constraints in schemas may be challenging for the model
 - Image URLs not supported (use base64-encoded images)
 - Some AI SDK parameters not supported: `frequencyPenalty`, `presencePenalty`, `seed`
-- Only function tools supported (no provider-defined tools)
-- **Abort signals have limited support**: While the provider correctly handles abort signals and throws `AbortError`, the underlying `gemini-cli-core` does not support request cancellation. This means aborted requests will continue running in the background until completion, though the provider will throw an `AbortError` as soon as it detects the abort signal
+- **Complex schemas may fail**: Gemini's structured output has limits on schema complexity. See [Known Limitations](docs/known-limitations.md) for details and workarounds.
+- **Abort signals**: The provider throws `AbortError` correctly, but `gemini-cli-core` doesn't support request cancellation (aborted requests continue in background).
+
+For detailed information on structured output limitations and workarounds, see the [Known Limitations Guide](docs/known-limitations.md).
 
 ## Contributing
 

@@ -135,30 +135,69 @@ node examples/long-running-tasks.mjs
 ```
 **Key concepts**: AbortSignal, timeout handling, complex reasoning
 
+## Thinking Mode (New in v1.6.0)
+
+### 12. Thinking Mode (`thinking-mode.mjs`)
+**Purpose**: Enable Gemini's thinking/reasoning mode for enhanced problem-solving.
+```bash
+node examples/thinking-mode.mjs
+```
+**Key concepts**: thinkingConfig, thinkingLevel, ThinkingLevel enum, reasoning depth
+
+**ThinkingLevel values for Gemini 3 models**:
+| Level | Description | Models |
+|-------|-------------|--------|
+| `low` | Minimizes latency and cost | Pro & Flash |
+| `medium` | Balanced thinking | Flash only |
+| `high` | Maximizes reasoning depth | Pro & Flash |
+| `minimal` | Near "no thinking" | Flash only |
+
+**Usage**:
+```javascript
+import { createGeminiProvider, ThinkingLevel } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({ authType: 'oauth-personal' });
+
+// Using string (case-insensitive)
+const model = gemini('gemini-3-flash-preview', {
+  thinkingConfig: { thinkingLevel: 'high' }
+});
+
+// Using enum (type-safe)
+const model2 = gemini('gemini-3-flash-preview', {
+  thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
+});
+
+// Gemini 2.5 uses thinkingBudget instead
+const model25 = gemini('gemini-2.5-flash', {
+  thinkingConfig: { thinkingBudget: 8192 }
+});
+```
+
 ## Object Generation (Structured Output)
 
-### 12. Object Generation Basic (`generate-object-basic.mjs`)
+### 13. Object Generation Basic (`generate-object-basic.mjs`)
 **Purpose**: Learn structured output generation step-by-step.
 ```bash
 node examples/generate-object-basic.mjs
 ```
 **Key concepts**: Zod schemas, JSON generation, validation
 
-### 13. Nested Structures (`generate-object-nested.mjs`)
+### 14. Nested Structures (`generate-object-nested.mjs`)
 **Purpose**: Generate complex hierarchical data structures.
 ```bash
 node examples/generate-object-nested.mjs
 ```
 **Key concepts**: Nested objects, arrays of objects, complex relationships
 
-### 14. Validation Constraints (`generate-object-constraints.mjs`)
+### 15. Validation Constraints (`generate-object-constraints.mjs`)
 **Purpose**: Enforce data quality with validation rules.
 ```bash
 node examples/generate-object-constraints.mjs
 ```
 **Key concepts**: Enums, ranges, patterns, business rules
 
-### 15. Advanced Object Generation (`generate-object-advanced.mjs`)
+### 16. Advanced Object Generation (`generate-object-advanced.mjs`)
 **Purpose**: Real-world examples of complex object generation.
 ```bash
 node examples/generate-object-advanced.mjs
@@ -167,21 +206,21 @@ node examples/generate-object-advanced.mjs
 
 ## Testing & Troubleshooting
 
-### 16. Check Authentication (`check-auth.mjs`)
+### 17. Check Authentication (`check-auth.mjs`)
 **Purpose**: Verify Google Cloud Code authentication status.
 ```bash
 node examples/check-auth.mjs
 ```
 **Key concepts**: OAuth validation, credential refresh, troubleshooting
 
-### 17. Integration Test (`integration-test.mjs`)
+### 18. Integration Test (`integration-test.mjs`)
 **Purpose**: Comprehensive test suite to verify all features.
 ```bash
 node examples/integration-test.mjs
 ```
 **Key concepts**: Feature verification, error handling, test patterns
 
-### 18. Error Handling (`error-handling.mjs`)
+### 19. Error Handling (`error-handling.mjs`)
 **Purpose**: Demonstrate proper error handling patterns.
 ```bash
 node examples/error-handling.mjs

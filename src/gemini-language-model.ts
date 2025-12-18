@@ -17,6 +17,23 @@ import type {
   GenerateContentParameters,
   GenerateContentConfig,
 } from '@google/genai';
+
+/**
+ * ThinkingLevel enum for Gemini 3 models.
+ * Note: This is defined locally as @google/genai v1.30.0 doesn't export it yet.
+ * Values match the official @google/genai v1.34.0 ThinkingLevel enum format.
+ * Will be replaced with the official enum when gemini-cli-core upgrades.
+ */
+export enum ThinkingLevel {
+  /** Minimizes latency and cost. Best for simple tasks. */
+  LOW = 'LOW',
+  /** Balanced thinking for most tasks. (Gemini 3 Flash only) */
+  MEDIUM = 'MEDIUM',
+  /** Maximizes reasoning depth. May take longer for first token. */
+  HIGH = 'HIGH',
+  /** Matches "no thinking" for most queries. (Gemini 3 Flash only) */
+  MINIMAL = 'MINIMAL',
+}
 import { initializeGeminiClient } from './client';
 import { mapPromptToGeminiFormat } from './message-mapper';
 import { mapGeminiToolConfig, mapToolsToGeminiFormat } from './tool-mapper';
@@ -31,6 +48,48 @@ export interface GeminiLanguageModelOptions {
     logger?: Logger | false;
     verbose?: boolean;
   };
+}
+
+/**
+ * Input interface for thinkingConfig settings.
+ * Supports both Gemini 3 (thinkingLevel) and Gemini 2.5 (thinkingBudget) models.
+ */
+export interface ThinkingConfigInput {
+  /**
+   * Thinking level for Gemini 3 models (gemini-3-pro-preview, gemini-3-flash-preview).
+   * Accepts case-insensitive strings ('high', 'HIGH', 'High') or ThinkingLevel enum.
+   * Valid values: 'low', 'medium', 'high', 'minimal'
+   */
+  thinkingLevel?: string | ThinkingLevel;
+  /**
+   * Token budget for thinking in Gemini 2.5 models.
+   * Common values: 0 (disabled), 512, 8192 (default), -1 (unlimited)
+   */
+  thinkingBudget?: number;
+  /**
+   * Whether to include thinking/reasoning in the response.
+   */
+  includeThoughts?: boolean;
+}
+
+/**
+ * Normalize thinkingLevel string to ThinkingLevel enum (case-insensitive).
+ * Returns undefined for invalid values, allowing the API to handle validation.
+ */
+function normalizeThinkingLevel(level: string): ThinkingLevel | undefined {
+  const normalized = level.toUpperCase();
+  switch (normalized) {
+    case 'LOW':
+      return ThinkingLevel.LOW;
+    case 'MEDIUM':
+      return ThinkingLevel.MEDIUM;
+    case 'HIGH':
+      return ThinkingLevel.HIGH;
+    case 'MINIMAL':
+      return ThinkingLevel.MINIMAL;
+    default:
+      return undefined;
+  }
 }
 
 /**
@@ -55,13 +114,63 @@ function mapGeminiFinishReason(
 }
 
 /**
- * Prepare generation config with proper handling for JSON mode.
+ * Extended ThinkingConfig type that includes thinkingLevel (not yet in @google/genai v1.30.0 types).
+ * This is a temporary workaround until the official types are updated.
+ * Using Omit to remove any existing thinkingLevel type and replace with our enum.
+ */
+type ExtendedThinkingConfig = Omit<
+  NonNullable<GenerateContentConfig['thinkingConfig']>,
+  'thinkingLevel'
+> & {
+  thinkingLevel?: ThinkingLevel;
+};
+
+/**
+ * Build thinkingConfig from user input, normalizing string thinkingLevel to enum.
+ */
+function buildThinkingConfig(
+  input: ThinkingConfigInput
+): ExtendedThinkingConfig {
+  const config = {} as ExtendedThinkingConfig;
+
+  // Handle thinkingLevel (string or enum)
+  if (input.thinkingLevel !== undefined) {
+    if (typeof input.thinkingLevel === 'string') {
+      const normalized = normalizeThinkingLevel(input.thinkingLevel);
+      if (normalized !== undefined) {
+        config.thinkingLevel = normalized;
+      }
+      // If normalization fails, we skip setting thinkingLevel
+      // and let the API handle any validation errors
+    } else {
+      // Already a ThinkingLevel enum value
+      config.thinkingLevel = input.thinkingLevel;
+    }
+  }
+
+  // Handle thinkingBudget (number)
+  if (input.thinkingBudget !== undefined) {
+    config.thinkingBudget = input.thinkingBudget;
+  }
+
+  // Handle includeThoughts (boolean)
+  if (input.includeThoughts !== undefined) {
+    config.includeThoughts = input.includeThoughts;
+  }
+
+  return config;
+}
+
+/**
+ * Prepare generation config with proper handling for JSON mode and thinkingConfig.
  *
  * When JSON response format is requested WITHOUT a schema, we downgrade to
  * text/plain and emit a warning. This aligns with Claude-code provider behavior
  * and prevents raw fenced JSON from leaking to clients.
  *
  * When a schema IS provided, we use native responseJsonSchema for structured output.
+ *
+ * ThinkingConfig supports both Gemini 3 (thinkingLevel) and Gemini 2.5 (thinkingBudget).
  */
 function prepareGenerationConfig(
   options: LanguageModelV2CallOptions,
@@ -88,6 +197,42 @@ function prepareGenerationConfig(
     });
   }
 
+  // Handle thinkingConfig from options (call-time) and settings (model-level)
+  // Merge fields: call-time options override settings per-field (like temperature/topP)
+  // Special handling for thinkingLevel: invalid call-time values fall back to settings
+  const settingsThinkingConfig = settings?.thinkingConfig as
+    | ThinkingConfigInput
+    | undefined;
+  const optionsThinkingConfig = (options as Record<string, unknown>)
+    .thinkingConfig as ThinkingConfigInput | undefined;
+
+  // Validate call-time thinkingLevel before merging
+  // If invalid, preserve settings thinkingLevel instead of silently dropping it
+  let effectiveOptionsThinking = optionsThinkingConfig;
+  if (
+    optionsThinkingConfig?.thinkingLevel !== undefined &&
+    typeof optionsThinkingConfig.thinkingLevel === 'string'
+  ) {
+    const normalized = normalizeThinkingLevel(
+      optionsThinkingConfig.thinkingLevel
+    );
+    if (normalized === undefined) {
+      // Invalid thinkingLevel - remove it so settings value is preserved
+      const { thinkingLevel: _, ...rest } = optionsThinkingConfig;
+      effectiveOptionsThinking =
+        Object.keys(rest).length > 0 ? rest : undefined;
+    }
+  }
+
+  const mergedThinkingConfig =
+    settingsThinkingConfig || effectiveOptionsThinking
+      ? { ...settingsThinkingConfig, ...effectiveOptionsThinking }
+      : undefined;
+
+  const thinkingConfig = mergedThinkingConfig
+    ? buildThinkingConfig(mergedThinkingConfig)
+    : undefined;
+
   const generationConfig: GenerateContentConfig = {
     temperature:
       options.temperature ?? (settings?.temperature as number | undefined),
@@ -102,6 +247,9 @@ function prepareGenerationConfig(
     // Pass schema directly to Gemini API for native structured output
     responseJsonSchema: hasSchema ? schema : undefined,
     toolConfig: mapGeminiToolConfig(options),
+    // Pass thinkingConfig for Gemini 3 (thinkingLevel) or Gemini 2.5 (thinkingBudget)
+    // Cast needed because our ThinkingLevel enum isn't recognized by @google/genai v1.30.0 types
+    thinkingConfig: thinkingConfig as GenerateContentConfig['thinkingConfig'],
   };
 
   return { generationConfig, warnings };

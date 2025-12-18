@@ -7,6 +7,7 @@ import type {
   LanguageModelV2CallOptions,
 } from '@ai-sdk/provider';
 import { FunctionCallingConfigMode } from '@google/genai';
+import { ThinkingLevel } from '../gemini-language-model';
 
 // Mock dependencies
 vi.mock('../client');
@@ -1031,6 +1032,617 @@ describe('GeminiLanguageModel', () => {
           abortSignal: abortController.signal,
         })
       ).rejects.toThrow('Request aborted');
+    });
+  });
+
+  describe('thinkingConfig support', () => {
+    it('should pass thinkingLevel as enum for Gemini 3 models', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Thinking response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const gemini3Model = new GeminiLanguageModel({
+        modelId: 'gemini-3-flash-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {},
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      await gemini3Model.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.HIGH,
+        },
+      } as any);
+
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.HIGH,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should normalize thinkingLevel string to enum (case-insensitive)', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const gemini3Model = new GeminiLanguageModel({
+        modelId: 'gemini-3-pro-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {},
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      // Test lowercase
+      await gemini3Model.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingLevel: 'high',
+        },
+      } as any);
+
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.HIGH,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+
+      // Reset mock and test mixed case
+      mockClient.generateContent.mockClear();
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      await gemini3Model.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingLevel: 'Low',
+        },
+      } as any);
+
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.LOW,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should pass thinkingBudget for Gemini 2.5 models', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      await model.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingBudget: 8192,
+        },
+      } as any);
+
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingBudget: 8192,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should pass includeThoughts boolean', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      await model.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingBudget: 4096,
+          includeThoughts: true,
+        },
+      } as any);
+
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingBudget: 4096,
+              includeThoughts: true,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should support thinkingConfig in model settings', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      // Create model with thinkingConfig in settings
+      const modelWithThinking = new GeminiLanguageModel({
+        modelId: 'gemini-3-flash-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {
+          thinkingConfig: {
+            thinkingLevel: 'medium',
+          },
+        },
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      await modelWithThinking.doGenerate({
+        prompt: messages,
+      });
+
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.MEDIUM,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should allow call-time thinkingConfig to override settings', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      // Create model with thinkingConfig in settings
+      const modelWithThinking = new GeminiLanguageModel({
+        modelId: 'gemini-3-flash-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {
+          thinkingConfig: {
+            thinkingLevel: 'low',
+          },
+        },
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      // Call-time config should override settings
+      await modelWithThinking.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingLevel: 'high',
+        },
+      } as any);
+
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.HIGH,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should merge call-time thinkingConfig with settings (not replace)', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      // Create model with thinkingLevel in settings
+      const modelWithThinking = new GeminiLanguageModel({
+        modelId: 'gemini-3-flash-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {
+          thinkingConfig: {
+            thinkingLevel: 'high',
+          },
+        },
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      // Call-time adds includeThoughts, should MERGE with settings thinkingLevel
+      await modelWithThinking.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          includeThoughts: true,
+        },
+      } as any);
+
+      // Both thinkingLevel (from settings) and includeThoughts (from call) should be present
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.HIGH,
+              includeThoughts: true,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should handle invalid thinkingLevel string gracefully', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      // Invalid thinkingLevel with no settings - thinkingConfig should not be set
+      await model.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingLevel: 'invalid_level',
+        },
+      } as any);
+
+      // Verify thinkingConfig is not set when only invalid values provided
+      const callArgs = mockClient.generateContent.mock.calls[0][0];
+      expect(callArgs.config.thinkingConfig).toBeUndefined();
+    });
+
+    it('should preserve settings thinkingLevel when call-time value is invalid', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      // Create model with valid thinkingLevel in settings
+      const modelWithThinking = new GeminiLanguageModel({
+        modelId: 'gemini-3-flash-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {
+          thinkingConfig: {
+            thinkingLevel: 'high',
+          },
+        },
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      // Call with invalid thinkingLevel (typo) - should fall back to settings
+      await modelWithThinking.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingLevel: 'hihg', // typo
+        },
+      } as any);
+
+      // Should preserve the valid 'high' from settings, not drop it
+      expect(mockClient.generateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.HIGH,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
+    });
+
+    it('should support all thinkingLevel values', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const gemini3Model = new GeminiLanguageModel({
+        modelId: 'gemini-3-flash-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {},
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      const levels = ['low', 'MEDIUM', 'High', 'MINIMAL'];
+      const expectedEnums = [
+        ThinkingLevel.LOW,
+        ThinkingLevel.MEDIUM,
+        ThinkingLevel.HIGH,
+        ThinkingLevel.MINIMAL,
+      ];
+
+      for (let i = 0; i < levels.length; i++) {
+        mockClient.generateContent.mockClear();
+        mockClient.generateContent.mockResolvedValue(mockResponse);
+
+        await gemini3Model.doGenerate({
+          prompt: messages,
+          thinkingConfig: {
+            thinkingLevel: levels[i],
+          },
+        } as any);
+
+        expect(mockClient.generateContent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            config: expect.objectContaining({
+              thinkingConfig: {
+                thinkingLevel: expectedEnums[i],
+              },
+            }),
+          }),
+          expect.any(String)
+        );
+      }
+    });
+
+    it('should pass thinkingConfig in streaming mode', async () => {
+      const mockStream = {
+        async *[Symbol.asyncIterator]() {
+          yield {
+            candidates: [
+              {
+                content: {
+                  role: 'model',
+                  parts: [{ text: 'Streamed thinking response' }],
+                },
+                finishReason: 'STOP',
+              },
+            ],
+            usageMetadata: {
+              promptTokenCount: 10,
+              candidatesTokenCount: 20,
+            },
+          };
+        },
+      };
+
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+
+      const gemini3Model = new GeminiLanguageModel({
+        modelId: 'gemini-3-pro-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {},
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      const result = await gemini3Model.doStream({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingLevel: 'high',
+        },
+      } as any);
+
+      // Consume the stream
+      const reader = result.stream.getReader();
+      while (true) {
+        const { done } = await reader.read();
+        if (done) break;
+      }
+
+      expect(mockClient.generateContentStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.HIGH,
+            },
+          }),
+        }),
+        expect.any(String)
+      );
     });
   });
 });
