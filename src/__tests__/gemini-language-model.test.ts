@@ -1448,7 +1448,7 @@ describe('GeminiLanguageModel', () => {
         },
       ];
 
-      // Invalid thinkingLevel should result in empty thinkingConfig
+      // Invalid thinkingLevel with no settings - thinkingConfig should not be set
       await model.doGenerate({
         prompt: messages,
         thinkingConfig: {
@@ -1456,10 +1456,63 @@ describe('GeminiLanguageModel', () => {
         },
       } as any);
 
+      // Verify thinkingConfig is not set when only invalid values provided
+      const callArgs = mockClient.generateContent.mock.calls[0][0];
+      expect(callArgs.config.thinkingConfig).toBeUndefined();
+    });
+
+    it('should preserve settings thinkingLevel when call-time value is invalid', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: 'Response' }],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      // Create model with valid thinkingLevel in settings
+      const modelWithThinking = new GeminiLanguageModel({
+        modelId: 'gemini-3-flash-preview',
+        providerOptions: { authType: 'gemini-api-key', apiKey: 'test-key' },
+        settings: {
+          thinkingConfig: {
+            thinkingLevel: 'high',
+          },
+        },
+      });
+
+      const messages: LanguageModelV2CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Test' }],
+        },
+      ];
+
+      // Call with invalid thinkingLevel (typo) - should fall back to settings
+      await modelWithThinking.doGenerate({
+        prompt: messages,
+        thinkingConfig: {
+          thinkingLevel: 'hihg', // typo
+        },
+      } as any);
+
+      // Should preserve the valid 'high' from settings, not drop it
       expect(mockClient.generateContent).toHaveBeenCalledWith(
         expect.objectContaining({
           config: expect.objectContaining({
-            thinkingConfig: {}, // Empty because invalid level was skipped
+            thinkingConfig: {
+              thinkingLevel: ThinkingLevel.HIGH,
+            },
           }),
         }),
         expect.any(String)

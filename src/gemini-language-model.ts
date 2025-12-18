@@ -199,15 +199,34 @@ function prepareGenerationConfig(
 
   // Handle thinkingConfig from options (call-time) and settings (model-level)
   // Merge fields: call-time options override settings per-field (like temperature/topP)
+  // Special handling for thinkingLevel: invalid call-time values fall back to settings
   const settingsThinkingConfig = settings?.thinkingConfig as
     | ThinkingConfigInput
     | undefined;
   const optionsThinkingConfig = (options as Record<string, unknown>)
     .thinkingConfig as ThinkingConfigInput | undefined;
 
+  // Validate call-time thinkingLevel before merging
+  // If invalid, preserve settings thinkingLevel instead of silently dropping it
+  let effectiveOptionsThinking = optionsThinkingConfig;
+  if (
+    optionsThinkingConfig?.thinkingLevel !== undefined &&
+    typeof optionsThinkingConfig.thinkingLevel === 'string'
+  ) {
+    const normalized = normalizeThinkingLevel(
+      optionsThinkingConfig.thinkingLevel
+    );
+    if (normalized === undefined) {
+      // Invalid thinkingLevel - remove it so settings value is preserved
+      const { thinkingLevel: _, ...rest } = optionsThinkingConfig;
+      effectiveOptionsThinking =
+        Object.keys(rest).length > 0 ? rest : undefined;
+    }
+  }
+
   const mergedThinkingConfig =
-    settingsThinkingConfig || optionsThinkingConfig
-      ? { ...settingsThinkingConfig, ...optionsThinkingConfig }
+    settingsThinkingConfig || effectiveOptionsThinking
+      ? { ...settingsThinkingConfig, ...effectiveOptionsThinking }
       : undefined;
 
   const thinkingConfig = mergedThinkingConfig
