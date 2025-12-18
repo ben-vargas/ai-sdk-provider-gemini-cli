@@ -128,7 +128,9 @@ type ExtendedThinkingConfig = Omit<
 /**
  * Build thinkingConfig from user input, normalizing string thinkingLevel to enum.
  */
-function buildThinkingConfig(input: ThinkingConfigInput): ExtendedThinkingConfig {
+function buildThinkingConfig(
+  input: ThinkingConfigInput
+): ExtendedThinkingConfig {
   const config = {} as ExtendedThinkingConfig;
 
   // Handle thinkingLevel (string or enum)
