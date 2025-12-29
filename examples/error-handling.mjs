@@ -156,7 +156,7 @@ async function main() {
       });
     }, 3, 1000);
     
-    console.log('✅ Request successful:', result.content[0]?.text || 'Generated successfully');
+    console.log('✅ Request successful:', result.text || 'Generated successfully');
   } catch (error) {
     console.log('❌ All retries failed:', error.message);
     
@@ -285,7 +285,7 @@ async function main() {
   
   try {
     const result = await generateWithFallback('Say hello');
-    console.log('Result:', result.content[0].text);
+    console.log('Result:', result.text);
   } catch (error) {
     console.log('❌ All models failed');
   }

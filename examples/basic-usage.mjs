@@ -29,7 +29,7 @@ async function main() {
     });
 
     console.log('Response:');
-    console.log(result1.content[0]?.text || 'No response generated');
+    console.log(result1.text || 'No response generated');
     console.log(`\nTokens used: ${result1.usage?.totalTokens || 'N/A'}`);
     console.log();
 
@@ -43,7 +43,7 @@ async function main() {
     });
 
     console.log('Response:');
-    console.log(result2.content[0]?.text || 'No response generated');
+    console.log(result2.text || 'No response generated');
     console.log(`\nModel used: gemini-3-pro-preview`);
     console.log(`Input tokens: ${result2.usage?.inputTokens || 'N/A'}`);
     console.log(`Output tokens: ${result2.usage?.outputTokens || 'N/A'}`);
@@ -55,12 +55,13 @@ async function main() {
     
     const result3 = await generateText({
       model: gemini('gemini-3-pro-preview'),
-      prompt: 'Write a haiku about programming',
+      prompt: 'Write a creative story opening about a robot discovering art',
+      temperature: 0.9,
     });
 
-    console.log('Response:');
-    console.log(result3.content[0]?.text || 'No response generated');
-    console.log(`\nModel used: gemini-3-pro-preview`);
+    console.log('Response (high temperature = more creative):');
+    console.log(result3.text || 'No response generated');
+    console.log(`\nModel used: gemini-3-pro-preview (temperature: 0.9)`);
     console.log(`Total tokens: ${result3.usage?.totalTokens || 'N/A'}`);
     console.log();
 

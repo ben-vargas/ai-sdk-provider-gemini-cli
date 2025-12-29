@@ -76,7 +76,7 @@ Keep the summary concise but informative.`
 
     console.log('Executive Summary:');
     console.log('─'.repeat(40));
-    console.log(result1.content[0]?.text || 'No response generated');
+    console.log(result1.text || 'No response generated');
     console.log();
     console.log(`Input tokens: ${result1.usage?.inputTokens || 'N/A'}`);
     console.log(`Output tokens: ${result1.usage?.outputTokens || 'N/A'}`);
@@ -120,7 +120,7 @@ For each metric, include the actual numbers and any percentage changes mentioned
 
     console.log('Financial Metrics:');
     console.log('─'.repeat(40));
-    console.log(result2.content[0]?.text || 'No response generated');
+    console.log(result2.text || 'No response generated');
     console.log();
     console.log(`Tokens used: ${result2.usage?.totalTokens || 'N/A'}`);
     console.log();
@@ -162,7 +162,7 @@ Summarize each risk in 1-2 sentences.`
 
     console.log('Risk Analysis:');
     console.log('─'.repeat(40));
-    console.log(result3.content[0]?.text || 'No response generated');
+    console.log(result3.text || 'No response generated');
     console.log();
 
     console.log('✅ PDF analysis completed successfully!');
