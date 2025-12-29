@@ -45,10 +45,10 @@ async function main() {
   // Test 1: Basic text generation
   await runTest('Basic text generation', async () => {
     const result = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-flash-preview'),
       prompt: 'Say hello',
     });
-    // In v5, check both .text and .content
+    // Check result.text for the generated content
     if (!result.text || result.text.length === 0) {
       throw new Error('No text generated');
     }
@@ -57,7 +57,7 @@ async function main() {
   // Test 2: Token usage reporting
   await runTest('Token usage reporting', async () => {
     const result = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-flash-preview'),
       prompt: 'Count to 5',
     });
     if (!result.usage || !result.usage.totalTokens) {
@@ -68,7 +68,7 @@ async function main() {
   // Test 3: Streaming response
   await runTest('Streaming response', async () => {
     const result = await streamText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-flash-preview'),
       prompt: 'List 3 colors',
     });
     
@@ -85,7 +85,7 @@ async function main() {
   // Test 4: System messages
   await runTest('System messages', async () => {
     const result = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-flash-preview'),
       system: 'You must respond with exactly one word.',
       prompt: 'What is 2+2?',
     });
@@ -99,7 +99,7 @@ async function main() {
   // Test 5: Conversation history
   await runTest('Conversation history', async () => {
     const result = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-flash-preview'),
       messages: [
         { role: 'user', content: 'My name is TestBot' },
         { role: 'assistant', content: 'Nice to meet you, TestBot!' },
@@ -116,21 +116,21 @@ async function main() {
     }
   });
 
-  // Test 6: Flash model
-  await runTest('Flash model', async () => {
+  // Test 6: Different model test
+  await runTest('Model selection', async () => {
     const result = await generateText({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-flash-preview'),
       prompt: 'Say yes',
     });
     if (!result.text || result.text.length === 0) {
-      throw new Error('Flash model did not generate text');
+      throw new Error('Model did not generate text');
     }
   });
 
   // Test 7: Object generation (basic)
   await runTest('Object generation - basic', async () => {
     const { object } = await generateObject({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-flash-preview'),
       schema: z.object({
         name: z.string(),
         age: z.number(),
@@ -146,7 +146,7 @@ async function main() {
   // Test 8: Object generation (complex)
   await runTest('Object generation - complex', async () => {
     const { object } = await generateObject({
-      model: gemini('gemini-2.5-pro'),
+      model: gemini('gemini-3-flash-preview'),
       schema: z.object({
         product: z.object({
           name: z.string(),
@@ -162,12 +162,11 @@ async function main() {
     }
   });
 
-  // Test 9: JSON mode
+  // Test 9: JSON mode (via prompt - mode option is not standard in generateText)
   await runTest('JSON mode', async () => {
     const result = await generateText({
-      model: gemini('gemini-2.5-pro'),
-      mode: 'json',
-      prompt: 'Generate a JSON object with fields: name (string) and score (number)',
+      model: gemini('gemini-3-flash-preview'),
+      prompt: 'Generate a JSON object with fields: name (string) and score (number). Return only valid JSON, no explanation.',
     });
     
     try {
@@ -217,7 +216,7 @@ async function main() {
     
     try {
       await generateText({
-        model: gemini('gemini-2.5-pro'),
+        model: gemini('gemini-3-flash-preview'),
         prompt: 'Write a very long story',
         abortSignal: controller.signal,
         });
@@ -232,7 +231,7 @@ async function main() {
   // Test 12: Maximum tokens limit
   await runTest('Maximum tokens limit', async () => {
     const result = await generateText({
-      model: gemini('gemini-2.5-pro', { maxOutputTokens: 10 }),
+      model: gemini('gemini-3-flash-preview', { maxOutputTokens: 10 }),
       prompt: 'Write a detailed essay about artificial intelligence, covering its history, current applications, and future potential.',
     });
     
@@ -245,7 +244,7 @@ async function main() {
 
   // Test 13: Temperature setting
   await runTest('Temperature setting', async () => {
-    const model = gemini('gemini-2.5-pro', { temperature: 0 });
+    const model = gemini('gemini-3-flash-preview', { temperature: 0 });
     
     // With temperature 0, responses should be deterministic
     const result = await generateText({

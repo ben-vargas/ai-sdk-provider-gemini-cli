@@ -62,12 +62,12 @@ if (process.env.GEMINI_API_KEY) {
     // Quick test
     const { generateText } = await import('ai');
     const result = await generateText({
-      model: geminiWithApiKey('gemini-2.5-pro'),
+      model: geminiWithApiKey('gemini-3-flash-preview'),
       prompt: 'Say "API key works" in 3 words'
     });
     
     console.log('✅ API key authentication successful!');
-    console.log(`Response: ${result.content[0]?.text || 'No response'}`);
+    console.log(`Response: ${result.text || 'No response'}`);
   } catch (error) {
     console.error('❌ API key test failed:', error.message);
   }
@@ -88,18 +88,18 @@ try {
   });
   
   console.log('✅ Provider created successfully');
-  console.log('Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-2.0-pro-exp, and more');
+  console.log('Available models: gemini-3-flash-preview, gemini-2.5-flash, gemini-2.0-pro-exp, and more');
   
   // Quick connection test
   console.log('\nTesting connection with a simple request...');
   const { generateText } = await import('ai');
   const result = await generateText({
-    model: gemini('gemini-2.5-pro'),
+    model: gemini('gemini-3-flash-preview'),
     prompt: 'Say hello in one word'
   });
   
   console.log('✅ Connection successful!');
-  console.log(`Response: ${result.content[0]?.text || 'No response'}`);
+  console.log(`Response: ${result.text || 'No response'}`);
 } catch (error) {
   console.error('❌ Provider test failed:', error.message);
 }

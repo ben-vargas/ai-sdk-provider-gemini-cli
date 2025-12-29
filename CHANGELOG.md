@@ -2,24 +2,188 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.5.1] - 2025-12-17
+## [2.0.0] - 2025-12-28
 
-### Added
+### BREAKING CHANGES
 
-- **Thinking Mode Support**: Added `thinkingConfig` settings for Gemini reasoning capabilities (#28)
-  - `thinkingLevel` for Gemini 3 models (`gemini-3-pro-preview`, `gemini-3-flash-preview`)
-    - Supports values: `low`, `medium`, `high`, `minimal`
-    - Case-insensitive string input ('HIGH', 'high', 'High' all work)
-    - Also accepts `ThinkingLevel` enum for type-safe usage
-  - `thinkingBudget` for Gemini 2.5 models (backwards compatible)
-    - Token-based control: 0 (disabled), 512, 8192 (default), -1 (unlimited)
-  - `includeThoughts` option to include reasoning in responses
-  - Re-exported `ThinkingLevel` enum from `@google/genai` for user convenience
-  - Re-exported `ThinkingConfigInput` type for TypeScript users
+This is the stable release for Vercel AI SDK v6. For AI SDK v5 compatibility, use version 1.x (see `ai-sdk-v5` branch).
 
 ### Changed
 
-- Updated documentation to include `gemini-3-flash-preview` in supported models list
+- **AI SDK v6 Final Release**: Updated from beta to stable AI SDK v6 packages
+  - `@ai-sdk/provider`: 3.0.0-beta.26 → ^3.0.0
+  - `@ai-sdk/provider-utils`: 4.0.0-beta.51 → ^4.0.1
+  - `ai` (devDependency): 6.0.0-beta.156 → ^6.0.3
+
+- **FinishReason Format**: Updated to match AI SDK v6 final format
+  - Changed from simple string (`'stop'`, `'length'`, etc.)
+  - Now returns object: `{ unified: 'stop', raw: 'STOP' }`
+  - `unified` provides cross-provider consistency
+  - `raw` preserves the original Gemini API value
+
+- **Dependency Updates**:
+  - `@google/gemini-cli-core`: 0.20.0 → 0.22.4
+
+### Fixed
+
+- Fixed example imports in logging examples (logging-\*.mjs) to use relative paths
+
+- **Streaming Lifecycle**: Now properly follows AI SDK v6 streaming contract
+  - Added `text-start` event before first text chunk with stable id
+  - All `text-delta` events now share the same id per text block
+  - Added `text-end` event when text streaming completes
+  - Previously: used random id per delta (non-compliant)
+
+- **Finish Reason for Tool Calls**: Now returns `tool-calls` finish reason when tools are invoked
+  - Both `doGenerate` and `doStream` check for tool calls in response
+  - Returns `{ unified: 'tool-calls', raw: 'STOP' }` when tool calls occurred
+  - Previously: always returned `stop` even when tools were called
+
+- **Abort Handling**: Fixed abort flow in streaming to properly terminate
+  - Added `return` after `controller.error()` to prevent further processing
+  - Previously: used `break` which could allow additional loop iterations
+
+- **Tool Result Mapping**: Fixed handling of non-object JSON values in tool results
+  - JSON arrays, strings, numbers, booleans, and null are now wrapped in `{ result: value }`
+  - Gemini API expects objects for function responses
+  - Previously: non-object JSON values were cast incorrectly
+
+- **Test Fix**: Changed `contentType` to `mediaType` in multimodal test (AI SDK v6 uses `mediaType`)
+
+- **Example Fixes**: Comprehensive updates to all example files
+  - Fixed response access pattern: `result.content[0]?.text` → `result.text` (AI SDK v6 convention)
+  - Fixed in: check-auth, basic-usage, streaming, conversation-history, system-messages, error-handling, custom-config, pdf-document-analysis
+  - `generate-object-advanced.mjs`: Simplified schemas to avoid Gemini's "too many states" limit
+  - `generate-object-constraints.mjs`: Replaced `multipleOf()` with `.describe()` hints
+  - `long-running-tasks.mjs`: Increased timeouts (5s→60s, 45s→180s) for reliable execution
+  - `streaming.mjs`: Fixed abort signal messaging logic
+  - `system-messages.mjs`: Fixed Example 7 empty response issue
+  - `integration-test.mjs`: Fixed Flash model test, updated v6 comments, removed invalid `mode:'json'`
+  - `basic-usage.mjs`: Example 3 now actually demonstrates temperature settings
+
+### Technical Details
+
+- All 191 tests passing
+- ThinkingLevel enum still locally defined (waiting for gemini-cli-core to upgrade @google/genai to v1.34.0+)
+- See issue #28 for ThinkingLevel migration tracking
+
+## [2.0.0-beta.2] - 2025-12-17
+
+### Added
+
+- **thinkingConfig Support**: Port of thinkingConfig from main branch (v1.5.1) for Gemini 3 thinking mode
+  - `thinkingLevel` for Gemini 3 models (`gemini-3-pro-preview`, `gemini-3-flash-preview`)
+    - Supports values: `low`, `medium`, `high`, `minimal`
+    - Case-insensitive string input (`'HIGH'`, `'high'`, `'High'` all work)
+    - Also accepts `ThinkingLevel` enum for type-safe usage
+  - `thinkingBudget` for Gemini 2.5 models (backwards compatible)
+    - Token-based control: `0` (disabled), `512`, `8192`, `-1` (unlimited)
+  - `includeThoughts` option to include reasoning in responses
+
+- **New Exports**:
+  - `ThinkingLevel` enum exported for type-safe thinkingLevel values
+  - `ThinkingConfigInput` type exported for TypeScript users
+
+### Technical Details
+
+- Local `ThinkingLevel` enum matching `@google/genai` v1.34.0 format (workaround until gemini-cli-core upgrades)
+- `normalizeThinkingLevel` helper for case-insensitive string handling
+- Support at both model-level settings and call-time options
+- Call-time thinkingConfig merges with settings (field-by-field override)
+- Invalid call-time thinkingLevel preserves settings value
+- 10 new tests for thinkingConfig functionality
+- Updated index.test.ts to use V3 types
+- All 191 tests passing
+
+### Example Usage
+
+```typescript
+import {
+  createGeminiProvider,
+  ThinkingLevel,
+} from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider();
+
+// Using string (case-insensitive)
+const result = await generateText({
+  model: gemini('gemini-3-flash-preview'),
+  prompt: 'Solve this complex problem...',
+  thinkingConfig: {
+    thinkingLevel: 'high',
+    includeThoughts: true,
+  },
+});
+
+// Or using enum
+const result = await generateText({
+  model: gemini('gemini-3-flash-preview'),
+  prompt: 'Solve this complex problem...',
+  thinkingConfig: {
+    thinkingLevel: ThinkingLevel.HIGH,
+  },
+});
+```
+
+## [2.0.0-beta.1] - 2025-12-15
+
+### BREAKING CHANGES
+
+This version is compatible with Vercel AI SDK v6 (beta). For v5 compatibility, use version 1.x.
+
+### Changed
+
+- **Provider Interface**: Migrated from `ProviderV2` to `ProviderV3` interface
+  - Updated `specificationVersion` from `'v2'` to `'v3'`
+  - Renamed `textEmbeddingModel()` to `embeddingModel()` (AI SDK v6 convention)
+  - All V2 types replaced with V3 equivalents
+
+- **Language Model**: Migrated from `LanguageModelV2` to `LanguageModelV3` interface
+  - `LanguageModelV2` → `LanguageModelV3`
+  - `LanguageModelV2CallOptions` → `LanguageModelV3CallOptions`
+  - `LanguageModelV2CallWarning` → `SharedV3Warning`
+  - `LanguageModelV2FinishReason` → `LanguageModelV3FinishReason`
+  - `LanguageModelV2FunctionTool` → `LanguageModelV3FunctionTool`
+  - `LanguageModelV2StreamPart` → `LanguageModelV3StreamPart`
+  - `LanguageModelV2Content` → `LanguageModelV3Content`
+  - `LanguageModelV2Usage` → `LanguageModelV3Usage`
+
+- **Token Usage Structure**: Changed from flat to hierarchical format
+
+  ```typescript
+  // v5 (flat)
+  usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 }
+
+  // v6 (hierarchical)
+  usage: {
+    inputTokens: { total: 10, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
+    outputTokens: { total: 20, text: undefined, reasoning: undefined }
+  }
+  ```
+
+- **Warning Format**: Changed from `unsupported-setting` to `unsupported`
+
+  ```typescript
+  // v5
+  { type: 'unsupported-setting', setting: 'responseFormat', details: '...' }
+
+  // v6
+  { type: 'unsupported', feature: 'responseFormat', details: '...' }
+  ```
+
+- **Tool Result Handling**: Updated to handle v6 typed `ToolResultOutput` union
+  - Supports `text`, `json`, `error-text`, `error-json`, `execution-denied`, and `content` output types
+
+- **Dependencies**: Updated and pinned to exact beta versions for stability
+  - `@ai-sdk/provider`: 3.0.0-beta.26
+  - `@ai-sdk/provider-utils`: 4.0.0-beta.51
+  - `ai` (devDependency): 6.0.0-beta.156
+
+### Technical Details
+
+- Documentation moved from `docs/ai-sdk-v5/` to `docs/ai-sdk-v6/`
+- Renamed `language-model-v2-implementation.md` to `language-model-v3-implementation.md`
+- All 178 tests passing
 
 ## [1.5.0] - 2025-12-11
 
@@ -431,6 +595,15 @@ This version is compatible with Vercel AI SDK v5. For v4 compatibility, please u
 - Streaming support
 - Basic error handling
 
+[2.0.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v2.0.0-beta.2...v2.0.0
+[2.0.0-beta.2]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v2.0.0-beta.1...v2.0.0-beta.2
+[2.0.0-beta.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.5.0...v2.0.0-beta.1
+[1.5.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.4.1...v1.5.0
+[1.4.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.1.2...v1.2.0
+[1.1.2]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.0-beta.1...v1.0.1

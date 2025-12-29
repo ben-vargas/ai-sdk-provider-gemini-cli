@@ -75,10 +75,10 @@ async function main() {
     
     // First, show a task that completes successfully
     const controller1 = new AbortController();
-    const timeout1 = setTimeout(() => controller1.abort(), 5000); // 5 seconds
+    const timeout1 = setTimeout(() => controller1.abort(), 60000); // 60 seconds
     
-    console.log('📝 Task 1: Simple request (5-second timeout)...');
-    console.log('   (Will likely take 10+ seconds due to background processing)');
+    console.log('📝 Task 1: Simple request (60-second timeout)...');
+    console.log('   (Gemini CLI requests typically take 10-30 seconds)');
     const progress1 = createProgressIndicator('Processing');
     
     try {
@@ -159,7 +159,9 @@ async function main() {
       }
       
       clearTimeout(timeout3);
-      console.log('\n✅ Documentation generated successfully!');
+      const finalElapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      process.stdout.write(`\r📝 Generated: ${totalChars} chars | Time: ${finalElapsed}s\n`);
+      console.log('✅ Documentation generated successfully!');
     } catch (error) {
       if (error.name === 'AbortError') {
         console.log('\n⏱️  Stream timed out');
@@ -240,7 +242,7 @@ async function main() {
     ];
     
     const controller5 = new AbortController();
-    const timeout5 = setTimeout(() => controller5.abort(), 45000); // 45 seconds total
+    const timeout5 = setTimeout(() => controller5.abort(), 180000); // 180 seconds (3 minutes) total
     
     const results = [];
     

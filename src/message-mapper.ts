@@ -1,7 +1,7 @@
 import type {
-  LanguageModelV2CallOptions,
-  LanguageModelV2FilePart,
-  LanguageModelV2Message,
+  LanguageModelV3CallOptions,
+  LanguageModelV3FilePart,
+  LanguageModelV3Message,
 } from '@ai-sdk/provider';
 import type { Content, Part } from '@google/genai';
 
@@ -17,7 +17,7 @@ export interface GeminiPromptResult {
  * so we no longer inject schema instructions into the prompt.
  */
 export function mapPromptToGeminiFormat(
-  options: LanguageModelV2CallOptions
+  options: LanguageModelV3CallOptions
 ): GeminiPromptResult {
   const messages = options.prompt;
   const contents: Content[] = [];
@@ -42,16 +42,50 @@ export function mapPromptToGeminiFormat(
         break;
 
       case 'tool': {
-        // Tool results in v5 are part of tool messages
+        // Tool results in v6 have typed output union
         const parts: Part[] = [];
         for (const part of message.content) {
           if (part.type === 'tool-result') {
+            // Handle new ToolResultOutput union types in v6
+            const output = part.output;
+            let resultValue: Record<string, unknown>;
+
+            if (output.type === 'text' || output.type === 'error-text') {
+              resultValue = { result: output.value };
+            } else if (output.type === 'json' || output.type === 'error-json') {
+              // JSON values can be objects, arrays, strings, numbers, booleans, or null
+              // Gemini expects an object, so wrap non-object values
+              const jsonValue = output.value;
+              if (
+                jsonValue !== null &&
+                typeof jsonValue === 'object' &&
+                !Array.isArray(jsonValue)
+              ) {
+                resultValue = jsonValue as Record<string, unknown>;
+              } else {
+                resultValue = { result: jsonValue };
+              }
+            } else if (output.type === 'execution-denied') {
+              resultValue = {
+                result: `[Execution denied${output.reason ? `: ${output.reason}` : ''}]`,
+              };
+            } else if (output.type === 'content') {
+              // Handle content array - extract text parts
+              const textContent = output.value
+                .filter(
+                  (p): p is { type: 'text'; text: string } => p.type === 'text'
+                )
+                .map((p) => p.text)
+                .join('\n');
+              resultValue = { result: textContent };
+            } else {
+              resultValue = { result: '[Unknown output type]' };
+            }
+
             parts.push({
               functionResponse: {
                 name: part.toolName,
-                response: (typeof part.output === 'string'
-                  ? { result: part.output }
-                  : part.output) as Record<string, unknown>,
+                response: resultValue,
               },
             });
           }
@@ -72,7 +106,7 @@ export function mapPromptToGeminiFormat(
  * Maps a user message to Gemini format
  */
 function mapUserMessage(
-  message: LanguageModelV2Message & { role: 'user' }
+  message: LanguageModelV3Message & { role: 'user' }
 ): Content {
   const parts: Part[] = [];
 
@@ -107,7 +141,7 @@ function mapUserMessage(
  * Maps an assistant message to Gemini format
  */
 function mapAssistantMessage(
-  message: LanguageModelV2Message & { role: 'assistant' }
+  message: LanguageModelV3Message & { role: 'assistant' }
 ): Content {
   const parts: Part[] = [];
 
@@ -135,7 +169,7 @@ function mapAssistantMessage(
 /**
  * Maps a file part to Gemini format
  */
-function mapFilePart(part: LanguageModelV2FilePart): Part {
+function mapFilePart(part: LanguageModelV3FilePart): Part {
   if (part.data instanceof URL) {
     throw new Error(
       'URL files are not supported by Gemini CLI Core. Please provide base64-encoded data.'

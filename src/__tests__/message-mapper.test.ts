@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { mapPromptToGeminiFormat } from '../message-mapper';
-import type { LanguageModelV2CallOptions } from '@ai-sdk/provider';
+import type { LanguageModelV3CallOptions } from '@ai-sdk/provider';
 
 describe('mapPromptToGeminiFormat', () => {
   describe('basic message mapping', () => {
     it('should map a simple user message', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -25,7 +25,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should map a simple assistant message', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'assistant',
@@ -44,7 +44,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should handle system messages separately', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'system',
@@ -71,7 +71,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should handle conversation with multiple messages', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -99,7 +99,7 @@ describe('mapPromptToGeminiFormat', () => {
 
   describe('multimodal content', () => {
     it('should map user message with text and base64 image', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -134,7 +134,7 @@ describe('mapPromptToGeminiFormat', () => {
 
     it('should map user message with Uint8Array image', () => {
       const imageData = new Uint8Array([1, 2, 3, 4]);
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -161,7 +161,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should handle images with explicit content type', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -187,7 +187,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should map user message with PDF file', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -214,7 +214,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should map user message with audio file', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -241,7 +241,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should map user message with video file', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -268,7 +268,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should throw error for URL files', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -289,7 +289,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should throw error for unsupported file format', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',
@@ -312,7 +312,7 @@ describe('mapPromptToGeminiFormat', () => {
 
   describe('tool calling', () => {
     it('should map assistant message with tool calls', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'assistant',
@@ -347,7 +347,8 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should map tool result messages', () => {
-      const options: LanguageModelV2CallOptions = {
+      // v6 uses typed output union - using 'json' type here
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'tool',
@@ -356,7 +357,10 @@ describe('mapPromptToGeminiFormat', () => {
                 type: 'tool-result',
                 toolCallId: '123',
                 toolName: 'getWeather',
-                output: { temperature: 72, condition: 'sunny' },
+                output: {
+                  type: 'json',
+                  value: { temperature: 72, condition: 'sunny' },
+                },
               },
             ],
           },
@@ -380,7 +384,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should handle empty args in tool calls', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'assistant',
@@ -422,7 +426,7 @@ describe('mapPromptToGeminiFormat', () => {
         required: ['name', 'age'],
       };
 
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         responseFormat: { type: 'json', schema },
         prompt: [
           {
@@ -446,7 +450,7 @@ describe('mapPromptToGeminiFormat', () => {
         required: ['result'],
       };
 
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         responseFormat: { type: 'json', schema },
         prompt: [
           {
@@ -473,7 +477,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should handle json response format without schema', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         responseFormat: { type: 'json' },
         prompt: [
           {
@@ -494,7 +498,7 @@ describe('mapPromptToGeminiFormat', () => {
         properties: { test: { type: 'string' } },
       };
 
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         responseFormat: { type: 'json', schema },
         prompt: [],
       };
@@ -507,7 +511,7 @@ describe('mapPromptToGeminiFormat', () => {
 
   describe('edge cases', () => {
     it('should handle empty prompt', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [],
       };
 
@@ -518,7 +522,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should handle multiple system messages', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'system',
@@ -546,7 +550,7 @@ describe('mapPromptToGeminiFormat', () => {
     });
 
     it('should handle messages with empty content arrays', () => {
-      const options: LanguageModelV2CallOptions = {
+      const options: LanguageModelV3CallOptions = {
         prompt: [
           {
             role: 'user',

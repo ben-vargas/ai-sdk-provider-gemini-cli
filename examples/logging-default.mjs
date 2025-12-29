@@ -14,7 +14,7 @@
  */
 
 import { streamText } from 'ai';
-import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+import { createGeminiProvider } from '../dist/index.mjs';
 
 async function main() {
   console.log('=== Default Logging (Non-Verbose Mode) ===\n');
@@ -30,7 +30,7 @@ async function main() {
 
     // Default logging - only warn/error messages will appear
     const result = streamText({
-      model: gemini('gemini-2.5-flash'),
+      model: gemini('gemini-3-flash-preview'),
       prompt: 'Say hello in 5 words',
     });
 
