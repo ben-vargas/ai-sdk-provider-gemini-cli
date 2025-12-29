@@ -2,6 +2,71 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2025-12-28
+
+### BREAKING CHANGES
+
+This is the stable release for Vercel AI SDK v6. For AI SDK v5 compatibility, use version 1.x (see `ai-sdk-v5` branch).
+
+### Changed
+
+- **AI SDK v6 Final Release**: Updated from beta to stable AI SDK v6 packages
+  - `@ai-sdk/provider`: 3.0.0-beta.26 → ^3.0.0
+  - `@ai-sdk/provider-utils`: 4.0.0-beta.51 → ^4.0.1
+  - `ai` (devDependency): 6.0.0-beta.156 → ^6.0.3
+
+- **FinishReason Format**: Updated to match AI SDK v6 final format
+  - Changed from simple string (`'stop'`, `'length'`, etc.)
+  - Now returns object: `{ unified: 'stop', raw: 'STOP' }`
+  - `unified` provides cross-provider consistency
+  - `raw` preserves the original Gemini API value
+
+- **Dependency Updates**:
+  - `@google/gemini-cli-core`: 0.20.0 → 0.22.4
+
+### Fixed
+
+- Fixed example imports in logging examples (logging-*.mjs) to use relative paths
+
+- **Streaming Lifecycle**: Now properly follows AI SDK v6 streaming contract
+  - Added `text-start` event before first text chunk with stable id
+  - All `text-delta` events now share the same id per text block
+  - Added `text-end` event when text streaming completes
+  - Previously: used random id per delta (non-compliant)
+
+- **Finish Reason for Tool Calls**: Now returns `tool-calls` finish reason when tools are invoked
+  - Both `doGenerate` and `doStream` check for tool calls in response
+  - Returns `{ unified: 'tool-calls', raw: 'STOP' }` when tool calls occurred
+  - Previously: always returned `stop` even when tools were called
+
+- **Abort Handling**: Fixed abort flow in streaming to properly terminate
+  - Added `return` after `controller.error()` to prevent further processing
+  - Previously: used `break` which could allow additional loop iterations
+
+- **Tool Result Mapping**: Fixed handling of non-object JSON values in tool results
+  - JSON arrays, strings, numbers, booleans, and null are now wrapped in `{ result: value }`
+  - Gemini API expects objects for function responses
+  - Previously: non-object JSON values were cast incorrectly
+
+- **Test Fix**: Changed `contentType` to `mediaType` in multimodal test (AI SDK v6 uses `mediaType`)
+
+- **Example Fixes**: Comprehensive updates to all example files
+  - Fixed response access pattern: `result.content[0]?.text` → `result.text` (AI SDK v6 convention)
+  - Fixed in: check-auth, basic-usage, streaming, conversation-history, system-messages, error-handling, custom-config, pdf-document-analysis
+  - `generate-object-advanced.mjs`: Simplified schemas to avoid Gemini's "too many states" limit
+  - `generate-object-constraints.mjs`: Replaced `multipleOf()` with `.describe()` hints
+  - `long-running-tasks.mjs`: Increased timeouts (5s→60s, 45s→180s) for reliable execution
+  - `streaming.mjs`: Fixed abort signal messaging logic
+  - `system-messages.mjs`: Fixed Example 7 empty response issue
+  - `integration-test.mjs`: Fixed Flash model test, updated v6 comments, removed invalid `mode:'json'`
+  - `basic-usage.mjs`: Example 3 now actually demonstrates temperature settings
+
+### Technical Details
+
+- All 191 tests passing
+- ThinkingLevel enum still locally defined (waiting for gemini-cli-core to upgrade @google/genai to v1.34.0+)
+- See issue #28 for ThinkingLevel migration tracking
+
 ## [2.0.0-beta.2] - 2025-12-17
 
 ### Added
@@ -525,6 +590,7 @@ This version is compatible with Vercel AI SDK v5. For v4 compatibility, please u
 - Streaming support
 - Basic error handling
 
+[2.0.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v2.0.0-beta.2...v2.0.0
 [2.0.0-beta.2]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v2.0.0-beta.1...v2.0.0-beta.2
 [2.0.0-beta.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.5.0...v2.0.0-beta.1
 [1.5.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.4.1...v1.5.0

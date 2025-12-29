@@ -103,7 +103,7 @@ describe('GeminiLanguageModel', () => {
       expect(result.content).toHaveLength(1);
       expect(result.content[0].type).toBe('text');
       expect((result.content[0] as any).text).toBe('Hello, world!');
-      expect(result.finishReason).toBe('stop');
+      expect(result.finishReason).toEqual({ unified: 'stop', raw: 'STOP' });
       expect(result.usage).toEqual({
         inputTokens: {
           total: 10,
@@ -325,7 +325,7 @@ describe('GeminiLanguageModel', () => {
       });
 
       expect(result.content).toHaveLength(0);
-      expect(result.finishReason).toBe('stop');
+      expect(result.finishReason).toEqual({ unified: 'stop', raw: 'STOP' });
     });
 
     it('should handle multi-modal input', async () => {
@@ -355,7 +355,7 @@ describe('GeminiLanguageModel', () => {
             {
               type: 'file',
               data: 'base64imagedata',
-              contentType: 'image/jpeg',
+              mediaType: 'image/jpeg',
             },
           ],
         },
@@ -531,25 +531,38 @@ describe('GeminiLanguageModel', () => {
         streamParts.push(value);
       }
 
-      expect(streamParts).toHaveLength(5); // stream-start, 2 text-delta chunks, response-metadata, finish
+      // stream-start, text-start, 2 text-deltas, text-end, response-metadata, finish
+      expect(streamParts).toHaveLength(7);
       expect(streamParts[0]).toEqual({ type: 'stream-start', warnings: [] });
       expect(streamParts[1]).toEqual(
         expect.objectContaining({
-          type: 'text-delta',
-          delta: 'Hello',
+          type: 'text-start',
         })
       );
+      const textId = streamParts[1].id;
       expect(streamParts[2]).toEqual(
         expect.objectContaining({
           type: 'text-delta',
+          id: textId,
+          delta: 'Hello',
+        })
+      );
+      expect(streamParts[3]).toEqual(
+        expect.objectContaining({
+          type: 'text-delta',
+          id: textId,
           delta: ', world!',
         })
       );
-      expect(streamParts[3].type).toBe('response-metadata');
-      expect(streamParts[4]).toEqual(
+      expect(streamParts[4]).toEqual({
+        type: 'text-end',
+        id: textId,
+      });
+      expect(streamParts[5].type).toBe('response-metadata');
+      expect(streamParts[6]).toEqual(
         expect.objectContaining({
           type: 'finish',
-          finishReason: 'stop',
+          finishReason: { unified: 'stop', raw: 'STOP' },
           usage: {
             inputTokens: {
               total: 10,

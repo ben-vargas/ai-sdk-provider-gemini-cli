@@ -93,23 +93,34 @@ function normalizeThinkingLevel(level: string): ThinkingLevel | undefined {
 }
 
 /**
- * Map Gemini finish reasons to Vercel AI SDK finish reasons
+ * Map Gemini finish reasons to Vercel AI SDK finish reasons.
+ *
+ * @param geminiReason - The finish reason from Gemini API
+ * @returns The corresponding AI SDK finish reason with unified and raw values
+ *
+ * @remarks
+ * Mappings:
+ * - 'STOP' -> { unified: 'stop', raw: 'STOP' } (normal completion)
+ * - 'MAX_TOKENS' -> { unified: 'length', raw: 'MAX_TOKENS' } (hit token limit)
+ * - 'SAFETY'/'RECITATION' -> { unified: 'content-filter', raw } (content filtered)
+ * - 'OTHER' -> { unified: 'other', raw: 'OTHER' } (other reason)
+ * - undefined -> { unified: 'other', raw: undefined } (no reason provided)
  */
 function mapGeminiFinishReason(
   geminiReason?: string
 ): LanguageModelV3FinishReason {
   switch (geminiReason) {
     case 'STOP':
-      return 'stop';
+      return { unified: 'stop', raw: geminiReason };
     case 'MAX_TOKENS':
-      return 'length';
+      return { unified: 'length', raw: geminiReason };
     case 'SAFETY':
     case 'RECITATION':
-      return 'content-filter';
+      return { unified: 'content-filter', raw: geminiReason };
     case 'OTHER':
-      return 'other';
+      return { unified: 'other', raw: geminiReason };
     default:
-      return 'unknown';
+      return { unified: 'other', raw: geminiReason };
   }
 }
 
@@ -440,6 +451,7 @@ export class GeminiLanguageModel implements LanguageModelV3 {
 
       // Build content array for v3 format
       const content: LanguageModelV3Content[] = [];
+      let hasToolCalls = false;
 
       if (responseContent?.parts) {
         for (const part of responseContent.parts) {
@@ -450,6 +462,7 @@ export class GeminiLanguageModel implements LanguageModelV3 {
               text: part.text,
             });
           } else if (part.functionCall) {
+            hasToolCalls = true;
             content.push({
               type: 'tool-call',
               toolCallId: randomUUID(),
@@ -483,8 +496,11 @@ export class GeminiLanguageModel implements LanguageModelV3 {
         `[gemini-cli] Token usage - Input: ${inputTokens}, Output: ${outputTokens}, Total: ${totalTokens}`
       );
 
-      const finishReason = mapGeminiFinishReason(candidate?.finishReason);
-      this.logger.debug(`[gemini-cli] Finish reason: ${finishReason}`);
+      // Determine finish reason - use 'tool-calls' if tools were called
+      const finishReason = hasToolCalls
+        ? ({ unified: 'tool-calls', raw: candidate?.finishReason } as LanguageModelV3FinishReason)
+        : mapGeminiFinishReason(candidate?.finishReason);
+      this.logger.debug(`[gemini-cli] Finish reason: ${finishReason.unified}`);
 
       return {
         content,
@@ -637,6 +653,10 @@ export class GeminiLanguageModel implements LanguageModelV3 {
             let totalInputTokens = 0;
             let totalOutputTokens = 0;
 
+            // Track text streaming lifecycle - stable id per text block
+            let textPartId: string | undefined;
+            let hasToolCalls = false;
+
             // Emit stream-start event with any warnings
             controller.enqueue({
               type: 'stream-start',
@@ -652,7 +672,7 @@ export class GeminiLanguageModel implements LanguageModelV3 {
                 const abortError = new Error('Request aborted');
                 abortError.name = 'AbortError';
                 controller.error(abortError);
-                break;
+                return; // Return after error to prevent further processing
               }
 
               const candidate = chunk.candidates?.[0];
@@ -668,14 +688,23 @@ export class GeminiLanguageModel implements LanguageModelV3 {
               if (content?.parts) {
                 for (const part of content.parts) {
                   if (part.text) {
-                    // With native responseJsonSchema, stream text directly
-                    // (output is already clean JSON when schema is provided)
+                    // Emit text-start if this is the first text chunk
+                    if (!textPartId) {
+                      textPartId = randomUUID();
+                      controller.enqueue({
+                        type: 'text-start',
+                        id: textPartId,
+                      });
+                    }
+
+                    // Stream text delta with stable id
                     controller.enqueue({
                       type: 'text-delta',
-                      id: randomUUID(),
+                      id: textPartId,
                       delta: part.text,
                     });
                   } else if (part.functionCall) {
+                    hasToolCalls = true;
                     // Emit tool call as a single event
                     controller.enqueue({
                       type: 'tool-call',
@@ -697,11 +726,20 @@ export class GeminiLanguageModel implements LanguageModelV3 {
                   `[gemini-cli] Stream token usage - Input: ${totalInputTokens}, Output: ${totalOutputTokens}, Total: ${totalInputTokens + totalOutputTokens}`
                 );
 
-                const finishReason = mapGeminiFinishReason(
-                  candidate.finishReason
-                );
+                // Close text part if it was opened
+                if (textPartId) {
+                  controller.enqueue({
+                    type: 'text-end',
+                    id: textPartId,
+                  });
+                }
+
+                // Determine finish reason - use 'tool-calls' if tools were called
+                const finishReason = hasToolCalls
+                  ? ({ unified: 'tool-calls', raw: candidate.finishReason } as LanguageModelV3FinishReason)
+                  : mapGeminiFinishReason(candidate.finishReason);
                 logger.debug(
-                  `[gemini-cli] Stream finish reason: ${finishReason}`
+                  `[gemini-cli] Stream finish reason: ${finishReason.unified}`
                 );
 
                 // Emit response metadata

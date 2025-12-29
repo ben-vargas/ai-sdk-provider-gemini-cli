@@ -53,7 +53,18 @@ export function mapPromptToGeminiFormat(
             if (output.type === 'text' || output.type === 'error-text') {
               resultValue = { result: output.value };
             } else if (output.type === 'json' || output.type === 'error-json') {
-              resultValue = output.value as Record<string, unknown>;
+              // JSON values can be objects, arrays, strings, numbers, booleans, or null
+              // Gemini expects an object, so wrap non-object values
+              const jsonValue = output.value;
+              if (
+                jsonValue !== null &&
+                typeof jsonValue === 'object' &&
+                !Array.isArray(jsonValue)
+              ) {
+                resultValue = jsonValue as Record<string, unknown>;
+              } else {
+                resultValue = { result: jsonValue };
+              }
             } else if (output.type === 'execution-denied') {
               resultValue = {
                 result: `[Execution denied${output.reason ? `: ${output.reason}` : ''}]`,
