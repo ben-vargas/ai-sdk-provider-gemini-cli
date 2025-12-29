@@ -24,7 +24,7 @@
  */
 
 import { streamText } from 'ai';
-import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+import { createGeminiProvider } from '../dist/index.mjs';
 
 async function main() {
   console.log('=== Logging Disabled Example ===\n');
@@ -40,7 +40,7 @@ async function main() {
 
     // Disable all logging
     const result = streamText({
-      model: gemini('gemini-2.5-flash', {
+      model: gemini('gemini-3-flash-preview', {
         logger: false, // Disable all logging
       }),
       prompt: 'Say hello in 5 words',

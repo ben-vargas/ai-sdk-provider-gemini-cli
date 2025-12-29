@@ -99,12 +99,12 @@ async function example4_dataTypes() {
     model: gemini('gemini-3-pro-preview'),
     schema: z.object({
       // Strings with constraints
-      id: z.string().uuid().describe('Unique identifier'),
-      username: z.string().min(3).max(20).describe('Username'),
+      id: z.string().describe('Unique identifier (UUID format)'),
+      username: z.string().describe('Username (3-20 characters)'),
       
       // Numbers with constraints  
-      score: z.number().int().min(0).max(100).describe('Test score'),
-      price: z.number().positive().describe('Product price in USD'),
+      score: z.number().int().describe('Test score between 0 and 100'),
+      price: z.number().describe('Product price in USD'),
       
       // Enums
       status: z.enum(['pending', 'active', 'suspended']).describe('Account status'),
@@ -114,7 +114,7 @@ async function example4_dataTypes() {
       createdAt: z.string().describe('ISO 8601 creation date'),
       
       // URLs
-      website: z.string().url().optional().describe('Personal website'),
+      website: z.string().optional().describe('Personal website URL'),
     }),
     prompt: 'Generate a user account with various field types.',
   });

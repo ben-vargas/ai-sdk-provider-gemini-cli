@@ -31,7 +31,7 @@ async function main() {
     console.log('System: Respond in haiku format');
     console.log('Prompt: Explain what JavaScript is');
     console.log('Response:');
-    console.log(result1.content[0].text);
+    console.log(result1.text);
     console.log();
 
     // Example 2: Professional tone
@@ -45,7 +45,7 @@ async function main() {
     });
     
     console.log('Response:');
-    console.log(result2.content[0].text);
+    console.log(result2.text);
     console.log();
 
     // Example 3: Code assistant
@@ -59,7 +59,7 @@ async function main() {
     });
     
     console.log('Response:');
-    console.log(result3.content[0].text);
+    console.log(result3.text);
     console.log();
 
     // Example 4: Language teacher
@@ -73,7 +73,7 @@ async function main() {
     });
     
     console.log('Response:');
-    console.log(result4.content[0].text);
+    console.log(result4.text);
     console.log();
 
     // Example 5: System message with conversation
@@ -93,7 +93,7 @@ async function main() {
     console.log('System: Pirate captain persona');
     console.log('Conversation with pirate captain...');
     console.log('Response:');
-    console.log(result5.content[0].text);
+    console.log(result5.text);
     console.log();
 
     // Example 6: Streaming with system message
@@ -138,12 +138,12 @@ async function main() {
     for (const system of systems) {
       console.log(`\n${system.name}:`);
       const result = await generateText({
-        model: gemini('gemini-3-pro-preview'), // Using flash for faster comparison
+        model: gemini('gemini-3-flash-preview'),
         system: system.instruction,
         prompt,
-        maxOutputTokens: 150,
+        maxTokens: 200,
       });
-      console.log(result.content[0]?.text || 'No response generated');
+      console.log(result.text || 'No response generated');
     }
     
     console.log('\n✅ All system message examples completed!');

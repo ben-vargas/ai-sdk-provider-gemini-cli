@@ -17,7 +17,7 @@
  */
 
 import { streamText } from 'ai';
-import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+import { createGeminiProvider } from '../dist/index.mjs';
 
 // Custom logger that prefixes each level and adds timestamps
 const customLogger = {
@@ -51,7 +51,7 @@ async function main() {
 
     // Use custom logger with verbose mode enabled
     const result = streamText({
-      model: gemini('gemini-2.5-flash', {
+      model: gemini('gemini-3-flash-preview', {
         verbose: true, // Enable verbose logging to see debug/info
         logger: customLogger, // Use our custom logger
       }),

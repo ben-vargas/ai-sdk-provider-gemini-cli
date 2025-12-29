@@ -20,7 +20,7 @@
  */
 
 import { streamText } from 'ai';
-import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+import { createGeminiProvider } from '../dist/index.mjs';
 
 async function main() {
   console.log('=== Verbose Logging Mode ===\n');
@@ -36,7 +36,7 @@ async function main() {
 
     // Enable verbose logging to see debug and info messages
     const result = streamText({
-      model: gemini('gemini-2.5-flash', {
+      model: gemini('gemini-3-flash-preview', {
         verbose: true, // Enable verbose logging
       }),
       prompt: 'Say hello in 5 words',

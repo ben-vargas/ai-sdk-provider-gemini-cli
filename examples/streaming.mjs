@@ -62,7 +62,9 @@ async function main() {
     console.log('Generating response with 10-second timeout...\n');
 
     const controller = new AbortController();
+    let wasAborted = false;
     const timeout = setTimeout(() => {
+      wasAborted = true;
       console.log('\n⏱️  Aborting due to timeout...');
       controller.abort();
     }, 10000);
@@ -79,8 +81,11 @@ async function main() {
       }
       
       clearTimeout(timeout);
-      console.log('\n✅ Completed before timeout');
+      if (!wasAborted) {
+        console.log('\n✅ Completed before timeout');
+      }
     } catch (error) {
+      clearTimeout(timeout);
       if (error.name === 'AbortError') {
         console.log('✅ Successfully aborted the stream');
       } else {
@@ -129,11 +134,6 @@ async function main() {
       console.log('\n💡 Authentication tip: Run "gemini (follow setup prompts)"');
     }
   }
-}
-
-// Helper function to add delay
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 main().catch(console.error);
