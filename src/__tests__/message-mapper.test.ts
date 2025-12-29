@@ -357,7 +357,10 @@ describe('mapPromptToGeminiFormat', () => {
                 type: 'tool-result',
                 toolCallId: '123',
                 toolName: 'getWeather',
-                output: { type: 'json', value: { temperature: 72, condition: 'sunny' } },
+                output: {
+                  type: 'json',
+                  value: { temperature: 72, condition: 'sunny' },
+                },
               },
             ],
           },

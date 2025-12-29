@@ -26,7 +26,7 @@ This is the stable release for Vercel AI SDK v6. For AI SDK v5 compatibility, us
 
 ### Fixed
 
-- Fixed example imports in logging examples (logging-*.mjs) to use relative paths
+- Fixed example imports in logging examples (logging-\*.mjs) to use relative paths
 
 - **Streaming Lifecycle**: Now properly follows AI SDK v6 streaming contract
   - Added `text-start` event before first text chunk with stable id
@@ -98,7 +98,10 @@ This is the stable release for Vercel AI SDK v6. For AI SDK v5 compatibility, us
 ### Example Usage
 
 ```typescript
-import { createGeminiProvider, ThinkingLevel } from 'ai-sdk-provider-gemini-cli';
+import {
+  createGeminiProvider,
+  ThinkingLevel,
+} from 'ai-sdk-provider-gemini-cli';
 
 const gemini = createGeminiProvider();
 
@@ -146,6 +149,7 @@ This version is compatible with Vercel AI SDK v6 (beta). For v5 compatibility, u
   - `LanguageModelV2Usage` → `LanguageModelV3Usage`
 
 - **Token Usage Structure**: Changed from flat to hierarchical format
+
   ```typescript
   // v5 (flat)
   usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 }
@@ -158,6 +162,7 @@ This version is compatible with Vercel AI SDK v6 (beta). For v5 compatibility, u
   ```
 
 - **Warning Format**: Changed from `unsupported-setting` to `unsupported`
+
   ```typescript
   // v5
   { type: 'unsupported-setting', setting: 'responseFormat', details: '...' }

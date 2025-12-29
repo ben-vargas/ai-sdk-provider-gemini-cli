@@ -498,7 +498,10 @@ export class GeminiLanguageModel implements LanguageModelV3 {
 
       // Determine finish reason - use 'tool-calls' if tools were called
       const finishReason = hasToolCalls
-        ? ({ unified: 'tool-calls', raw: candidate?.finishReason } as LanguageModelV3FinishReason)
+        ? ({
+            unified: 'tool-calls',
+            raw: candidate?.finishReason,
+          } as LanguageModelV3FinishReason)
         : mapGeminiFinishReason(candidate?.finishReason);
       this.logger.debug(`[gemini-cli] Finish reason: ${finishReason.unified}`);
 
@@ -736,7 +739,10 @@ export class GeminiLanguageModel implements LanguageModelV3 {
 
                 // Determine finish reason - use 'tool-calls' if tools were called
                 const finishReason = hasToolCalls
-                  ? ({ unified: 'tool-calls', raw: candidate.finishReason } as LanguageModelV3FinishReason)
+                  ? ({
+                      unified: 'tool-calls',
+                      raw: candidate.finishReason,
+                    } as LanguageModelV3FinishReason)
                   : mapGeminiFinishReason(candidate.finishReason);
                 logger.debug(
                   `[gemini-cli] Stream finish reason: ${finishReason.unified}`
