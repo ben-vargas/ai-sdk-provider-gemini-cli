@@ -11,11 +11,11 @@ A community provider for the [Vercel AI SDK](https://sdk.vercel.ai/docs) that en
 
 ## Version Compatibility
 
-| Provider Version | AI SDK Version | NPM Tag      | Branch      |
-| ---------------- | -------------- | ------------ | ----------- |
-| 2.x              | v6             | `latest`     | `main`      |
-| 1.x              | v5             | `ai-sdk-v5`  | `ai-sdk-v5` |
-| 0.x              | v4             | `ai-sdk-v4`  | `ai-sdk-v4` |
+| Provider Version | AI SDK Version | NPM Tag     | Branch      |
+| ---------------- | -------------- | ----------- | ----------- |
+| 2.x              | v6             | `latest`    | `main`      |
+| 1.x              | v5             | `ai-sdk-v5` | `ai-sdk-v5` |
+| 0.x              | v4             | `ai-sdk-v4` | `ai-sdk-v4` |
 
 ```bash
 # AI SDK v6 (default)
