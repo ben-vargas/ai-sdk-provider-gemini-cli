@@ -180,6 +180,10 @@ function cleanJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
     }
   }
 
+  if (cleaned.properties && cleaned.type === undefined) {
+    cleaned.type = 'object';
+  }
+
   return cleaned;
 }
 
