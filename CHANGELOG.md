@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2026-01-02
+
+### Fixed
+
+- Default function tool parameter schemas to `type: "object"` when only `properties` are provided (fixes Gemini function declaration validation error).
+
 ## [2.0.0] - 2025-12-28
 
 ### BREAKING CHANGES

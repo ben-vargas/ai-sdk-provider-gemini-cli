@@ -108,6 +108,32 @@ describe('mapToolsToGeminiFormat', () => {
       });
     });
 
+    it('should default type to object when properties are provided', () => {
+      const tools: LanguageModelV2FunctionTool[] = [
+        {
+          type: 'function',
+          name: 'getWeather',
+          description: 'Get the weather for a location',
+          inputSchema: {
+            properties: {
+              location: { type: 'string' },
+            },
+            required: ['location'],
+          },
+        },
+      ];
+
+      const result = mapToolsToGeminiFormat(tools);
+
+      expect(result[0].functionDeclarations[0].parameters).toEqual({
+        type: 'object',
+        properties: {
+          location: { type: 'string' },
+        },
+        required: ['location'],
+      });
+    });
+
     it('should clean $schema from JSON schema', () => {
       const tools: LanguageModelV2FunctionTool[] = [
         {
