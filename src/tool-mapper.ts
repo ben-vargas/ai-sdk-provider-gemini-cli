@@ -70,10 +70,17 @@ function convertZodToJsonSchema(zodSchema: z.ZodSchema): unknown {
   // Try zod-to-json-schema for Zod v3 compatibility
   try {
     // Lazy load zod-to-json-schema to avoid import errors with Zod v4
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const zodToJsonSchemaModule = require('zod-to-json-schema');
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    return zodToJsonSchemaModule.zodToJsonSchema(zodSchema);
+    const jsonSchema = zodToJsonSchemaModule.zodToJsonSchema(zodSchema);
+
+    // Ensure strict object type for Gemini tools
+    if (jsonSchema && typeof jsonSchema === 'object' && !jsonSchema.type) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (jsonSchema as any).type = 'object';
+    }
+    return jsonSchema;
   } catch {
     // zod-to-json-schema not available or not compatible
   }
@@ -81,8 +88,8 @@ function convertZodToJsonSchema(zodSchema: z.ZodSchema): unknown {
   // No conversion method available
   console.warn(
     'Unable to convert Zod schema to JSON Schema. ' +
-      'For Zod v3, install zod-to-json-schema. ' +
-      'For Zod v4, use z.toJSONSchema() function.'
+    'For Zod v3, install zod-to-json-schema. ' +
+    'For Zod v4, use z.toJSONSchema() function.'
   );
 
   // Return a basic object schema as fallback
