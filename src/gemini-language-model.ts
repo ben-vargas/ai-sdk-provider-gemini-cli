@@ -463,11 +463,21 @@ export class GeminiLanguageModel implements LanguageModelV3 {
             });
           } else if (part.functionCall) {
             hasToolCalls = true;
+            // Extract thoughtSignature from Gemini Part for tool loop propagation
+            const geminiPart = part as { thoughtSignature?: string };
             content.push({
               type: 'tool-call',
               toolCallId: randomUUID(),
               toolName: part.functionCall.name || '',
               input: JSON.stringify(part.functionCall.args || {}),
+              // Expose thoughtSignature as providerMetadata for AI SDK propagation
+              ...(geminiPart.thoughtSignature
+                ? {
+                    providerMetadata: {
+                      'gemini-cli': { thoughtSignature: geminiPart.thoughtSignature },
+                    },
+                  }
+                : {}),
             } as LanguageModelV3Content);
           }
         }
@@ -708,12 +718,22 @@ export class GeminiLanguageModel implements LanguageModelV3 {
                     });
                   } else if (part.functionCall) {
                     hasToolCalls = true;
-                    // Emit tool call as a single event
+                    // Extract thoughtSignature from Gemini Part for tool loop propagation
+                    const geminiPart = part as { thoughtSignature?: string };
+                    // Emit tool call with providerMetadata containing thoughtSignature
                     controller.enqueue({
                       type: 'tool-call',
                       toolCallId: randomUUID(),
                       toolName: part.functionCall.name || '',
                       input: JSON.stringify(part.functionCall.args || {}),
+                      // Expose thoughtSignature for AI SDK propagation
+                      ...(geminiPart.thoughtSignature
+                        ? {
+                            providerMetadata: {
+                              'gemini-cli': { thoughtSignature: geminiPart.thoughtSignature },
+                            },
+                          }
+                        : {}),
                     });
                   }
                 }

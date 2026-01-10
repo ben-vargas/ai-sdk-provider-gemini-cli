@@ -139,6 +139,7 @@ function mapUserMessage(
 
 /**
  * Maps an assistant message to Gemini format
+ * Preserves thoughtSignature from providerOptions for Gemini 3 tool loop validation
  */
 function mapAssistantMessage(
   message: LanguageModelV3Message & { role: 'assistant' }
@@ -151,20 +152,31 @@ function mapAssistantMessage(
         parts.push({ text: part.text });
         break;
 
-      case 'tool-call':
-        // In v5, tool calls have input as an object already
-        parts.push({
+      case 'tool-call': {
+        // Extract thoughtSignature from providerOptions if present
+        // This is critical for Gemini 3 which requires signatures on function calls
+        const providerOptions = (part as { providerOptions?: Record<string, unknown> }).providerOptions;
+        const geminiCliOptions = providerOptions?.['gemini-cli'] as { thoughtSignature?: string } | undefined;
+        const thoughtSignature = geminiCliOptions?.thoughtSignature;
+
+        // Build the part with optional thoughtSignature
+        const geminiPart = {
           functionCall: {
             name: part.toolName,
             args: (part.input || {}) as Record<string, unknown>,
           },
-        });
+          ...(thoughtSignature ? { thoughtSignature } : {}),
+        };
+
+        parts.push(geminiPart as Part);
         break;
+      }
     }
   }
 
   return { role: 'model', parts };
 }
+
 
 /**
  * Maps a file part to Gemini format
