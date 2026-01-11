@@ -1,8 +1,9 @@
 // Main exports
 export { createGeminiProvider } from './gemini-provider';
 
-// Export ThinkingLevel enum for users who prefer enum over string
-export { ThinkingLevel } from './gemini-language-model';
+// Export ThinkingLevel enum from official @google/genai package
+// Migrated from local enum per issue #28
+export { ThinkingLevel } from '@google/genai';
 
 // Type exports
 export type { GeminiProvider } from './gemini-provider';
