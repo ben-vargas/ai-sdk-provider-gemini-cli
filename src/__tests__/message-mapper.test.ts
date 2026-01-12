@@ -409,6 +409,66 @@ describe('mapPromptToGeminiFormat', () => {
         },
       });
     });
+
+    it('should preserve thoughtSignature from providerOptions in tool calls', () => {
+      const options: LanguageModelV3CallOptions = {
+        prompt: [
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'tool-call',
+                toolCallId: '123',
+                toolName: 'getWeather',
+                input: { location: 'New York' },
+                providerOptions: {
+                  'gemini-cli': {
+                    thoughtSignature: 'test-signature-abc123',
+                  },
+                },
+              } as any,
+            ],
+          },
+        ],
+      };
+
+      const result = mapPromptToGeminiFormat(options);
+
+      expect(result.contents[0].parts[0]).toEqual({
+        functionCall: {
+          name: 'getWeather',
+          args: { location: 'New York' },
+        },
+        thoughtSignature: 'test-signature-abc123',
+      });
+    });
+
+    it('should not include thoughtSignature when not present in providerOptions', () => {
+      const options: LanguageModelV3CallOptions = {
+        prompt: [
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'tool-call',
+                toolCallId: '123',
+                toolName: 'getWeather',
+                input: { location: 'London' },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = mapPromptToGeminiFormat(options);
+
+      const part = result.contents[0].parts[0] as any;
+      expect(part.functionCall).toEqual({
+        name: 'getWeather',
+        args: { location: 'London' },
+      });
+      expect(part.thoughtSignature).toBeUndefined();
+    });
   });
 
   describe('json response format (native schema support)', () => {

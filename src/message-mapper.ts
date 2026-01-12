@@ -177,7 +177,6 @@ function mapAssistantMessage(
   return { role: 'model', parts };
 }
 
-
 /**
  * Maps a file part to Gemini format
  */

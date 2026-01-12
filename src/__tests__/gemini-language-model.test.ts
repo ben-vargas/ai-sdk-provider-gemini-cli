@@ -179,6 +179,126 @@ describe('GeminiLanguageModel', () => {
       expect(toolCall.input).toBe('{"location":"London"}');
     });
 
+    it('should extract thoughtSignature from tool calls and expose via providerMetadata', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [
+                {
+                  functionCall: {
+                    name: 'getWeather',
+                    args: { location: 'Paris' },
+                  },
+                  thoughtSignature: 'gemini3-signature-xyz789',
+                },
+              ],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 15,
+          candidatesTokenCount: 25,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const tools: LanguageModelV3FunctionTool[] = [
+        {
+          type: 'function',
+          name: 'getWeather',
+          description: 'Get weather information',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              location: { type: 'string' },
+            },
+          },
+        },
+      ];
+
+      const messages: LanguageModelV3CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'What is the weather in Paris?' }],
+        },
+      ];
+
+      const result = await model.doGenerate({
+        prompt: messages,
+        tools,
+      });
+
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].type).toBe('tool-call');
+      const toolCall = result.content[0] as any;
+      expect(toolCall.toolName).toBe('getWeather');
+      expect(toolCall.providerMetadata).toEqual({
+        'gemini-cli': { thoughtSignature: 'gemini3-signature-xyz789' },
+      });
+    });
+
+    it('should not include providerMetadata when thoughtSignature is absent', async () => {
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              role: 'model',
+              parts: [
+                {
+                  functionCall: {
+                    name: 'getWeather',
+                    args: { location: 'Tokyo' },
+                  },
+                  // No thoughtSignature
+                },
+              ],
+            },
+            finishReason: 'STOP',
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 15,
+          candidatesTokenCount: 25,
+        },
+      };
+
+      mockClient.generateContent.mockResolvedValue(mockResponse);
+
+      const tools: LanguageModelV3FunctionTool[] = [
+        {
+          type: 'function',
+          name: 'getWeather',
+          description: 'Get weather information',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              location: { type: 'string' },
+            },
+          },
+        },
+      ];
+
+      const messages: LanguageModelV3CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'What is the weather in Tokyo?' }],
+        },
+      ];
+
+      const result = await model.doGenerate({
+        prompt: messages,
+        tools,
+      });
+
+      expect(result.content).toHaveLength(1);
+      const toolCall = result.content[0] as any;
+      expect(toolCall.providerMetadata).toBeUndefined();
+    });
+
     it('should handle JSON mode with native schema support', async () => {
       // With native responseJsonSchema, Gemini returns clean JSON without markdown
       const mockResponse = {
@@ -634,6 +754,121 @@ describe('GeminiLanguageModel', () => {
       expect(toolCallPart).toBeDefined();
       expect(toolCallPart.toolName).toBe('getWeather');
       expect(toolCallPart.input).toBe('{"location":"London"}');
+    });
+
+    it('should stream tool calls with thoughtSignature in providerMetadata', async () => {
+      const mockStream = {
+        async *[Symbol.asyncIterator]() {
+          yield {
+            candidates: [
+              {
+                content: {
+                  role: 'model',
+                  parts: [
+                    {
+                      functionCall: {
+                        name: 'getWeather',
+                        args: { location: 'Berlin' },
+                      },
+                      thoughtSignature: 'stream-signature-abc123',
+                    },
+                  ],
+                },
+                finishReason: 'STOP',
+              },
+            ],
+            usageMetadata: {
+              promptTokenCount: 15,
+              candidatesTokenCount: 25,
+            },
+          };
+        },
+      };
+
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+
+      const messages: LanguageModelV3CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Get weather in Berlin' }],
+        },
+      ];
+
+      const result = await model.doStream({
+        prompt: messages,
+      });
+
+      const streamParts: any[] = [];
+      const reader = result.stream.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        streamParts.push(value);
+      }
+
+      const toolCallPart = streamParts.find((p) => p.type === 'tool-call');
+      expect(toolCallPart).toBeDefined();
+      expect(toolCallPart.toolName).toBe('getWeather');
+      expect(toolCallPart.providerMetadata).toEqual({
+        'gemini-cli': { thoughtSignature: 'stream-signature-abc123' },
+      });
+    });
+
+    it('should stream tool calls without providerMetadata when thoughtSignature is absent', async () => {
+      const mockStream = {
+        async *[Symbol.asyncIterator]() {
+          yield {
+            candidates: [
+              {
+                content: {
+                  role: 'model',
+                  parts: [
+                    {
+                      functionCall: {
+                        name: 'getWeather',
+                        args: { location: 'Sydney' },
+                      },
+                      // No thoughtSignature
+                    },
+                  ],
+                },
+                finishReason: 'STOP',
+              },
+            ],
+            usageMetadata: {
+              promptTokenCount: 15,
+              candidatesTokenCount: 25,
+            },
+          };
+        },
+      };
+
+      mockClient.generateContentStream.mockResolvedValue(mockStream);
+
+      const messages: LanguageModelV3CallOptions['prompt'] = [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Get weather in Sydney' }],
+        },
+      ];
+
+      const result = await model.doStream({
+        prompt: messages,
+      });
+
+      const streamParts: any[] = [];
+      const reader = result.stream.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        streamParts.push(value);
+      }
+
+      const toolCallPart = streamParts.find((p) => p.type === 'tool-call');
+      expect(toolCallPart).toBeDefined();
+      expect(toolCallPart.providerMetadata).toBeUndefined();
     });
 
     it('should handle streaming errors', async () => {
