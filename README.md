@@ -144,6 +144,7 @@ See the [examples/](examples/) directory for comprehensive examples:
 npm run build
 npm run example:check
 npm run example:basic
+npm run example:tool
 ```
 
 ## Breaking Changes

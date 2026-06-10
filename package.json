@@ -58,6 +58,7 @@
     "example:basic": "node examples/basic-usage.mjs",
     "example:stream": "node examples/streaming.mjs",
     "example:conversation": "node examples/conversation-history.mjs",
+    "example:tool": "node examples/tool-calling.mjs",
     "example:object": "node examples/generate-object-basic.mjs",
     "example:pdf": "node examples/pdf-document-analysis.mjs",
     "example:test": "node examples/integration-test.mjs",

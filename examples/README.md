@@ -43,6 +43,15 @@ node examples/conversation-history.mjs
 ```
 **Key concepts**: Message history, context preservation, multi-turn conversations
 
+## Tool Calling
+
+### Tool Calling (`tool-calling.mjs`)
+**Purpose**: Expose a local function to Gemini and use the tool result in a final answer.
+```bash
+node examples/tool-calling.mjs
+```
+**Key concepts**: Tool schemas, `tool()` helper, multi-step generation, tool results
+
 ## Logging Examples
 
 The provider includes a flexible logging system that can be configured for different use cases. These examples demonstrate all logging modes:
