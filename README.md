@@ -1,3 +1,15 @@
+> [!WARNING]
+> **This package is deprecated and no longer maintained.**
+>
+> Google [transitioned Gemini CLI to Antigravity CLI](https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/) and, on **June 18, 2026**, stopped serving Gemini CLI requests from individual accounts (free tier, Google AI Pro, and AI Ultra). That removed this package's core use case — accessing Gemini models via personal Google OAuth (`oauth-personal`) without per-token API billing.
+>
+> The remaining auth modes are better served by Vercel's first-party providers:
+>
+> - **Gemini API key** → [`@ai-sdk/google`](https://www.npmjs.com/package/@ai-sdk/google)
+> - **Vertex AI** (`vertex-ai` / `google-auth-library`) → [`@ai-sdk/google-vertex`](https://www.npmjs.com/package/@ai-sdk/google-vertex)
+>
+> All versions are deprecated on npm and this repository is archived.
+
 <p align="center">
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/v/ai-sdk-provider-gemini-cli?color=00A79E" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/dy/ai-sdk-provider-gemini-cli.svg?color=00A79E" alt="npm downloads" /></a>
